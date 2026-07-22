@@ -148,23 +148,27 @@ for (i in 2:nYears){
     #Rest of the World
     RoW[i,] = EX_i[i,] - IM_i[i,]
 
-    #Wages ?
-    #
-
 
     #Household Consumption
     #C
 
-    
     #Government Consumption
     #G
-  
+    
+    #Wages ?
+    #
+
+    #Employment
+
     # Energy
     #EN
     
     # Emissions
     #EM
 
+    #Land Use
+
+    #Water Impact
 
     
 } 

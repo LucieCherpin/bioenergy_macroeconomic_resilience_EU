@@ -22,10 +22,13 @@ options(scipen = 999)
 ###Import Data
 ##########################################
 
-#Input-Output Table Austria (Eurostat)
+#Input-Output Table EU27 (Eurostat)
 #IO_Austria <- read_xlsx("FINAL_IOT_AT_2021_TOTAL_fuels_reaggregated.xlsx", sheet= "Sheet 1", range = "A11:CE95", col_names = T)
-IO_Austria <- read_xlsx("IOT_AT_2021_TOTAL_fuels_reaggregated.xlsx", sheet= "Sheet 1", range = "A11:DC119", col_names = T)
-IO_Austria <- as.data.frame(IO_Austria)
+IO_EU_domestic <- read_xlsx("IOT_AT_2021_TOTAL_fuels_reaggregated.xlsx", sheet= "Sheet 1", range = "A11:DC119", col_names = T)
+IO_EU_domestic <- as.data.frame(IO_Austria)
+
+IO_EU_imports <- read_xlsx("IOT_AT_2021_TOTAL_fuels_reaggregated.xlsx", sheet= "Sheet 1", range = "A11:DC119", col_names = T)
+IO_EU_imports <- as.data.frame(IO_Austria)
 
 #Here Integrate Extensions
 #Employment E.G:

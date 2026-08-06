@@ -22,8 +22,10 @@ options(scipen = 999)
 ###Import Data
 ##########################################
 
+#### adpated: switch from  Austria to EU; have two tables for doemstic cosnumption and imports
+
 #Input-Output Table EU27 (Eurostat)
-#IO_Austria <- read_xlsx("FINAL_IOT_AT_2021_TOTAL_fuels_reaggregated.xlsx", sheet= "Sheet 1", range = "A11:CE95", col_names = T)
+
 IO_EU_domestic <- read_xlsx("IOT_AT_2021_TOTAL_fuels_reaggregated.xlsx", sheet= "Sheet 1", range = "A11:DC119", col_names = T)
 IO_EU_domestic <- as.data.frame(IO_Austria)
 
@@ -50,6 +52,10 @@ nIndustries = 89        #Industries of Eurostat input-output table
 
 #P3 - Final expenditure
 final_expenditure <- as.numeric(national_accounts[3,2])       #P3 - Total final expenditure (C + G)
+
+t_f_e <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries+1), nIndustries+3])) +
+         as.numeric(unlist(IO_EU_imports[2:(nIndustries+1), nIndustries+3]))
+
 t_f_e <- as.numeric(unlist(IO_Austria[2:(nIndustries + 1), nIndustries + 3]))             #P3 - Total final expenditure (C + G) by industry
 expenditure_tax <- as.numeric(unlist(IO_Austria[nIndustries + 8, nIndustries + 3]))             #D21X31 - Taxes less subsidies on products as part of final expenditure
 expenditure_tax_i <- consumption_tax_i + g_cons_tax_i         #D21X31 - Taxes less subsidies on products as part of final expenditure by industry

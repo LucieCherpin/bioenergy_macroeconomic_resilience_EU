@@ -40,7 +40,7 @@ national_accounts <- read_xlsx("nama_10_gdp_EU27.xlsx", sheet = "Sheet 1", range
 
 #Here Integrate Extensions
 #Employment E.G:
-#employment <- read_xlsx("nama_10_a64_e.xlsx", sheet = "Sheet 1", range = "A11:X77", col_names = T)
+#employment <- read_xlsx("nama_10_a64_EU27.xlsx", sheet = "Sheet 1", range = "A11:X77", col_names = T)
 
 #####################################################################
 ###STEP 2: Defining Coefficients (Exogenous Variables and Parameters)

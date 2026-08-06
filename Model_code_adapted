@@ -29,10 +29,10 @@ options(scipen = 999)
 #### to do: check how many industries in the end; also: kann ich einfach eine Zeile/ Spalte ausblenden, die dann nciht mitberechnet wird? (Um original und adapted e.g. chmeical sector zu rechnen=
 
 IO_EU_domestic <- read_xlsx("IOT_EU_2023_domestic_biofuels_disaggregated.xlsx", sheet= "Sheet 1", range = "A11:DC119", col_names = T)
-IO_EU_domestic <- as.data.frame(IO_Austria)
+IO_EU_domestic <- as.data.frame(IO_EU_domestic)
 
-IO_EU_imports <- read_xlsx("IOT_AT_2021_TOTAL_fuels_reaggregated.xlsx", sheet= "Sheet 1", range = "A11:DC119", col_names = T)
-IO_EU_imports <- as.data.frame(IO_Austria)
+IO_EU_imports <- read_xlsx("IOT_EU_2023_imports_biofuels_disaggregated.xlsx", sheet= "Sheet 1", range = "A11:DC119", col_names = T)
+IO_EU_imports <- as.data.frame(IO_EU_imports)
 
 #Here Integrate Extensions
 #Employment E.G:

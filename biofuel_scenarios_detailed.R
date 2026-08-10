@@ -22,24 +22,26 @@
 #   - Advanced biogasoline
 #   - Advanced bio-kerosene
 #   - Advanced bio-HFO
+#   - Advanced biogas
 #
 # RENEWABLE FUELS OF NON-BIOLOGICAL ORIGIN (RFNBOs):
-#   - (if relevant to your analysis)
+#   - RFNBOs
 #
 # Each sector has DIFFERENT INPUT REQUIREMENTS from other industries
-# (visible in the IO matrix showing consumption from Agriculture, Chemicals, etc.)
 
-# Map biofuel sectors to your IO table indices
-# ACTION: Replace these with actual row/column indices from your IO classification
+# Map biofuel sectors to  IO table indices
+# Replace these with actual row/column indices from your IO classification
 BIOFUEL_SECTORS <- list(
-  conv_biodiesel = NA,           # Row/col index for conventional biodiesel
-  conv_biogasoline = NA,         # Row/col index for conventional biogasoline
-  conv_bio_kerosene = NA,        # Row/col index for conventional bio-kerosene
-  conv_bio_hfo = NA,             # Row/col index for conventional bio-HFO
-  adv_biodiesel = NA,            # Row/col index for advanced biodiesel
-  adv_biogasoline = NA,          # Row/col index for advanced biogasoline
-  adv_bio_kerosene = NA,         # Row/col index for advanced bio-kerosene
-  adv_bio_hfo = NA               # Row/col index for advanced bio-HFO
+  conv_biodiesel = 23,           # Row/col index for conventional biodiesel
+  conv_biogasoline = 25,         # Row/col index for conventional biogasoline
+  conv_bio_kerosene = 27,        # Row/col index for conventional bio-kerosene
+  conv_bio_hfo = 29,             # Row/col index for conventional bio-HFO
+  adv_biodiesel = 24,            # Row/col index for advanced biodiesel
+  adv_biogasoline = 26,          # Row/col index for advanced biogasoline
+  adv_bio_kerosene = 28,         # Row/col index for advanced bio-kerosene
+  adv_bio_hfo = 30,              # Row/col index for advanced bio-HFO
+  RFNBOs = 31,
+  adv_biogas = 46
 )
 
 #####################################################################
@@ -47,26 +49,28 @@ BIOFUEL_SECTORS <- list(
 #####################################################################
 
 # Scenario 1: Import-Focused
+
+### here I already put in the right numbers, based on "Receiving sectors" excel file
 scenario_1 <- list(
   name = "S1: Import-Focused",
   description = "Import-dependent biofuel strategy",
   
   # Total demand by biofuel type (millions EUR)
-  # Distribution across fuel types - adjust based on your data
+  # Distribution across fuel types 
   conv_biodiesel = list(
-    domestic = 5.00,
-    imports = 4.50,
-    total = 9.50
+    domestic = 3018.19,
+    imports = 19194.17,
+    total = 22212.36
   ),
   conv_biogasoline = list(
-    domestic = 13.90,
-    imports = 0.72,
-    total = 14.62
+    domestic = 567.06,
+    imports = 4436.26,
+    total = 5003.31
   ),
   conv_bio_kerosene = list(
-    domestic = 0.00,
-    imports = 0.00,
-    total = 0.00
+    domestic = 1848,
+    imports = 966.98,
+    total = 2814.98
   ),
   conv_bio_hfo = list(
     domestic = 0.00,
@@ -89,17 +93,18 @@ scenario_1 <- list(
     total = 0.00
   ),
   adv_bio_hfo = list(
-    domestic = 0.00,
+    domestic = 900,
     imports = 0.00,
-    total = 0.00
+    total = 900.00
   ),
   
-  total_domestic = 23.98,
-  total_imports = 14.08,
-  total_demand = 38.07
+  total_domestic = 33330.27,
+  total_imports = 44952.96,
+  total_demand = 78283.23
 )
 
 # Scenario 2: Domestic Autarky
+### here still need to put in right numbers
 scenario_2 <- list(
   name = "S2: Domestic Autarky",
   description = "Domestic-focused biofuel strategy with advanced biofuel adoption",
@@ -214,7 +219,7 @@ scenario_3 <- list(
 # From your IO table, we can extract consumption patterns:
 # This matrix shows intermediate input requirements per unit of output
 
-# Example structure (UPDATE WITH ACTUAL VALUES FROM YOUR IO TABLE):
+# Example structure
 biofuel_input_coefficients <- list(
   
   # Conventional biodiesel typical inputs:

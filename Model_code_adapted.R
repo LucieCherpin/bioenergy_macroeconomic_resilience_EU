@@ -28,17 +28,18 @@ options(scipen = 999)
 
 #### to do: check how many industries in the end; also: kann ich einfach eine Zeile/ Spalte ausblenden, die dann nciht mitberechnet wird? (Um original und adapted e.g. chmeical sector zu rechnen=
 
-IO_EU_domestic <- read_xlsx("IOT_EU_2023_domestic_biofuels_disaggregated.xlsx", sheet= "Sheet 1", range = "A11:DC119", col_names = T)
+IO_EU_domestic <- read_xlsx("IOT_EU_2023_domestic_biofuels_disaggregated.xlsx", sheet= "Sheet 1", range = "A9:CP104", col_names = T)
 IO_EU_domestic <- as.data.frame(IO_EU_domestic)
 
-IO_EU_imports <- read_xlsx("IOT_EU_2023_imports_biofuels_disaggregated.xlsx", sheet= "Sheet 1", range = "A11:DC119", col_names = T)
+IO_EU_imports <- read_xlsx("IOT_EU_2023_imports_biofuels_disaggregated.xlsx", sheet= "Sheet 1", range = "A9:CP104", col_names = T)
 IO_EU_imports <- as.data.frame(IO_EU_imports)
 
-### will I include that at all? 
+
 #National Accounts
-national_accounts <- read_xlsx("nama_10_gdp_EU27.xlsx", sheet = "Sheet 1", range = "B12:C50", col_names = F)
+national_accounts <- read_xlsx("nama_10_gdp_EU27.xlsx", sheet = "Sheet 1", range = "A10:B48", col_names = F)
 
 #Here Integrate Extensions
+### maybe don't use that one if I us ethe exiosbase extensions
 #Employment E.G:
 #employment <- read_xlsx("nama_10_a64_EU27.xlsx", sheet = "Sheet 1", range = "A11:X77", col_names = T)
 

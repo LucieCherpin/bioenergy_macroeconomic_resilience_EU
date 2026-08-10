@@ -173,6 +173,24 @@ TotalUse <- (A %*% q_s) + final_use
 TotalUseCheck <- L%*%final_use
 isTRUE(all.equal(TotalUse, TotalUseCheck, total_use, tolerance = 1e-3))
 
+##########################################
+###Extensions
+##########################################
+
+#Employment Intensity
+#EMPL_IN[i,] = EMPL_IN / X_i [i,] # gives us employment per output of sector
+
+#Emission Intensity
+#EM_IN[i,] = EM_IN[i,] / X_i[i,] # gives us emissions per output of sector
+
+#Energy Intensity
+#EN_IN[i,] = EN_IN[i,] / X_i[i,] # gives us energy per output of sector
+
+#Land-Use Intensity
+#LU_IN[i,] = LU_IN[i,] / X_i[i,] # gives us land-use per output of sector
+
+#Deforestation Intensity
+#DEF_IN[i,] = DEF_IN[i,] / X_i[i,] # gives us deforestation per output of sector
 
 ##########################################
 ###Imports and Exports
@@ -247,7 +265,8 @@ for (i in 2:nYears){
     #EM
 
     #Land Use
-
+           
+    #Deforestation
     #Water Impact
 
     

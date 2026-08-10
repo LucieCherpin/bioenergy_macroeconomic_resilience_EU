@@ -1,7 +1,7 @@
 #####################################################################
 ### Model_code_adapted_including_imports.R
 ### Adapted version of Model_code_adapted.R that uses EU domestic and
-### imports IO tables and builds technical coefficients including imports.
+### imports IO tables and builds technical coefficients SEPARATELY.
 #####################################################################
 
 # Clear working environment
@@ -39,13 +39,12 @@ nYears <- 20
 nIndustries <- 89
 
 ##########################################
-### Build Z, q and A matrices (including imports)
+### Build Z, q and A matrices (SEPARATE domestic and imports)
 ##########################################
 
 # Numeric Z matrices (goods x goods)
 Z_dom <- as.matrix(IO_EU_domestic[2:(nIndustries + 1), 3:(nIndustries + 2)])
 Z_imp <- as.matrix(IO_EU_imports[2:(nIndustries + 1), 3:(nIndustries + 2)])
-Z_total <- Z_dom + Z_imp
 
 # Total supply by industry (row n + 19 in original layout)
 q_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 19, 3:(nIndustries + 2)]))
@@ -54,15 +53,27 @@ q_total <- q_dom + q_imp
 
 # Avoid zero division
 q_dom[q_dom == 0] <- 1e-6
+q_imp[q_imp == 0] <- 1e-6
 q_total[q_total == 0] <- 1e-6
 
-# Technical coefficient matrices (including imports)
-A_total <- matrix(as.numeric(Z_total), nrow = nIndustries, ncol = nIndustries)
-A_total <- sweep(A_total, 2, q_total, FUN = "/")
+# Technical coefficient matrices (KEPT SEPARATE)
+# A_dom: technical coefficients using only domestic inputs per total supply
+A_dom <- matrix(as.numeric(Z_dom), nrow = nIndustries, ncol = nIndustries)
+A_dom <- sweep(A_dom, 2, q_dom, FUN = "/")
 
-# Leontief inverse using A_total (includes imported intermediate inputs)
+# A_imp: technical coefficients using only imported inputs per total supply
+A_imp <- matrix(as.numeric(Z_imp), nrow = nIndustries, ncol = nIndustries)
+A_imp <- sweep(A_imp, 2, q_imp, FUN = "/")
+
+# A_total: combined technical coefficients (domestic + imports per combined total supply)
+A_total <- A_dom + A_imp
+A_total_normalized <- sweep(A_total, 2, q_total / q_total, FUN = "/")
+
+# Leontief inverses
 diag_mat <- diag(nIndustries)
-L <- solve(diag_mat - A_total)
+L_dom <- solve(diag_mat - A_dom)    # Leontief inverse for domestic only
+L_imp <- solve(diag_mat - A_imp)    # Leontief inverse for imports only
+L_total <- solve(diag_mat - A_total) # Leontief inverse for combined
 
 ##########################################
 ### Read IO rows/columns (domestic + imports where relevant)
@@ -178,9 +189,10 @@ C_i_tax <- matrix(rep(consumption_tax_i, times = nYears), nrow = nYears, byrow =
 ### Consistency checks
 ##########################################
 
+# Check using combined A and L matrices
 A <- A_total
 diag <- diag(ncol = ncol(A), nrow = nrow(A))
-L <- solve(diag - A)
+L <- L_total
 
 # Check for total final use
 TotalFinalUse <- total_use - (A %*% as.numeric(x <- as.matrix(as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 17])))))
@@ -220,6 +232,10 @@ expenditure_tax_i <- rep(expenditure_tax / nIndustries, nIndustries)
 D_i <- matrix(rep(t_f_e, times = nYears), nrow = nYears, byrow = TRUE)
 D_tax_i <- matrix(rep(expenditure_tax_i, times = nYears), nrow = nYears, byrow = TRUE)
 
+# Initialize output matrices
+X_i <- matrix(0, nrow = nYears, ncol = nIndustries)
+X_i[1, ] <- q_s
+
 ##########################################
 ### Time loop (skeleton)
 ##########################################
@@ -238,8 +254,8 @@ for (i in 2:nYears) {
     # Exports (simple persistence)
     EX_i[i, ] <- EX_i[i - 1, ]
 
-    # Total use by industry (Leontief production function) using A_total/L
-    X_i[i, ] <- (L %*% f_i[i, ])
+    # Total use by industry (Leontief production function) using combined L (domestic + imports)
+    X_i[i, ] <- (L_total %*% f_i[i, ])
 
     # Rest of the world balance
     RoW[i, ] <- EX_i[i, ] - IM_i[i, ]

@@ -207,6 +207,95 @@ scenario_3 <- list(
   exports = 69.98
 )
 
+
+##################################################################################################################
+#### Version 2 - IVC - specific #####
+##################################################################################################################
+
+##### Scenario 1, 2030 #####
+
+#####################################################################
+### 1. IVC-PROFILE ALS RELATIVE TECHNOLOGIE-REZEPTE (a_ij)
+### (Alle Werte als Anteile am Marktverkaufserlös X = 1.00 EUR)
+#####################################################################
+
+# --- IVC 1 Profile (Import-basiert, POME) ---
+# Basis: X_IVC1 = 1,70 Mio. t * 1.750 €/t = 2,975 Mrd. EUR
+ivc1_profile <- list(
+  name = "IVC 1: Imported POME",
+  a_dom = c(
+    agriculture = 0.0000, forestry = 0.0000, paper = 0.0000, food_bev = 0.0000,
+    # CAPEX-Anteile
+    fab_metal = 0.002371, elec_equip = 0.000949, machinery = 0.021343,
+    construction = 0.007114, architecture = 0.014229, computer_opt = 0.001423,
+    # OPEX-Anteile
+    electricity = 0.053400, chemicals = 0.038143, legal_head = 0.030514,
+    repair_inst = 0.022886, land_transp = 0.007629
+  ),
+  a_imp = c(
+    agriculture_imp = 0.297143 # 884 Mio. EUR / 2,975 Mrd. EUR
+  )
+)
+
+# --- IVC 2 Profile (HVO Import) ---
+# Basis: X_IVC2 = 0,28 Mio. t * 1.750 €/t = 490 Mio. EUR
+ivc2_profile <- list(
+  name = "IVC 2: HVO Import",
+  a_dom = c(
+    agriculture = 0.0000, forestry = 0.0000, paper = 0.0000, food_bev = 0.0000,
+    # CAPEX-Anteile
+    fab_metal = 0.007686, elec_equip = 0.003074, machinery = 0.069171,
+    construction = 0.023057, architecture = 0.045992, computer_opt = 0.004611,
+    # OPEX-Anteile
+    electricity = 0.081000, chemicals = 0.057857, legal_head = 0.046286,
+    repair_inst = 0.034714, land_transp = 0.011571
+  ),
+  a_imp = c(
+    agriculture_imp = 0.350676 # 171,8 Mio. EUR / 490 Mio. EUR
+  )
+)
+
+# --- IVC 13a Profile (Heimisch, Stroh/Lignozellulose) ---
+# Basis: X_IVC13a = 60.905,7 t * 1.750 €/t = 106,58 Mio. EUR
+ivc13a_profile <- list(
+  name = "IVC 13a: Domestic Straw/Lignocellulose",
+  a_dom = c(
+    agriculture = 0.059728, forestry = 0.030374, paper = 0.024157, food_bev = 0.001674,
+    # CAPEX-Anteile
+    fab_metal = 0.006899, elec_equip = 0.000920, machinery = 0.020700,
+    construction = 0.004600, architecture = 0.011500, computer_opt = 0.001380,
+    # OPEX-Anteile
+    electricity = 0.049886, chemicals = 0.083143, legal_head = 0.066514,
+    repair_inst = 0.099771, land_transp = 0.033257
+  ),
+  a_imp = c(
+    agriculture_imp = 0.000000 # Kein Feedstock-Import
+  )
+)
+
+# --- IVC 13b Profile (Heimisch, Maritim) ---
+# Basis: X_IVC13b = 40.603,8 t * 1.750 €/t = 71,06 Mio. EUR
+ivc13b_profile <- list(
+  name = "IVC 13b: Domestic Maritime Path",
+  a_dom = c(
+    agriculture = 0.224467, forestry = 0.072027, paper = 0.066639, food_bev = 0.005100,
+    # CAPEX-Anteile
+    fab_metal = 0.058714, elec_equip = 0.007828, machinery = 0.176140,
+    construction = 0.039143, architecture = 0.097857, computer_opt = 0.011743,
+    # OPEX-Anteile
+    electricity = 0.072300, chemicals = 0.120500, legal_head = 0.096400,
+    repair_inst = 0.144600, land_transp = 0.048200
+  ),
+  a_imp = c(
+    agriculture_imp = 0.000000
+  )
+)
+
+
+################################################################################################################################
+##### VERSION 1 ###############
+#################################################################################################################################
+
 #####################################################################
 ### INPUT COEFFICIENTS BY BIOFUEL TYPE  - Scenario 1
 #####################################################################

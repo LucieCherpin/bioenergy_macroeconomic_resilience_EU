@@ -9,7 +9,7 @@
 ### BIOFUEL SECTOR MAPPING FROM IO TABLE
 #####################################################################
 #
-# From your IO table screenshot, biofuel sectors include:
+# The biofuel sectors include:
 #
 # CONVENTIONAL BIOFUELS (1st generation):
 #   - Conventional biodiesel
@@ -32,14 +32,14 @@
 # Map biofuel sectors to  IO table indices
 # Replace these with actual row/column indices from your IO classification
 BIOFUEL_SECTORS <- list(
-  conv_biodiesel = 23,           # Row/col index for conventional biodiesel
-  conv_biogasoline = 25,         # Row/col index for conventional biogasoline
-  conv_bio_kerosene = 27,        # Row/col index for conventional bio-kerosene
-  conv_bio_hfo = 29,             # Row/col index for conventional bio-HFO
-  adv_biodiesel = 24,            # Row/col index for advanced biodiesel
-  adv_biogasoline = 26,          # Row/col index for advanced biogasoline
-  adv_bio_kerosene = 28,         # Row/col index for advanced bio-kerosene
-  adv_bio_hfo = 30,              # Row/col index for advanced bio-HFO
+  conv_biodiesel = 23,           # Row index for conventional biodiesel
+  conv_biogasoline = 25,         # Row index for conventional biogasoline
+  conv_bio_kerosene = 27,        # Row index for conventional bio-kerosene
+  conv_bio_hfo = 29,             # Row index for conventional bio-HFO
+  adv_biodiesel = 24,            # Row index for advanced biodiesel
+  adv_biogasoline = 26,          # Row index for advanced biogasoline
+  adv_bio_kerosene = 28,         # Row index for advanced bio-kerosene
+  adv_bio_hfo = 30,              # Row index for advanced bio-HFO
   RFNBOs = 31,
   adv_biogas = 46
 )

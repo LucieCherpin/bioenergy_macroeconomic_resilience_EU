@@ -212,14 +212,14 @@ scenario_3 <- list(
 #####################################################################
 #
 # Each biofuel type consumes different inputs based on:
-#   1. Feedstock type (agricultural products, waste, chemicals, etc.)
-#   2. Processing requirements (refining, conversion, blending)
-#   3. Co-products and energy inputs
+#   1. Feedstock types; 
+#   2. CAPEX components; 
+#   3. OPEX components; 
+####   4. and add later: Co-products that then later sell  
 #
-# From your IO table, we can extract consumption patterns:
+# From the IO table, we can extract consumption patterns:
 # This matrix shows intermediate input requirements per unit of output
 
-# Example structure
 biofuel_input_coefficients <- list(
   
   # Conventional biodiesel typical inputs:

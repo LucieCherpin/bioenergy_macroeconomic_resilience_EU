@@ -1,0 +1,289 @@
+#####################################################################
+### three-tired model
+### Level 1: Cost-to-value ratio
+### Level 2: Cost Structure Shares (alpha_feed + alpha_capex + alpha_opex = 1.0
+### Level 2: Component Sub-Distributions (sum(s_ij) = 1.0 per category)
+#####################################################################
+
+# ===================================================================
+# 1. CORE COEFFICIENT CALCULATOR FUNCTION
+# ===================================================================
+
+build_ivc_vector <- function(prod_cost, market_value, 
+                             alpha_cost, 
+                             dist_feed, dist_capex, dist_opex) {
+# Validates that Level 2 shares sum to 1.0 (100% of production costs)
+  stopifnot(abs(sum(alpha_cost) - 1.0) < 1e-3)
+
+# Validates that Level 3 nested distribution vectors sum to 1.0 (100%)
+  stopifnot(
+    abs(sum(dist_feed) - 1.0) < 1e-3,
+    abs(sum(dist_capex) - 1.0) < 1e-3,
+    abs(sum(dist_opex) - 1.0) < 1e-3
+
+##### TIER 1: Cost-to-Value Ratio (r_k = P_k / X_k) ---
+  r_k <- prod_cost / market_value
+
+##### TIER 2: Macro Shares Relative to Total Market Output Value (S = r_k * alpha) ---
+  s_feed  <- r_k * alpha_cost["feed"]
+  s_capex <- r_k * alpha_cost["capex"]
+  s_opex  <- r_k * alpha_cost["opex"]
+
+#### TIER 3: Absolute Technical Coefficients (a_ij = S * s_ij) ---
+  a_feed  <- s_feed  * dist_feed
+  a_capex <- s_capex * dist_capex
+  a_opex  <- s_opex  * dist_opex
+
+  
+  # Merges into unified domestic input vector
+### here I still need to add ALL feedstock inputs that exist (other biofuel sectors and maybe more?)
+  a_dom <- c(
+    agriculture  = unname(a_feed["agriculture"]), 
+    forestry     = unname(a_feed["forestry"]), 
+    paper        = unname(a_feed["paper"]), 
+    food_bev     = unname(a_feed["food_bev"]), 
+    sewerage     = unname(a_feed["sewerage"]),
+    chemicals    = unname(a_feed["chemicals"]),
+    adv_biodie   = unname(a_feed["adv_biodie"]),
+    fab_metal    = unname(a_capex["fab_metal"]), 
+    elec_equip   = unname(a_capex["elec_equip"]), 
+    machinery    = unname(a_capex["machinery"]), 
+    construction = unname(a_capex["construction"]), 
+    architecture = unname(a_capex["architecture"]), 
+    computer_opt = unname(a_capex["computer_opt"]),
+    electricity  = unname(a_opex["electricity"]), 
+    chemicals    = unname(a_opex["chemicals"]), 
+    legal_head   = unname(a_opex["legal_head"]), 
+    repair_inst  = unname(a_opex["repair_inst"]), 
+    land_transp  = unname(a_opex["land_transp"])
+  )
+  
+  a_imp <- c(agriculture_imp = unname(a_feed["agriculture_imp"]))
+  
+ return(list(
+    r_k     = r_k,
+    s_feed  = s_feed,
+    s_capex = s_capex,
+    s_opex  = s_opex,
+    a_dom   = a_dom, 
+    a_imp   = a_imp
+  ))
+}
+
+
+# ===================================================================
+# 2. MONETARY PRODUCTION WEIGHTS (w_k = X_k / X_total)
+# ===================================================================
+
+
+###  these are shares, i.e. how much each IVC contributes to the final product of advanced biodiesel (all in monetary values)
+
+w_S1 <- c(
+  IVC1   = 0.7930434,
+  IVC2   = 0.1576435,
+  IVC13a = 0.0342907,
+  IVC13b = 0.0150226
+)
+# ===================================================================
+# 3. GLOBAL CONSTANT SUB-DISTRIBUTIONS (LEVEL 3 FIXTURES)
+# ===================================================================
+
+# Standard CAPEX & OPEX distributions remain constant across years and scenarios
+dist_capex_standard <- c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_opt = 0.03)
+dist_opex_standard  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, repair_inst = 0.15, land_transp = 0.05)
+
+# ===================================================================
+# 4. IVC-SPECIFIC PARAMETRIZATION & VECTOR GENERATION
+# ===================================================================
+
+# -------------------------------------------------------------------
+# --- IVC 1: FAME ---
+# -------------------------------------------------------------------
+# Tier 1: Total Cost P_1 = 870 €/t vs. Market Value X_1 = 1450 €/t  (r_1 = 0.60)
+prod_cost_ivc1    <- 870
+market_value_ivc1 <- 1450
+
+# Tier 2: Internal Cost Breakdown (Sum = 1.0)
+### automated: shares of fefdstock/ CAPEX/ OPEX within IVC 1
+alpha_cost_ivc1   <- c(feed = 0.5977011495, capex = 0.0954022988, opex = 0.3068965517)
+
+# Tier 3: Category Component Breakdown (Sum = 1.0)
+dist_feed_ivc1    <- c(agriculture = 0.0, forestry = 0.0, paper = 0.0, food_bev = 0.0, sewerage = 0.0, chemicals = 0.0, adv_biodio = 0.0, agriculture_imp = 1.0)
+
+### here the math happens; jumps back to function blueprint on top ; takes the vectors defned in section 4, assigns them to their respectvie placeholder in the function and runs the code
+
+ivc1 <- build_ivc_vector(
+  prod_cost    = prod_cost_ivc1, 
+  market_value = market_value_ivc1,
+  alpha_cost   = alpha_cost_ivc1,
+  dist_feed    = dist_feed_ivc1,
+  dist_capex   = dist_capex_standard,
+  dist_opex    = dist_opex_standard
+)
+
+
+
+
+
+
+
+##########################################################################
+##old
+#########################################################################
+
+
+# ===================================================================
+# 3. IVC-SPECIFIC PARAMETRIZATION (LEVEL 1 & LEVEL 2)
+# ===================================================================
+## these are the relative shares of the monetary value of intermediate inputs 
+## (summed by feedtsock, capex and opex) devided by the overall market value of the amoutn produced (on IVC-level)
+
+# --- IVC 1: FAME ---
+s_feed_ivc1  <- 0.3586206897
+s_capex_ivc1 <- 0.0572413793
+s_opex_ivc1  <- 0.1841379310
+
+#### these shares within feedstock are scenario and year-specific (although not changing a lot, mostly only in IVC 1 and 2))
+dist_feed_ivc1  <- c(agriculture = 0.0, forestry = 0.0, paper = 0.0, food_bev = 0.0, sewerage = 0.0, agriculture_imp = 1.0)
+
+#### these shares within CAPEX and within OPEX are fixed across years and across scnenarios -> hence keep them the same always
+dist_capex_ivc1 <- c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_opt = 0.03)
+dist_opex_ivc1  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, repair_inst = 0.15, land_transp = 0.05)
+
+
+### building the  techical input coefficient vector for IVC 1 in that sepcific year and scenario
+ivc1 <- build_ivc_vector(
+  s_feed_ivc1, dist_feed_ivc1,
+  s_capex_ivc1, dist_capex_ivc1,
+  s_opex_ivc1, dist_opex_ivc1
+)
+
+
+# --- IVC 2: HVO  ---
+s_feed_ivc2  <- 0.3506762558
+s_capex_ivc2 <- 0.1537142857
+s_opex_ivc2  <- 0.4862910665
+
+dist_feed_ivc2  <- c(agriculture = 0.0, forestry = 0.0, paper = 0.0, food_bev = 0.0, sewerage = 0.0, agriculture_imp = 1.0)
+dist_capex_ivc2 <- c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_opt = 0.03)
+dist_opex_ivc2  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, repair_inst = 0.15, land_transp = 0.05)
+
+ivc2 <- build_ivc_vector(
+  s_feed_ivc2, dist_feed_ivc2,
+  s_capex_ivc2, dist_capex_ivc2,
+  s_opex_ivc2, dist_opex_ivc2
+)
+
+
+# --- IVC 13a: Domestic Straw ---
+s_feed_ivc13a  <- 0.1159230944
+s_capex_ivc13a <- 0.4600000291
+s_opex_ivc13a  <- 0.3325714434
+
+dist_feed_ivc13a  <- c(agriculture = 0.5151520136, forestry = 0.2620215447, paper = 0.2083884531, food_bev = 0.0144379886, sewerage = 0.0, agriculture_imp = 0.0)
+dist_capex_ivc13a <- c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45, construction = 0.10, architecture = 0.25, computer_opt = 0.03) # Adjust to specific sheet
+dist_opex_ivc13a  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, repair_inst = 0.15, land_transp = 0.05)
+
+ivc13a <- build_ivc_vector(
+  s_feed_ivc13a, dist_feed_ivc13a,
+  s_capex_ivc13a, dist_capex_ivc13a,
+  s_opex_ivc13a, dist_opex_ivc13a
+)
+
+
+# --- IVC 13b: Domestic Maritime ---
+s_feed_ivc13b  <- 0.5603612956
+s_capex_ivc13b <- 0.5956522142
+s_opex_ivc13b  <- 0.7334770196
+
+dist_feed_ivc13b  <- c(agriculture = 0.6095762479, forestry = 0.1956021086, paper = 0.1809711180, food_bev = 0.0138505255, sewerage = 0.0, agriculture_imp = 0.0)
+dist_capex_ivc13b <- c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45, construction = 0.10, architecture = 0.25, computer_opt = 0.03) # Adjust to specific sheet
+dist_opex_ivc13b  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, repair_inst = 0.15, land_transp = 0.05)
+
+ivc13b <- build_ivc_vector(
+  s_feed_ivc13b, dist_feed_ivc13b,
+  s_capex_ivc13b, dist_capex_ivc13b,
+  s_opex_ivc13b, dist_opex_ivc13b
+)
+# -------------------------------------------------------------------
+# --- IVC 2: HVO ---
+# -------------------------------------------------------------------
+# Tier 1: Total Cost P_2 = 990.68 €/t vs. Market Value X_2 = 1000 €/t (r_2 = 0.99068)
+prod_cost_ivc2    <- 990.681608
+market_value_ivc2 <- 1000
+
+# Tier 2: Internal Cost Breakdown (Sum = 1.0)
+alpha_cost_ivc2   <- c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514)
+
+# Tier 3: Category Component Breakdown (Sum = 1.0)
+dist_feed_ivc2    <- c(agriculture = 0.0, forestry = 0.0, paper = 0.0, food_bev = 0.0, sewerage = 0.0, agriculture_imp = 1.0)
+
+ivc2 <- build_ivc_vector(
+  prod_cost    = prod_cost_ivc2, 
+  market_value = market_value_ivc2,
+  alpha_cost   = alpha_cost_ivc2,
+  dist_feed    = dist_feed_ivc2,
+  dist_capex   = dist_capex_standard,
+  dist_opex    = dist_opex_standard
+)
+
+
+# -------------------------------------------------------------------
+# --- IVC 13a: Domestic Straw ---
+# -------------------------------------------------------------------
+prod_cost_ivc13a    <- 908.4945669
+market_value_ivc13a <- 1000
+
+alpha_cost_ivc13a   <- c(feed = 0.12759911, capex = 0.50633217, opex = 0.36606872)
+
+dist_feed_ivc13a    <- c(agriculture = 0.5151520136, forestry = 0.2620215447, paper = 0.2083884531, food_bev = 0.0144379886, sewerage = 0.0, agriculture_imp = 0.0)
+dist_capex_ivc13a   <- c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45, construction = 0.10, architecture = 0.25, computer_opt = 0.03)
+
+ivc13a <- build_ivc_vector(
+  prod_cost    = prod_cost_ivc13a, 
+  market_value = market_value_ivc13a,
+  alpha_cost   = alpha_cost_ivc13a,
+  dist_feed    = dist_feed_ivc13a,
+  dist_capex   = dist_capex_ivc13a,
+  dist_opex    = dist_opex_standard
+)
+
+
+# -------------------------------------------------------------------
+# --- IVC 13b: Domestic Maritime ---
+# -------------------------------------------------------------------
+prod_cost_ivc13b    <- 1889.4905294
+market_value_ivc13b <- 1000
+
+alpha_cost_ivc13b   <- c(feed = 0.2965674, capex = 0.3152449, opex = 0.3881877)
+
+dist_feed_ivc13b    <- c(agriculture = 0.6095762479, forestry = 0.1956021086, paper = 0.1809711180, food_bev = 0.0138505255, sewerage = 0.0, agriculture_imp = 0.0)
+dist_capex_ivc13b   <- c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45, construction = 0.10, architecture = 0.25, computer_opt = 0.03)
+
+ivc13b <- build_ivc_vector(
+  prod_cost    = prod_cost_ivc13b, 
+  market_value = market_value_ivc13b,
+  alpha_cost   = alpha_cost_ivc13b,
+  dist_feed    = dist_feed_ivc13b,
+  dist_capex   = dist_capex_ivc13b,
+  dist_opex    = dist_opex_standard
+)
+
+
+# ===================================================================
+# 5. AGGREGATED SCENARIO 1 VECTOR RECOMBINATION
+# ===================================================================
+
+a_dom_S1 <- (w_S1["IVC1"]   * ivc1$a_dom) +
+            (w_S1["IVC2"]   * ivc2$a_dom) +
+            (w_S1["IVC13a"] * ivc13a$a_dom) +
+            (w_S1["IVC13b"] * ivc13b$a_dom)
+
+a_imp_S1 <- (w_S1["IVC1"]   * ivc1$a_imp) +
+            (w_S1["IVC2"]   * ivc2$a_imp) +
+            (w_S1["IVC13a"] * ivc13a$a_imp) +
+            (w_S1["IVC13b"] * ivc13b$a_imp)
+
+v_direct_S1 <- 1 - (sum(a_dom_S1) + sum(a_imp_S1))
+
+

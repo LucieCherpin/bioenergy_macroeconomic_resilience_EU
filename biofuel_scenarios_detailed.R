@@ -210,7 +210,83 @@ scenario_3 <- list(
 #####################################################################
 ### INPUT COEFFICIENTS BY BIOFUEL TYPE
 #####################################################################
-#
+
+
+#####################################################################
+### INPUT COEFFICIENTS: ADVANCED BIODIESEL (2030)
+### Computed on Market Selling Price (Gross Output Value X)
+#####################################################################
+
+# 1. Bruttoproduktionswert (Total Market Value / Sales Revenue in EUR)
+# 2.081.509,51 t * 1.750,00 €/t
+X_total <- 3642641635.62 
+
+# 2. Absoluter Zwischenverbrauch aus deiner Excel-Tabelle (in EUR)
+
+# DOMESTIC INTERMEDIATE INPUTS (Inländische Vorleistungen)
+z_dom_abs <- c(
+  agriculture  = 22317472.46,  # Products of agriculture, hunting and rel.
+  forestry     = 8355518.70,   # Products of forestry, logging and rel.
+  paper        = 7310016.07,   # Paper and paper products
+  food_bev     = 540799.33,    # Food, beverages and tobacco products
+  sewerage     = 0.00          # Sewerage services
+)
+
+# IMPORTED INTERMEDIATE INPUTS (Importierte Vorleistungen - Feedstock)
+z_imp_abs <- c(
+  agriculture_imp = 1055831366.35 # Imported Feedstock (POME etc.)
+)
+
+# CAPEX INTERMEDIATE INPUTS (Ausrüstung & Bau)
+z_capex_abs <- c(
+  fab_metal    = 22347404.41,  # Fabricated metal products
+  elec_equip   = 5865253.32,   # Electrical equipment
+  machinery    = 131968213.24, # Machinery and equipment n.e.c.
+  construction = 40147269.61,  # Constructions and construction works
+  architecture = 84136674.02,  # Architectural and engineering
+  computer_opt = 8797880.88    # Computer, electronic and optical
+)
+
+# OPEX INTERMEDIATE INPUTS (Energie & Dienstleistungen)
+z_opex_abs <- c(
+  electricity  = 209009464.03, # Electricity, gas, steam and air conditioning
+  chemicals    = 159249106.72, # Chemicals and chemical products
+  legal_head   = 127399285.37, # Legal and accounting services; head office
+  repair_inst  = 106003928.06, # Repair and installation services
+  land_transp  = 35334642.69   # Land transport services
+)
+
+#####################################################################
+### 3. Berechnung der IOT-Koeffizienten (a_ij = z_ij / X_total)
+#####################################################################
+
+# Inländische Koeffizienten (A_dom Spalte für Adv. Biodiesel)
+a_dom_adv_biodiesel <- c(z_dom_abs, z_capex_abs, z_opex_abs) / X_total
+
+# Importierte Koeffizienten (A_imp Spalte für Adv. Biodiesel)
+a_imp_adv_biodiesel <- z_imp_abs / X_total
+
+# Gesamte Vorleistungsquote (Intermediate Consumption Share)
+total_intermediate_share <- sum(a_dom_adv_biodiesel) + sum(a_imp_adv_biodiesel)
+
+# Wertschöpfungsquote (Direct Value Added Share v_j)
+gva_share <- 1 - total_intermediate_share
+
+#####################################################################
+### 4. Kontrollausgabe der Ergebnisse
+#####################################################################
+
+cat("--- ERGEBNISSE FÜR ADVANCED BIODIESEL --- \n")
+cat("Bruttoproduktionswert (Marktwert):", round(X_total / 1e6, 2), "Mio. EUR\n")
+cat("Gesamte Vorleistungsquote (sum a_ij):", round(total_intermediate_share * 100, 2), "%\n")
+cat("  - davon inländische Vorleistungen:", round(sum(a_dom_adv_biodiesel) * 100, 2), "%\n")
+cat("  - davon importierte Vorleistungen:", round(sum(a_imp_adv_biodiesel) * 100, 2), "%\n")
+cat("Integrierte Wertschöpfungsquote (v_j):", round(gva_share * 100, 2), "%\n")
+
+###########################################################################################################################
+### DELETE ###
+###########################################################################################################################
+
 # Each biofuel type consumes different inputs based on:
 #   1. Feedstock types; 
 #   2. CAPEX components; 

@@ -6,7 +6,63 @@
 #####################################################################
 
 # ===================================================================
-# 1. CORE COEFFICIENT CALCULATOR FUNCTION
+# 1. SECTOR MAPPING
+# ===================================================================
+
+# Mapping biofuel sectors to  IO table indices
+
+BIOFUEL_SECTORS <- list(
+  conv_biodiesel = 23,           # Row index for conventional biodiesel
+  conv_biogasoline = 25,         # Row index for conventional biogasoline
+  conv_bio_kerosene = 27,        # Row index for conventional bio-kerosene
+  conv_bio_hfo = 29,             # Row index for conventional bio-HFO
+  adv_biodiesel = 24,            # Row index for advanced biodiesel
+  adv_biogasoline = 26,          # Row index for advanced biogasoline
+  adv_bio_kerosene = 28,         # Row index for advanced bio-kerosene
+  adv_bio_hfo = 30,              # Row index for advanced bio-HFO
+  RFNBOs = 31,
+  adv_biogas = 46
+)
+
+###################
+#### this will allow to target one specific biofuels sector when inserting e.g. Sc 1 coefficinets into that sector column
+# Suppose A_full is your master N x N Leontief matrix (e.g., 64x64)
+# We want to insert Scenario 1 coefficients into the 'adv_biodiesel' column:
+###     target_col <- BIOFUEL_SECTORS$adv_biodiesel
+# Automatically place each calculated coefficient into its exact IO row
+###     for (sec_name in names(a_dom_S1)) {
+  row_idx <- INPUT_SECTORS[[sec_name]]
+  A_full[row_idx, target_col] <- a_dom_S1[sec_name]
+}
+###################
+
+
+# Intermediate Input Supply sectors 
+
+INPUT_SECTORS <- list(
+  agriculture  = 1,
+  forestry     = 2,
+  paper        = 17,
+  food_bev     = 10,
+  sewerage     = 37,
+  chemicals    = ??,
+  adv_biodie   = ??,
+  fab_metal    = 25,
+  elec_equip   = 27,
+  machinery    = 28,
+  construction = 41,
+  architecture = 71,
+  computer_opt = 26,
+  electricity  = 35,
+  chemicals    = 20,
+  legal_head   = 69,
+  repair_inst  = 33,
+  land_transp  = 49
+)
+
+
+# ===================================================================
+# 2. CORE COEFFICIENT CALCULATOR FUNCTION
 # ===================================================================
 
 build_ivc_vector <- function(prod_cost, market_value, 
@@ -70,9 +126,8 @@ build_ivc_vector <- function(prod_cost, market_value,
   ))
 }
 
-
 # ===================================================================
-# 2. MONETARY PRODUCTION WEIGHTS (w_k = X_k / X_total)
+# 3. MONETARY PRODUCTION WEIGHTS (w_k = X_k / X_total)
 # ===================================================================
 
 
@@ -85,7 +140,7 @@ w_S1 <- c(
   IVC13b = 0.0150226
 )
 # ===================================================================
-# 3. GLOBAL CONSTANT SUB-DISTRIBUTIONS (LEVEL 3 FIXTURES)
+# 4. GLOBAL CONSTANT SUB-DISTRIBUTIONS (LEVEL 3 FIXTURES)
 # ===================================================================
 
 # Standard CAPEX & OPEX distributions remain constant across years and scenarios

@@ -2,11 +2,65 @@
 ### MODULAR THREE-TIER MODELING FRAMEWORK
 #####################################################################
 
+# ===================================================================
+# 1. SECTOR MAPPING
+# ===================================================================
+
+# Mapping biofuel sectors to  IO table indices
+
+BIOFUEL_SECTORS <- list(
+  conv_biodiesel = 23,           # Row index for conventional biodiesel
+  conv_biogasoline = 25,         # Row index for conventional biogasoline
+  conv_bio_kerosene = 27,        # Row index for conventional bio-kerosene
+  conv_bio_hfo = 29,             # Row index for conventional bio-HFO
+  adv_biodiesel = 24,            # Row index for advanced biodiesel
+  adv_biogasoline = 26,          # Row index for advanced biogasoline
+  adv_bio_kerosene = 28,         # Row index for advanced bio-kerosene
+  adv_bio_hfo = 30,              # Row index for advanced bio-HFO
+  RFNBOs = 31,
+  adv_biogas = 46
+)
+
+###################
+#### this will allow to target one specific biofuels sector when inserting e.g. Sc 1 coefficinets into that sector column
+# Suppose A_full is your master N x N Leontief matrix (e.g., 64x64)
+# We want to insert Scenario 1 coefficients into the 'adv_biodiesel' column:
+###     target_col <- BIOFUEL_SECTORS$adv_biodiesel
+# Automatically place each calculated coefficient into its exact IO row
+###     for (sec_name in names(a_dom_S1)) {
+  row_idx <- INPUT_SECTORS[[sec_name]]
+  A_full[row_idx, target_col] <- a_dom_S1[sec_name]
+}
+###################
+
+
+# Intermediate Input Supply sectors 
+
+INPUT_SECTORS <- list(
+  agriculture  = 1,
+  forestry     = 2,
+  paper        = 17,
+  food_bev     = 10,
+  sewerage     = 37,
+  chemicals    = ??,
+  adv_biodie   = ??,
+  fab_metal    = 25,
+  elec_equip   = 27,
+  machinery    = 28,
+  construction = 41,
+  architecture = 71,
+  computer_opt = 26,
+  electricity  = 35,
+  chemicals    = 20,
+  legal_head   = 69,
+  repair_inst  = 33,
+  land_transp  = 49
+)
 
 
 
 # ===================================================================
-# 1. FIXED TECHNOLOGY BLUEPRINTS (IVC-speciifc= 
+# 2. FIXED/ STATIC TECHNOLOGY BLUEPRINTS (IVC-speciifc) 
 # ===================================================================
 # Standard distributions that do not change by scenario/year
 
@@ -107,11 +161,12 @@ scenario_config <- list(
   # -----------------------------------------------------------------
   # SCENARIO 1 - YEAR 2030
   # -----------------------------------------------------------------
-## create the full Scenario 1 by adding into the list all biofuel prodcucts
+
 
 "S1_2030" = list(
   ###advanced biodiesel
     adv_biodiesel = list(
+     abs_production_eur = ???,    ## adpat, find right value
       weights = c(IVC1 = 0.7930434, IVC2 = 0.1576435, IVC13a = 0.0342907, IVC13b = 0.0150226),
       dist_feed = list(
         IVC1   = c(agriculture = 0.0, agriculture_imp = 1.0),
@@ -122,6 +177,7 @@ scenario_config <- list(
     )
   ###advanced biogasoline
     adv_biogasoline = list(
+      abs_production_eur = ???, ### find rigth values
       weights = c(IVC1 = 0.7930434, IVC2 = 0.1576435, IVC13a = 0.0342907, IVC13b = 0.0150226),
       dist_feed = list(
         IVC1   = c(agriculture = 0.0, agriculture_imp = 1.0),
@@ -133,6 +189,7 @@ scenario_config <- list(
     adv_biokerosene
   ###advanced biokerosne
 adv_biokerosne = list(
+     abs_production_eur = ???,
       weights = c(IVC1 = 0.7930434, IVC2 = 0.1576435, IVC13a = 0.0342907, IVC13b = 0.0150226),
       dist_feed = list(
         IVC1   = c(agriculture = 0.0, agriculture_imp = 1.0),
@@ -141,8 +198,9 @@ adv_biokerosne = list(
         IVC13b = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
     )
   )
- ###advanced bio-HFP
+ ###advanced bio-HFO
 adv_bioHFO = list(
+ abs_production_eur = ???
       weights = c(IVC1 = 0.7930434, IVC2 = 0.1576435, IVC13a = 0.0342907, IVC13b = 0.0150226),
       dist_feed = list(
         IVC1   = c(agriculture = 0.0, agriculture_imp = 1.0),
@@ -229,3 +287,22 @@ for (sec_name in names(res_adv_bio$a_dom)) {
 }
 
 A_imp_S1_2030[INPUT_SECTORS$agriculture, target_col] <- res_adv_bio$a_imp["agriculture_imp"]
+
+# ===================================================================
+# 6. ABSOLUTE FLOWS & SFC SIMULATION (PLACE 2)
+# ===================================================================
+# Create macro production vector X and calculate Euro transaction matrices Z
+
+# 1. Initialize empty N-length vector for domestic production X
+X_S1_2030 <- numeric(N)
+
+# 2. Populate X from scenario_config targets
+for (fuel_name in names(scenario_config[["S1_2030"]])) {
+  col_idx <- BIOFUEL_SECTORS[[fuel_name]]
+  X_S1_2030[col_idx] <- scenario_config[["S1_2030"]][[fuel_name]][["abs_production_eur"]]
+}
+
+# 3. Calculate absolute intermediate transaction matrices Z (in € Millions)
+# Z_dom_ij = A_dom_ij * X_j
+Z_dom_S1_2030 <- A_dom_S1_2030 %*% diag(X_S1_2030)
+Z_imp_S1_2030 <- A_imp_S1_2030 %*% diag(X_S1_2030)

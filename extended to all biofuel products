@@ -28,9 +28,9 @@ BIOFUEL_SECTORS <- list(
 ###     target_col <- BIOFUEL_SECTORS$adv_biodiesel
 # Automatically place each calculated coefficient into its exact IO row
 ###     for (sec_name in names(a_dom_S1)) {
-  row_idx <- INPUT_SECTORS[[sec_name]]
-  A_full[row_idx, target_col] <- a_dom_S1[sec_name]
-}
+##  row_idx <- INPUT_SECTORS[[sec_name]]
+##  A_full[row_idx, target_col] <- a_dom_S1[sec_name]
+## }
 ###################
 
 
@@ -153,65 +153,67 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
 
 
 # ===================================================================
-# 3. SCENARIO PARAMETER CONFIGURATION 
-# ===================================================================
-# Store all variable parameters in a clean list structure or data frame
+# 3. SCENARIO-SPECIIFC PARAMETER CONFIGURATION 
+# ==================================================================
 
-scenario_config <- list(
   # -----------------------------------------------------------------
   # SCENARIO 1 - YEAR 2030
   # -----------------------------------------------------------------
-
 
 "S1_2030" = list(
   ###advanced biodiesel
     adv_biodiesel = list(
      abs_production_eur = ???,    ## adpat, find right value
-      weights = c(IVC1 = 0.7930434, IVC2 = 0.1576435, IVC13a = 0.0342907, IVC13b = 0.0150226),
+      weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),
       dist_feed = list(
         IVC1   = c(agriculture = 0.0, agriculture_imp = 1.0),
-        IVC2   = c(agriculture = 0.0, agriculture_imp = 1.0),
+        IVC2HVO   = c(agriculture = 0.0, agriculture_imp = 1.0),
         IVC13a = c(agriculture = 0.515152, forestry = 0.262022, paper = 0.208388, food_bev = 0.014438, agriculture_imp = 0.0),
-        IVC13b = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
+        IVC13bshipping = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
       )
     )
   ###advanced biogasoline
     adv_biogasoline = list(
       abs_production_eur = ???, ### find rigth values
-      weights = c(IVC1 = 0.7930434, IVC2 = 0.1576435, IVC13a = 0.0342907, IVC13b = 0.0150226),
+      weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),
       dist_feed = list(
         IVC1   = c(agriculture = 0.0, agriculture_imp = 1.0),
-        IVC2   = c(agriculture = 0.0, agriculture_imp = 1.0),
+        IVC2HVO   = c(agriculture = 0.0, agriculture_imp = 1.0),
         IVC13a = c(agriculture = 0.515152, forestry = 0.262022, paper = 0.208388, food_bev = 0.014438, agriculture_imp = 0.0),
-        IVC13b = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
+        IVC13bshipping = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
       )
     )
     adv_biokerosene
   ###advanced biokerosne
-adv_biokerosne = list(
+adv_biokerosene = list(
      abs_production_eur = ???,
-      weights = c(IVC1 = 0.7930434, IVC2 = 0.1576435, IVC13a = 0.0342907, IVC13b = 0.0150226),
+      weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),
       dist_feed = list(
         IVC1   = c(agriculture = 0.0, agriculture_imp = 1.0),
-        IVC2   = c(agriculture = 0.0, agriculture_imp = 1.0),
+        IVC2HVO   = c(agriculture = 0.0, agriculture_imp = 1.0),
         IVC13a = c(agriculture = 0.515152, forestry = 0.262022, paper = 0.208388, food_bev = 0.014438, agriculture_imp = 0.0),
-        IVC13b = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
+        IVC13bshipping = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
     )
   )
  ###advanced bio-HFO
-adv_bioHFO = list(
- abs_production_eur = ???
-      weights = c(IVC1 = 0.7930434, IVC2 = 0.1576435, IVC13a = 0.0342907, IVC13b = 0.0150226),
+adv_bio_hfo = list(
+ abs_production_eur = ???,
+      weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),
       dist_feed = list(
         IVC1   = c(agriculture = 0.0, agriculture_imp = 1.0),
-        IVC2   = c(agriculture = 0.0, agriculture_imp = 1.0),
+        IVC2HVO   = c(agriculture = 0.0, agriculture_imp = 1.0),
         IVC13a = c(agriculture = 0.515152, forestry = 0.262022, paper = 0.208388, food_bev = 0.014438, agriculture_imp = 0.0),
-        IVC13b = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
+        IVC13bshipping = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
     )
   )
-
-  # Add S2_2030, S1_2050, etc. here
 )
+
+
+
+##############################################################################
+#### Add other scenarios  here ###
+##############################################################################
+
 
 
 # ===================================================================
@@ -299,7 +301,7 @@ X_S1_2030 <- numeric(N)
 # 2. Populate X from scenario_config targets
 for (fuel_name in names(scenario_config[["S1_2030"]])) {
   col_idx <- BIOFUEL_SECTORS[[fuel_name]]
-  X_S1_2030[col_idx] <- scenario_config[["S1_2030"]][[fuel_name]][["abs_production_eur"]]
+  X_S1_2030[col_idx] <- scenario_config[["S1_2030"]][[fuel_name]][["abs_production_eur"]]    ##### Here I pick up the absolute produced amount. 
 }
 
 # 3. Calculate absolute intermediate transaction matrices Z (in € Millions)

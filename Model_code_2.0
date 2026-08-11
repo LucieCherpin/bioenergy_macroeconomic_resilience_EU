@@ -1,0 +1,148 @@
+
+
+
+
+#####################################################################
+### FULLY DISAGGREGATED TWO-TIERED INPUT-OUTPUT MODEL
+### Level 1: Macro Component Shares (S_feed, S_capex, S_opex) relative to X_k
+### Level 2: IVC-Specific Sub-Distributions (s_ij) per Category (Sum = 1.0)
+#####################################################################
+
+# ===================================================================
+# 1. CORE COEFFICIENT CALCULATOR FUNCTION
+# ===================================================================
+
+build_ivc_vector <- function(s_feed, dist_feed, s_capex, dist_capex, s_opex, dist_opex) {
+  # Validates that nested distribution vectors sum to 1.0 (100%)
+  stopifnot(
+    abs(sum(dist_feed) - 1.0) < 1e-3,
+    abs(sum(dist_capex) - 1.0) < 1e-3,
+    abs(sum(dist_opex) - 1.0) < 1e-3
+  )
+  
+  # Computes absolute technical coefficient shares (a_ij = S_category * s_subcomponent)
+  a_feed  <- s_feed  * dist_feed
+  a_capex <- s_capex * dist_capex
+  a_opex  <- s_opex  * dist_opex
+  
+  # Merges into unified domestic input vector
+  a_dom <- c(
+    agriculture  = unname(a_feed["agriculture"]), 
+    forestry     = unname(a_feed["forestry"]), 
+    paper        = unname(a_feed["paper"]), 
+    food_bev     = unname(a_feed["food_bev"]), 
+    sewerage     = unname(a_feed["sewerage"]),
+    fab_metal    = unname(a_capex["fab_metal"]), 
+    elec_equip   = unname(a_capex["elec_equip"]), 
+    machinery    = unname(a_capex["machinery"]), 
+    construction = unname(a_capex["construction"]), 
+    architecture = unname(a_capex["architecture"]), 
+    computer_opt = unname(a_capex["computer_opt"]),
+    electricity  = unname(a_opex["electricity"]), 
+    chemicals    = unname(a_opex["chemicals"]), 
+    legal_head   = unname(a_opex["legal_head"]), 
+    repair_inst  = unname(a_opex["repair_inst"]), 
+    land_transp  = unname(a_opex["land_transp"])
+  )
+  
+  a_imp <- c(agriculture_imp = unname(a_feed["agriculture_imp"]))
+  
+  return(list(a_dom = a_dom, a_imp = a_imp))
+}
+
+
+# ===================================================================
+# 2. MONETARY PRODUCTION WEIGHTS (w_k = X_k / X_total)
+# ===================================================================
+
+w_S1 <- c(
+  IVC1   = 0.7930434,
+  IVC2   = 0.1576435,
+  IVC13a = 0.0342907,
+  IVC13b = 0.0150226
+)
+
+
+# ===================================================================
+# 3. IVC-SPECIFIC PARAMETRIZATION (LEVEL 1 & LEVEL 2)
+# ===================================================================
+
+# --- IVC 1: Imported POME ---
+s_feed_ivc1  <- 0.3586206897
+s_capex_ivc1 <- 0.0572413793
+s_opex_ivc1  <- 0.1841379310
+
+dist_feed_ivc1  <- c(agriculture = 0.0, forestry = 0.0, paper = 0.0, food_bev = 0.0, sewerage = 0.0, agriculture_imp = 1.0)
+dist_capex_ivc1 <- c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_opt = 0.03)
+dist_opex_ivc1  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, repair_inst = 0.15, land_transp = 0.05)
+
+ivc1 <- build_ivc_vector(
+  s_feed_ivc1, dist_feed_ivc1,
+  s_capex_ivc1, dist_capex_ivc1,
+  s_opex_ivc1, dist_opex_ivc1
+)
+
+
+# --- IVC 2: HVO Import ---
+s_feed_ivc2  <- 0.3506762558
+s_capex_ivc2 <- 0.1537142857
+s_opex_ivc2  <- 0.4862910665
+
+dist_feed_ivc2  <- c(agriculture = 0.0, forestry = 0.0, paper = 0.0, food_bev = 0.0, sewerage = 0.0, agriculture_imp = 1.0)
+dist_capex_ivc2 <- c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_opt = 0.03)
+dist_opex_ivc2  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, repair_inst = 0.15, land_transp = 0.05)
+
+ivc2 <- build_ivc_vector(
+  s_feed_ivc2, dist_feed_ivc2,
+  s_capex_ivc2, dist_capex_ivc2,
+  s_opex_ivc2, dist_opex_ivc2
+)
+
+
+# --- IVC 13a: Domestic Straw ---
+s_feed_ivc13a  <- 0.1159230944
+s_capex_ivc13a <- 0.4600000291
+s_opex_ivc13a  <- 0.3325714434
+
+dist_feed_ivc13a  <- c(agriculture = 0.5151520136, forestry = 0.2620215447, paper = 0.2083884531, food_bev = 0.0144379886, sewerage = 0.0, agriculture_imp = 0.0)
+dist_capex_ivc13a <- c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45, construction = 0.10, architecture = 0.25, computer_opt = 0.03) # Adjust to specific sheet
+dist_opex_ivc13a  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, repair_inst = 0.15, land_transp = 0.05)
+
+ivc13a <- build_ivc_vector(
+  s_feed_ivc13a, dist_feed_ivc13a,
+  s_capex_ivc13a, dist_capex_ivc13a,
+  s_opex_ivc13a, dist_opex_ivc13a
+)
+
+
+# --- IVC 13b: Domestic Maritime ---
+s_feed_ivc13b  <- 0.5603612956
+s_capex_ivc13b <- 0.5956522142
+s_opex_ivc13b  <- 0.7334770196
+
+dist_feed_ivc13b  <- c(agriculture = 0.6095762479, forestry = 0.1956021086, paper = 0.1809711180, food_bev = 0.0138505255, sewerage = 0.0, agriculture_imp = 0.0)
+dist_capex_ivc13b <- c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45, construction = 0.10, architecture = 0.25, computer_opt = 0.03) # Adjust to specific sheet
+dist_opex_ivc13b  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, repair_inst = 0.15, land_transp = 0.05)
+
+ivc13b <- build_ivc_vector(
+  s_feed_ivc13b, dist_feed_ivc13b,
+  s_capex_ivc13b, dist_capex_ivc13b,
+  s_opex_ivc13b, dist_opex_ivc13b
+)
+
+
+# ===================================================================
+# 4. AGGREGATED SCENARIO 1 VECTOR RECOMBINATION
+# ===================================================================
+
+a_dom_S1 <- (w_S1["IVC1"]   * ivc1$a_dom) +
+            (w_S1["IVC2"]   * ivc2$a_dom) +
+            (w_S1["IVC13a"] * ivc13a$a_dom) +
+            (w_S1["IVC13b"] * ivc13b$a_dom)
+
+a_imp_S1 <- (w_S1["IVC1"]   * ivc1$a_imp) +
+            (w_S1["IVC2"]   * ivc2$a_imp) +
+            (w_S1["IVC13a"] * ivc13a$a_imp) +
+            (w_S1["IVC13b"] * ivc13b$a_imp)
+
+v_direct_S1 <- 1 - (sum(a_dom_S1) + sum(a_imp_S1))

@@ -206,10 +206,73 @@ ivc13b <- build_ivc_vector(
   s_capex_ivc13b, dist_capex_ivc13b,
   s_opex_ivc13b, dist_opex_ivc13b
 )
+# -------------------------------------------------------------------
+# --- IVC 2: HVO ---
+# -------------------------------------------------------------------
+# Tier 1: Total Cost P_2 = 990.68 €/t vs. Market Value X_2 = 1000 €/t (r_2 = 0.99068)
+prod_cost_ivc2    <- 990.681608
+market_value_ivc2 <- 1000
+
+# Tier 2: Internal Cost Breakdown (Sum = 1.0)
+alpha_cost_ivc2   <- c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514)
+
+# Tier 3: Category Component Breakdown (Sum = 1.0)
+dist_feed_ivc2    <- c(agriculture = 0.0, forestry = 0.0, paper = 0.0, food_bev = 0.0, sewerage = 0.0, agriculture_imp = 1.0)
+
+ivc2 <- build_ivc_vector(
+  prod_cost    = prod_cost_ivc2, 
+  market_value = market_value_ivc2,
+  alpha_cost   = alpha_cost_ivc2,
+  dist_feed    = dist_feed_ivc2,
+  dist_capex   = dist_capex_standard,
+  dist_opex    = dist_opex_standard
+)
+
+
+# -------------------------------------------------------------------
+# --- IVC 13a: Domestic Straw ---
+# -------------------------------------------------------------------
+prod_cost_ivc13a    <- 908.4945669
+market_value_ivc13a <- 1000
+
+alpha_cost_ivc13a   <- c(feed = 0.12759911, capex = 0.50633217, opex = 0.36606872)
+
+dist_feed_ivc13a    <- c(agriculture = 0.5151520136, forestry = 0.2620215447, paper = 0.2083884531, food_bev = 0.0144379886, sewerage = 0.0, agriculture_imp = 0.0)
+dist_capex_ivc13a   <- c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45, construction = 0.10, architecture = 0.25, computer_opt = 0.03)
+
+ivc13a <- build_ivc_vector(
+  prod_cost    = prod_cost_ivc13a, 
+  market_value = market_value_ivc13a,
+  alpha_cost   = alpha_cost_ivc13a,
+  dist_feed    = dist_feed_ivc13a,
+  dist_capex   = dist_capex_ivc13a,
+  dist_opex    = dist_opex_standard
+)
+
+
+# -------------------------------------------------------------------
+# --- IVC 13b: Domestic Maritime ---
+# -------------------------------------------------------------------
+prod_cost_ivc13b    <- 1889.4905294
+market_value_ivc13b <- 1000
+
+alpha_cost_ivc13b   <- c(feed = 0.2965674, capex = 0.3152449, opex = 0.3881877)
+
+dist_feed_ivc13b    <- c(agriculture = 0.6095762479, forestry = 0.1956021086, paper = 0.1809711180, food_bev = 0.0138505255, sewerage = 0.0, agriculture_imp = 0.0)
+dist_capex_ivc13b   <- c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45, construction = 0.10, architecture = 0.25, computer_opt = 0.03)
+
+ivc13b <- build_ivc_vector(
+  prod_cost    = prod_cost_ivc13b, 
+  market_value = market_value_ivc13b,
+  alpha_cost   = alpha_cost_ivc13b,
+  dist_feed    = dist_feed_ivc13b,
+  dist_capex   = dist_capex_ivc13b,
+  dist_opex    = dist_opex_standard
+)
 
 
 # ===================================================================
-# 4. AGGREGATED SCENARIO 1 VECTOR RECOMBINATION
+# 5. AGGREGATED SCENARIO 1 VECTOR RECOMBINATION
 # ===================================================================
 
 a_dom_S1 <- (w_S1["IVC1"]   * ivc1$a_dom) +
@@ -223,3 +286,5 @@ a_imp_S1 <- (w_S1["IVC1"]   * ivc1$a_imp) +
             (w_S1["IVC13b"] * ivc13b$a_imp)
 
 v_direct_S1 <- 1 - (sum(a_dom_S1) + sum(a_imp_S1))
+
+

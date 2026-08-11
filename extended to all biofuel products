@@ -71,12 +71,42 @@ dist_opex_standard  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20
                          repair_inst = 0.15, land_transp = 0.05)
 
 # Engineering cost breakdowns per IVC technology
+## add all IVCs here 
 
 IVC_TECH_LIBRARY <- list(
   IVC1 = list(
     prod_cost = 870,
     market_value = 1450,
     alpha = c(feed = 0.5977011495, capex = 0.0954022988, opex = 0.3068965517),
+    dist_capex = dist_capex_standard,
+    dist_opex  = dist_opex_standard
+  ),
+  IVC2HVO = list(
+    prod_cost = 1287.68,
+    market_value = 1750,
+    alpha = c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514),
+    dist_capex = dist_capex_standard,
+    dist_opex  = dist_opex_standard
+  ),
+  IVC5 = list(
+    prod_cost    = 1385.43,
+    market_value = 1000,
+    alpha        = c(feed = 0.22695215, capex = 0.40059902, opex = 0.37244882), # Exact cost ratios
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.50, 
+                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.50, legal_head = 0.15, 
+                     repair_inst = 0.10, land_transp = 0.05)
+IVC2HVO = list(
+    prod_cost = 1287.68,
+    market_value = 1750,
+    alpha = c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514),
+    dist_capex = dist_capex_standard,
+    dist_opex  = dist_opex_standard
+  ),
+  IVC2HVO = list(
+    prod_cost = 1287.68,
+    market_value = 1750,
+    alpha = c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514),
     dist_capex = dist_capex_standard,
     dist_opex  = dist_opex_standard
   ),
@@ -291,7 +321,7 @@ for (sec_name in names(res_adv_bio$a_dom)) {
 A_imp_S1_2030[INPUT_SECTORS$agriculture, target_col] <- res_adv_bio$a_imp["agriculture_imp"]
 
 # ===================================================================
-# 6. ABSOLUTE FLOWS & SFC SIMULATION (PLACE 2)
+# 6. ABSOLUTE FLOWS
 # ===================================================================
 # Create macro production vector X and calculate Euro transaction matrices Z
 
@@ -308,3 +338,62 @@ for (fuel_name in names(scenario_config[["S1_2030"]])) {
 # Z_dom_ij = A_dom_ij * X_j
 Z_dom_S1_2030 <- A_dom_S1_2030 %*% diag(X_S1_2030)
 Z_imp_S1_2030 <- A_imp_S1_2030 %*% diag(X_S1_2030)
+
+# ===================================================================
+# 7. LEONTIEF INVERSE & MULTIPLIER ANALYSIS
+# ===================================================================
+
+# Step 1: Create N x N Identity Matrix
+### check exactly what this is
+I_mat <- diag(N)
+
+# Step 2: Calculate Domestic Leontief Inverse L = (I - A_dom)^(-1)
+# Note: solve() computes the matrix inverse in R
+## subtracting A from I yields net output per unit of production
+## inverting i calculates total gross utput required across all sectors to deliber 1 EUR of final demand to any single sector
+L_dom_S1_2030 <- solve(I_mat - A_dom_S1_2030)
+
+
+# Step 3: Extract Multipliers for Biofuel Sectors
+# Initialize results data frame
+biofuel_multipliers <- data.frame(
+  Sector_Name    = character(),
+  IO_Index       = integer(),
+  Direct_Inputs  = numeric(),
+  Indirect_Mult  = numeric(),
+  Total_Output_M = numeric(),
+  stringsAsFactors = FALSE
+)
+
+##### Loop through defined biofuel sectors to extract column metrics
+
+## gets the column index correspnding to each fuel in scenario 1
+for (fuel_name in names(scenario_config[["S1_2030"]])) {
+  
+  col_idx <- BIOFUEL_SECTORS[[fuel_name]]
+
+## summing all rows i in colimn col_idx calculate ottal domestic gross output total doemstic gross output generates 
+## across all sectors of the economy when final demand for that biofuel icnreases by 1 EUR
+  # Total Output Multiplier = Column sum of Leontief Inverse
+  total_mult <- sum(L_dom_S1_2030[, col_idx])
+  
+  # Direct Intermediate Requirement = Column sum of Technical Matrix A
+  direct_req <- sum(A_dom_S1_2030[, col_idx])
+  
+  # Indirect Multiplier = Total - Initial Unit (€1) - Direct Inputs
+  indirect_mult <- total_mult - 1 - direct_req
+  
+  # Append to results table
+  biofuel_multipliers <- rbind(biofuel_multipliers, data.frame(
+    Sector_Name    = fuel_name,
+    IO_Index       = col_idx,
+    Direct_Inputs  = round(direct_req, 4),
+    Indirect_Mult  = round(indirect_mult, 4),
+    Total_Output_M = round(total_mult, 4)
+  ))
+}
+
+# Print summary table
+print("--- BIOFUEL SECTOR MULTIPLIERS (S1 2030) ---")
+print(biofuel_multipliers)
+

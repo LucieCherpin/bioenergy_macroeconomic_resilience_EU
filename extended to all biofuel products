@@ -73,80 +73,92 @@ dist_opex_standard  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20
 # Engineering cost breakdowns per IVC technology
 ## add all IVCs here 
 ## and rework dist_capex and dist_opex, wrong values still
+IVC_TECH_LIBRARY <- list(  
 
-IVC_TECH_LIBRARY <- list(
-  IVC1 = list(
-    prod_cost = 870,
+# --- IVC 1 (Biodiesel baseline) ---
+
+IVC1 = list(
+    prod_cost    = 870,
     market_value = 1450,
-    alpha = c(feed = 0.5977011495, capex = 0.0954022988, opex = 0.3068965517),
+    alpha        = c(feed = 0.59770115, capex = 0.09540230, opex = 0.30689655),
     dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
                      construction = 0.15, architecture = 0.30, computer_opt = 0.03),
     dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
                      repair_inst = 0.15, land_transp = 0.05)
   ),
-  IVC2HVO = list(
-    prod_cost = 1287.68,
-    market_value = 1750,
-    alpha = c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514),
-    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
-                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
-    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
-                     repair_inst = 0.15, land_transp = 0.05)
-  ),
+
+# --- IVC2 HEFA (Advanced Bio-kerosene) ---
+  IVC2_HEFA = list(
+    prod_cost    = 1811.29,
+    market_value = 2380.00,
+    alpha        = c(feed = 0.4800000, capex = 0.2080000, opex = 0.3120000),
+    dist_capex   = c(fab_metal = 0.050, elec_equip = 0.020, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.300, computer_opt = 0.030),
+    dist_opex    = c(electricity = 0.350, chemicals = 0.250, legal_head = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.050)
+  )
+  
+  # --- IVC 5 (Advanced Biogasoline) ---
   IVC5 = list(
     prod_cost    = 1385.43,
     market_value = 1000,
-    alpha        = c(feed = 0.22695215, capex = 0.40059902, opex = 0.37244882), # Exact cost ratios
-    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.50, 
-                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.50, legal_head = 0.15, 
-                     repair_inst = 0.10, land_transp = 0.05)
-IVC2HVO = list(
-    prod_cost = 1287.68,
-    market_value = 1750,
-    alpha = c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514),
-    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
-                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
-    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
-                     repair_inst = 0.15, land_transp = 0.05)
+    alpha        = c(feed = 0.2269522, capex = 0.400599025, opex = 0.3724488),
+    dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
+                     construction = 0.150, architecture = 0.300, computer_opt = 0.030),
+    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_head = 0.150, 
+                     repair_inst = 0.100, land_transp = 0.050)
   ),
-  IVC2HVO = list(
-    prod_cost = 1287.68,
-    market_value = 1750,
-    alpha = c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514),
-    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
-                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
-    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
-                     repair_inst = 0.15, land_transp = 0.05)
+
+# --- IVC 7 (Advanced Biogas) ---
+IVC7 = list(
+    prod_cost    = 1024.42,
+    market_value = 1275.00,
+    alpha        = c(feed = -0.0205790, capex = 0.590578966, opex = 0.430000100), # Feedstock share is negative due to waste revenue/tipping fees
+    dist_capex   = c(fab_metal = 0.050, elec_equip = 0.020, machinery = 0.400, 
+                     construction = 0.300, architecture = 0.200, computer_opt = 0.030),
+    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_head = 0.150, 
+                     repair_inst = 0.100, land_transp = 0.050)
   ),
-  IVC2HVO = list(
-    prod_cost = 1287.68,
-    market_value = 1750,
-    alpha = c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514),
-    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
-                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
-    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
-                     repair_inst = 0.15, land_transp = 0.05)
+
+  # --- IVC 12 / road (Advanced Biogasoline) ---
+  IVC12 = list(
+    prod_cost    = 988.04,
+    market_value = 1000,
+    alpha        = c(feed = 0.3208764, capex = 0.281365656, opex = 0.3977579),
+    dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
+                     construction = 0.150, architecture = 0.300, computer_opt = 0.030),
+    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_head = 0.150, 
+                     repair_inst = 0.100, land_transp = 0.050)
   ),
+
+  # --- IVC 13a / half (Advanced Biogasoline) ---
   IVC13a = list(
-    prod_cost = 1598.13,
+    prod_cost    = 1598.13,
     market_value = 1750,
-    alpha = c(feed = 0.12759911, capex = 0.50633217, opex = 0.36606872),
-    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
-                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
-    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
-                     repair_inst = 0.15, land_transp = 0.05)
+    alpha        = c(feed = 0.1321131, capex = 0.50371231, opex = 0.3641746),
+    dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
+                     construction = 0.100, architecture = 0.250, computer_opt = 0.030),
+    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_head = 0.200, 
+                     repair_inst = 0.300, land_transp = 0.100)
   ),
-  IVC13shipping = list(
-    prod_cost = 2160,
+
+  # --- IVC 13b / road (Advanced Biogasoline) ---
+  IVC13b_road = list(
+    prod_cost    = 1740.45,
     market_value = 1150,
-    alpha = c(feed = 0.2965674, capex = 0.3152449, opex = 0.3881877),
-   dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
-                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
-    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
-                     repair_inst = 0.15, land_transp = 0.05)
-  )
+    alpha        = c(feed = 0.1217770, capex = 0.393577182, opex = 0.4846458),
+    dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
+                     construction = 0.100, architecture = 0.250, computer_opt = 0.030),
+    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_head = 0.200, 
+                     repair_inst = 0.300, land_transp = 0.100)
+  ),
+
+
+
+
 )
+
+
 
 
 # ===================================================================

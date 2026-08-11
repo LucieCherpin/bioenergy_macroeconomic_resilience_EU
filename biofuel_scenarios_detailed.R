@@ -223,8 +223,9 @@ X_total <- 3642641635.62
 
 # 2. Absoluter Zwischenverbrauch aus  Excel-Tabelle "Providing sectors" (in EUR)
 
-# DOMESTIC INTERMEDIATE INPUTS (Inländische Vorleistungen)
-z_dom_abs <- c(
+# DOMESTIC INTERMEDIATE INPUTS (domestic feedstock inpust)
+
+z_dom_abs <- c(                ## absolute domestci intermediate transactions
   agriculture  = 22317472.46,  # Products of agriculture etc. 
   forestry     = 8355518.70,   # Products of forestry, logging etc. 
   paper        = 7310016.07,   # Paper and paper products
@@ -232,12 +233,12 @@ z_dom_abs <- c(
   sewerage     = 0.00          # Sewerage services
 )
 
-# IMPORTED INTERMEDIATE INPUTS (Importierte Vorleistungen - Feedstock)
+# IMPORTED INTERMEDIATE INPUTS (Imported inputs - Feedstock only)
 z_imp_abs <- c(
   agriculture_imp = 1055831366.35 # Imported Feedstock (POME) 
   
 
-# CAPEX INTERMEDIATE INPUTS (Ausrüstung & Bau)
+# CAPEX INTERMEDIATE INPUTS (domestic only)
 z_capex_abs <- c(
   fab_metal    = 22347404.41,  # Fabricated metal products
   elec_equip   = 5865253.32,   # Electrical equipment
@@ -247,7 +248,7 @@ z_capex_abs <- c(
   computer_opt = 8797880.88    # Computer, electronic and optical
 )
 
-# OPEX INTERMEDIATE INPUTS (Energie & Dienstleistungen)
+# OPEX INTERMEDIATE INPUTS (domestic only
 z_opex_abs <- c(
   electricity  = 209009464.03, # Electricity, gas, steam and air conditioning
   chemicals    = 159249106.72, # Chemicals and chemical products

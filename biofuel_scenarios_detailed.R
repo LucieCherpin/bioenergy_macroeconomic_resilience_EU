@@ -207,6 +207,100 @@ scenario_3 <- list(
   exports = 69.98
 )
 
+########################################################################################################################################
+### Version 3 - changes made:  ####
+### made the market price IVC-specific, instead of fuel product-speciifc 
+### and also, made the input values of each sector in relative rather than absolute numbers
+########################################################################################################################################
+
+#####################################################################
+### SCENARIO 1 (2030) - RELATIVE INPUT SHARES (OPTION B)
+### Denominators: X_k = Q_k * P_market
+#####################################################################
+
+# Market Selling Prices
+p_ivc1   <- 1450.00 # EUR/t
+p_others <- 1150.00 # EUR/t
+
+# --- IVC 1 Relative Profile (Imported POME) ---
+ivc1_share <- list(
+  name = "IVC 1: Imported POME",
+  a_dom = c(
+    agriculture = 0.000000, forestry = 0.000000, paper = 0.000000, food_bev = 0.000000,
+    fab_metal = 0.003000, elec_equip = 0.001200, machinery = 0.027000,
+    construction = 0.009000, architecture = 0.018000, computer_opt = 0.001800,
+    electricity = 0.063000, chemicals = 0.045000, legal_head = 0.036000,
+    repair_inst = 0.027000, land_transp = 0.009000
+  ),
+  a_imp = c(agriculture_imp = 0.360000)
+)
+
+# --- IVC 2 Relative Profile (HVO Import) ---
+ivc2_share <- list(
+  name = "IVC 2: HVO Import",
+  a_dom = c(
+    agriculture = 0.000000, forestry = 0.000000, paper = 0.000000, food_bev = 0.000000,
+    fab_metal = 0.011695, elec_equip = 0.004678, machinery = 0.105255,
+    construction = 0.035085, architecture = 0.070170, computer_opt = 0.007017,
+    electricity = 0.123261, chemicals = 0.156618, legal_head = 0.070435,
+    repair_inst = 0.052826, land_transp = 0.017609
+  ),
+  a_imp = c(agriculture_imp = 0.533638)
+)
+
+# --- IVC 13a Relative Profile (Domestic Straw) ---
+ivc13a_share <- list(
+  name = "IVC 13a: Domestic Straw",
+  a_dom = c(
+    agriculture = 0.090889, forestry = 0.046222, paper = 0.036761, food_bev = 0.002547,
+    fab_metal = 0.105000, elec_equip = 0.014000, machinery = 0.315000,
+    construction = 0.070000, architecture = 0.175000, computer_opt = 0.021000,
+    electricity = 0.076344, chemicals = 0.127240, legal_head = 0.101792,
+    repair_inst = 0.152687, land_transp = 0.050896
+  ),
+  a_imp = c(agriculture_imp = 0.000000)
+)
+
+# --- IVC 13b Relative Profile (Domestic Maritime) ---
+ivc13b_share <- list(
+  name = "IVC 13b: Domestic Maritime",
+  a_dom = c(
+    agriculture = 0.341583, forestry = 0.109608, paper = 0.101409, food_bev = 0.007761,
+    fab_metal = 0.089348, elec_equip = 0.011913, machinery = 0.268044,
+    construction = 0.059565, architecture = 0.148912, computer_opt = 0.017870,
+    electricity = 0.110214, chemicals = 0.183691, legal_head = 0.146953,
+    repair_inst = 0.220428, land_transp = 0.073476
+  ),
+  a_imp = c(agriculture_imp = 0.000000)
+)
+
+# --- Scenario 1 Monetary Recombination ---
+volumes_S1 <- c(IVC1 = 1700000, IVC2 = 280000, IVC13a = 60905.7, IVC13b = 40603.8)
+prices_S1  <- c(IVC1 = p_ivc1, IVC2 = p_others, IVC13a = p_others, IVC13b = p_others)
+
+# 1. Total Market Value (X)
+revenues_S1 <- volumes_S1 * prices_S1
+X_total_S1  <- sum(revenues_S1) # 2,903,735,925 EUR
+
+# 2. Monetary Weights (w_k)
+w_S1 <- revenues_S1 / X_total_S1
+
+# 3. Aggregated Input Vector for Scenario 1
+a_dom_S1 <- (w_S1["IVC1"]   * ivc1_share$a_dom) +
+            (w_S1["IVC2"]   * ivc2_share$a_dom) +
+            (w_S1["IVC13a"] * ivc13a_share$a_dom) +
+            (w_S1["IVC13b"] * ivc13b_share$a_dom)
+
+a_imp_S1 <- (w_S1["IVC1"]   * ivc1_share$a_imp) +
+            (w_S1["IVC2"]   * ivc2_share$a_imp) +
+            (w_S1["IVC13a"] * ivc13a_share$a_imp) +
+            (w_S1["IVC13b"] * ivc13b_share$a_imp)
+
+v_direct_S1 <- 1 - (sum(a_dom_S1) + sum(a_imp_S1))
+
+
+
+
 
 ##################################################################################################################
 #### Version 2 - IVC - specific #####

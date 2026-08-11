@@ -208,12 +208,12 @@ scenario_3 <- list(
 )
 
 #####################################################################
-### INPUT COEFFICIENTS BY BIOFUEL TYPE
+### INPUT COEFFICIENTS BY BIOFUEL TYPE  - Scenario 1
 #####################################################################
 
 
 #####################################################################
-### INPUT COEFFICIENTS: ADVANCED BIODIESEL (2030)
+### INPUT COEFFICIENTS: ADVANCED BIODIESEL (2030, Sc 1)
 ### Computed on Market Selling Price (Gross Output Value X)
 #####################################################################
 
@@ -221,12 +221,12 @@ scenario_3 <- list(
 # 2.081.509,51 t * 1.750,00 €/t
 X_total <- 3642641635.62 
 
-# 2. Absoluter Zwischenverbrauch aus deiner Excel-Tabelle (in EUR)
+# 2. Absoluter Zwischenverbrauch aus  Excel-Tabelle "Providing sectors" (in EUR)
 
 # DOMESTIC INTERMEDIATE INPUTS (Inländische Vorleistungen)
 z_dom_abs <- c(
-  agriculture  = 22317472.46,  # Products of agriculture, hunting and rel.
-  forestry     = 8355518.70,   # Products of forestry, logging and rel.
+  agriculture  = 22317472.46,  # Products of agriculture etc. 
+  forestry     = 8355518.70,   # Products of forestry, logging etc. 
   paper        = 7310016.07,   # Paper and paper products
   food_bev     = 540799.33,    # Food, beverages and tobacco products
   sewerage     = 0.00          # Sewerage services
@@ -234,8 +234,8 @@ z_dom_abs <- c(
 
 # IMPORTED INTERMEDIATE INPUTS (Importierte Vorleistungen - Feedstock)
 z_imp_abs <- c(
-  agriculture_imp = 1055831366.35 # Imported Feedstock (POME etc.)
-)
+  agriculture_imp = 1055831366.35 # Imported Feedstock (POME) 
+  
 
 # CAPEX INTERMEDIATE INPUTS (Ausrüstung & Bau)
 z_capex_abs <- c(
@@ -276,12 +276,17 @@ gva_share <- 1 - total_intermediate_share
 ### 4. Kontrollausgabe der Ergebnisse
 #####################################################################
 
+## check what this does
+  
 cat("--- ERGEBNISSE FÜR ADVANCED BIODIESEL --- \n")
 cat("Bruttoproduktionswert (Marktwert):", round(X_total / 1e6, 2), "Mio. EUR\n")
 cat("Gesamte Vorleistungsquote (sum a_ij):", round(total_intermediate_share * 100, 2), "%\n")
 cat("  - davon inländische Vorleistungen:", round(sum(a_dom_adv_biodiesel) * 100, 2), "%\n")
 cat("  - davon importierte Vorleistungen:", round(sum(a_imp_adv_biodiesel) * 100, 2), "%\n")
 cat("Integrierte Wertschöpfungsquote (v_j):", round(gva_share * 100, 2), "%\n")
+
+
+  
 
 ###########################################################################################################################
 ### DELETE ###

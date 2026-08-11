@@ -72,21 +72,26 @@ dist_opex_standard  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20
 
 # Engineering cost breakdowns per IVC technology
 ## add all IVCs here 
+## and rework dist_capex and dist_opex, wrong values still
 
 IVC_TECH_LIBRARY <- list(
   IVC1 = list(
     prod_cost = 870,
     market_value = 1450,
     alpha = c(feed = 0.5977011495, capex = 0.0954022988, opex = 0.3068965517),
-    dist_capex = dist_capex_standard,
-    dist_opex  = dist_opex_standard
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
+                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
+                     repair_inst = 0.15, land_transp = 0.05)
   ),
   IVC2HVO = list(
     prod_cost = 1287.68,
     market_value = 1750,
     alpha = c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514),
-    dist_capex = dist_capex_standard,
-    dist_opex  = dist_opex_standard
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
+                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
+                     repair_inst = 0.15, land_transp = 0.05)
   ),
   IVC5 = list(
     prod_cost    = 1385.43,
@@ -100,38 +105,46 @@ IVC2HVO = list(
     prod_cost = 1287.68,
     market_value = 1750,
     alpha = c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514),
-    dist_capex = dist_capex_standard,
-    dist_opex  = dist_opex_standard
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
+                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
+                     repair_inst = 0.15, land_transp = 0.05)
   ),
   IVC2HVO = list(
     prod_cost = 1287.68,
     market_value = 1750,
     alpha = c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514),
-    dist_capex = dist_capex_standard,
-    dist_opex  = dist_opex_standard
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
+                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
+                     repair_inst = 0.15, land_transp = 0.05)
   ),
   IVC2HVO = list(
     prod_cost = 1287.68,
     market_value = 1750,
     alpha = c(feed = 0.35397473, capex = 0.15516013, opex = 0.49086514),
-    dist_capex = dist_capex_standard,
-    dist_opex  = dist_opex_standard
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
+                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
+                     repair_inst = 0.15, land_transp = 0.05)
   ),
   IVC13a = list(
     prod_cost = 1598.13,
     market_value = 1750,
     alpha = c(feed = 0.12759911, capex = 0.50633217, opex = 0.36606872),
-    dist_capex = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45, 
-                   construction = 0.10, architecture = 0.25, computer_opt = 0.03),
-    dist_opex  = dist_opex_standard
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
+                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
+                     repair_inst = 0.15, land_transp = 0.05)
   ),
   IVC13shipping = list(
     prod_cost = 2160,
     market_value = 1150,
     alpha = c(feed = 0.2965674, capex = 0.3152449, opex = 0.3881877),
-    dist_capex = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45, 
-                   construction = 0.10, architecture = 0.25, computer_opt = 0.03),
-    dist_opex  = dist_opex_standard
+   dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
+                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
+                     repair_inst = 0.15, land_transp = 0.05)
   )
 )
 
@@ -264,18 +277,24 @@ build_fuel_column <- function(fuel_name, scenario_year_key) {
   # Loop over active IVCs and aggregate
     for (ivc_id in names(weights)) {
     w_k <- weights[ivc_id]
-    
-    # Retrieve static  parameters
+
+    #-------------------------------------------------------------
+    # 4.1. PULL ALL IVC-SPECIFIC CONSTANTS FROM IVC_TECH_LIBRARY
+    # ---------------------------------------------------------------
     tech_base <- IVC_TECH_LIBRARY[[ivc_id]]
     
     prod_cost_k    <- tech_base$prod_cost     
     market_value_k <- tech_base$market_value  
     alpha_k        <- tech_base$alpha
-    dist_capex_k   <- tech_base$dist_capex
-    dist_opex_k    <- tech_base$dist_opex
+    dist_capex_k   <- tech_base$dist_capex  # <-- Unique CAPEX distribution for this IVC
+    dist_opex_k    <- tech_base$dist_opex   # <-- Unique OPEX distribution for this IVC
     
-    # Retrieve scenario/year specific parameters
+    # ---------------------------------------------------------------
+    # 4.2. PULL DYNAMIC SCENARIO PARAMETERS FROM scenario_config
+    # ---------------------------------------------------------------
     dist_feed_k    <- fuel_cfg$dist_feed[[ivc_id]]
+
+    
     
     # Run calculation for this IVC
    ivc_res <- build_ivc_vector(

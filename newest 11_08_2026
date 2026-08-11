@@ -131,7 +131,7 @@ build_ivc_vector <- function(prod_cost, market_value,
 # ===================================================================
 
 
-###  these are shares, i.e. how much each IVC contributes to the final product of advanced biodiesel (all in monetary values)
+###  these are shares, i.e. how much each IVC contributes to the final product of advanced biodiesel (using IVC-speciifc MARKET selling value divided by overall product mafrket selling value)
 
 w_S1 <- c(
   IVC1   = 0.7930434,
@@ -225,9 +225,6 @@ ivc13b <- build_ivc_vector(prod_cost_ivc13b, market_value_ivc13b, alpha_cost_ivc
 
 
 
-
-
-
 # ===================================================================
 # 6. AGGREGATED SCENARIO 1 VECTOR RECOMBINATION
 # ===================================================================
@@ -243,5 +240,15 @@ a_imp_S1 <- (w_S1["IVC1"]   * ivc1$a_imp) +
             (w_S1["IVC13b"] * ivc13b$a_imp)
 
 v_direct_S1 <- 1 - (sum(a_dom_S1) + sum(a_imp_S1))
+
+# ===================================================================
+# 6. Insert into the 'adv_biodiesel' column of IO matrix
+# ===================================================================
+
+target_col <- BIOFUEL_SECTORS$adv_biodiesel
+for (sec_name in names(a_dom_S1)) {
+  row_idx <- INPUT_SECTORS[[sec_name]]
+  A_full[row_idx, target_col] <- a_dom_S1[sec_name]
+}
 
 

@@ -221,6 +221,16 @@ IVC7 = list(
                      repair_inst = 0.300, land_transp = 0.100)
   ),
 
+ # --- Conventional: ---
+  Conv_ = list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_acc = 0.200, 
+                     repair_inst = 0.300, land_transp = 0.100)
+  ),
+
 )
 
 

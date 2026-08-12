@@ -148,7 +148,7 @@ IVC7 = list(
                      construction = 0.100, architecture = 0.300, computer_opt = 0.030),
     dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_head = 0.300, 
                      repair_inst = 0.300, land_transp = 0.000)
-  ).
+  ),
 
 # --- IVC 8b ---
   IVC8b = list(
@@ -206,7 +206,7 @@ IVC7 = list(
                      repair_inst = 0.100, land_transp = 0.050)
   ),
 
-  # --- IVC 13a / half (Advanced Biogasoline) ---
+  # --- IVC 13a / half (Advanced Biogasoline or Advanced Biodiesel) ---
   IVC13a = list(
     prod_cost    = 1598.13,
     market_value = 1750,
@@ -222,6 +222,17 @@ IVC7 = list(
     prod_cost    = 1740.45,
     market_value = 1150,
     alpha        = c(feed = 0.1217770, capex = 0.393577182, opex = 0.4846458),
+    dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
+                     construction = 0.100, architecture = 0.250, computer_opt = 0.030),
+    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_head = 0.200, 
+                     repair_inst = 0.300, land_transp = 0.100)
+  ),
+
+  # --- IVC 13b / shipping ---
+  IVC13b_mar = list(
+    prod_cost    = 2160.57,
+    market_value = 1150,
+    alpha        = c(feed = 0.292548351, capex = 0.317045718, opex = 0.390405932),
     dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
                      construction = 0.100, architecture = 0.250, computer_opt = 0.030),
     dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_head = 0.200, 

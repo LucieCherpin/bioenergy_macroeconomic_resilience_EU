@@ -16,8 +16,8 @@ BIOFUEL_SECTORS <- list(
   conv_bio_kerosene = 26,        # Row/col  index for conventional bio-kerosene
   adv_bio_kerosene = 27,         # Row/col  index for advanced bio-kerosene
   adv_bio_hfo = 28,              # Row/col  index for advanced bio-HFO
-  RFNBOs = 29,
-  adv_biogas = 43
+  RFNBOs = 29,                   # Row/col  index for RFNBOs             
+  adv_biogas = 43                # adv_biogas = 43
 )
 
 
@@ -42,7 +42,7 @@ INPUT_SECTORS <- list(
   construction = 46,
   land_transp  = 50, 
   legal_acc    = 64,
-  architecture = 65,
+  architecture = 65
 )
 
 

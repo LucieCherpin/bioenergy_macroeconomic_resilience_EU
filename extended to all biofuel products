@@ -281,6 +281,8 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
   # SCENARIO 1 - YEAR 2030
   # -----------------------------------------------------------------
 ### check over the feed/ Capex/ OPEX shares, some of them are wrong
+### update all values in Sc 2 and 3
+### omit  feedtsock attribution with zero
 
 
 "S1_2030" = list(
@@ -497,12 +499,12 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
 )
 
 ##############################################################################
-#### Scenario (2) -- 2030 ###
+#### Scenario (3) -- 2030 ###
 ##############################################################################
 
-### non of these values are correct yet, just placeholdes, copy pasted them from scenario 1
+### none of these values are correct yet, just placeholdes, copy pasted them from scenario 1
 
-"S2_2030" = list(
+"S3_2030" = list(
   adv_biodiesel = list(
     abs_production_eur = 14820290077,  # 14,820,290,077 EUR total production value
     
@@ -520,10 +522,10 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
     
     # Scenario-specific feedstock input distribution vectors per IVC
     dist_feed = list(
-      IVC2HVO = c(agriculture   = 0.210755, adv_biodiesel = 0.670858, chemicals     = 0.118387),
-      IVC11aroad = c(agriculture   = 0.621964, forestry      = 0.148703, paper         = 0.182277, food_bev      = 0.014502, adv_biodiesel = 0.032554),
-      IVC13a = c(agriculture   = 0.627305, forestry      = 0.160874, paper         = 0.197195, food_bev      = 0.014627),
-      IVC13bmaritime = c(agriculture   = 0.659084, forestry      = 0.146554, paper         = 0.179642, food_bev      = 0.014719)
+      IVC2HVO = c(agriculture = 0.210755, adv_biodiesel = 0.670858, chemicals = 0.118387),
+      IVC11aroad = c(agriculture   = 0.621964, forestry = 0.148703, paper = 0.182277, food_bev = 0.014502, adv_biodiesel = 0.032554),
+      IVC13a = c(agriculture = 0.627305, forestry = 0.160874, paper = 0.197195, food_bev = 0.014627),
+      IVC13bmaritime = c(agriculture = 0.659084, forestry = 0.146554, paper = 0.179642, food_bev = 0.014719)
     )
   ), 
 

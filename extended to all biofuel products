@@ -271,7 +271,7 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
   
   a_imp <- c(
     agriculture_imp = get_v(a_feed, "agriculture_imp"),
-    chemicals_imp   = get_v(a_feed, "chemicals_imp")
+    food_bev_imp   = get_v(a_feed, "food_bev_imp")
   )
   
   return(list(a_dom = a_dom, a_imp = a_imp))
@@ -428,6 +428,7 @@ for (sec_name in names(res_adv_bio$a_dom)) {
 }
 
 A_imp_S1_2030[INPUT_SECTORS$agriculture, target_col] <- res_adv_bio$a_imp["agriculture_imp"]
+A_imp_S1_2030[INPUT_SECTORS$food_bev, target_col]    <- res_adv_bio$a_imp["food_bev_imp"]
 
 # ===================================================================
 # 6. ABSOLUTE FLOWS

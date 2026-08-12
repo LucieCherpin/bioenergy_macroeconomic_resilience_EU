@@ -9,16 +9,15 @@
 # Mapping biofuel sectors to  IO table indices
 
 BIOFUEL_SECTORS <- list(
-  conv_biodiesel = 23,           # Row/col index for conventional biodiesel
-  conv_biogasoline = 25,         # Row/col  index for conventional biogasoline
-  conv_bio_kerosene = 27,        # Row/col  index for conventional bio-kerosene
-  conv_bio_hfo = 29,             # Row/col  index for conventional bio-HFO
-  adv_biodiesel = 24,            # Row/col  index for advanced biodiesel
-  adv_biogasoline = 26,          # Row/col  index for advanced biogasoline
-  adv_bio_kerosene = 28,         # Row/col  index for advanced bio-kerosene
-  adv_bio_hfo = 30,              # Row/col  index for advanced bio-HFO
-  RFNBOs = 31,
-  adv_biogas = 46
+  conv_biodiesel = 22,           # Row/col index for conventional biodiesel
+  adv_biodiesel = 23,            # Row/col  index for advanced biodiesel
+  conv_biogasoline = 24,         # Row/col  index for conventional biogasoline
+  adv_biogasoline = 25,          # Row/col  index for advanced biogasoline
+  conv_bio_kerosene = 26,        # Row/col  index for conventional bio-kerosene
+  adv_bio_kerosene = 27,         # Row/col  index for advanced bio-kerosene
+  adv_bio_hfo = 28,              # Row/col  index for advanced bio-HFO
+  RFNBOs = 29,
+  adv_biogas = 43
 )
 
 ###################
@@ -39,22 +38,20 @@ BIOFUEL_SECTORS <- list(
 INPUT_SECTORS <- list(
   agriculture  = 1,
   forestry     = 2,
-  paper        = 17,
-  food_bev     = 10,
-  sewerage     = 37,
-  chemicals    = ??,
-  adv_biodie   = ??,
-  fab_metal    = 25,
-  elec_equip   = 27,
-  machinery    = 28,
-  construction = 41,
-  architecture = 71,
-  computer_opt = 26,
-  electricity  = 35,
-  chemicals    = 20,
-  legal_head   = 69,
-  repair_inst  = 33,
-  land_transp  = 49
+  food_bev     = 15,
+  paper        = 18,
+  chemicals    = 21,
+  fab_metal    = 34, 
+  computer_el  = 35,
+  elec_equip   = 36,
+  machinery    = 37,
+  repair_inst  = 41,
+  electricity  = 42,
+  sewerage     = 45,
+  construction = 46,
+  land_transp  = 50, 
+  legal_acc    = 64,
+  architecture = 65,
 )
 
 

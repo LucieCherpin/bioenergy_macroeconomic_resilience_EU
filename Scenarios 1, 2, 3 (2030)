@@ -254,12 +254,15 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
 
   get_v <- function(vec, k) if (k %in% names(vec)) unname(vec[k]) else 0
 
+# here, some feedstock sectors are missing
   a_dom <- c(
     agriculture  = get_v(a_feed, "agriculture"),
     forestry     = get_v(a_feed, "forestry"),
     paper        = get_v(a_feed, "paper"),
     food_bev     = get_v(a_feed, "food_bev"),
     sewerage     = get_v(a_feed, "sewerage"),
+    adv_biodiesel = get_v(a_feed, "adv_biodiesel"), 
+    adv_biogas    = get_v(a_feed, "adv_biogas"),    
     fab_metal    = get_v(a_capex, "fab_metal"),
     elec_equip   = get_v(a_capex, "elec_equip"),
     machinery    = get_v(a_capex, "machinery"),

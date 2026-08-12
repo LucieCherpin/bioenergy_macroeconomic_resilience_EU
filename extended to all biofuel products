@@ -20,20 +20,9 @@ BIOFUEL_SECTORS <- list(
   adv_biogas = 43
 )
 
-###################
-#### this will allow to target one specific biofuels sector when inserting e.g. Sc 1 coefficinets into that sector column
-# Suppose A_full is your master N x N Leontief matrix (e.g., 64x64)
-# We want to insert Scenario 1 coefficients into the 'adv_biodiesel' column:
-###     target_col <- BIOFUEL_SECTORS$adv_biodiesel
-# Automatically place each calculated coefficient into its exact IO row
-###     for (sec_name in names(a_dom_S1)) {
-##  row_idx <- INPUT_SECTORS[[sec_name]]
-##  A_full[row_idx, target_col] <- a_dom_S1[sec_name]
-## }
-###################
-
 
 # Intermediate Input Supply sectors 
+## check whether these are all!
 
 INPUT_SECTORS <- list(
   agriculture  = 1,
@@ -41,12 +30,14 @@ INPUT_SECTORS <- list(
   food_bev     = 15,
   paper        = 18,
   chemicals    = 21,
+  adv_biodiesel = 23,
   fab_metal    = 34, 
   computer_el  = 35,
   elec_equip   = 36,
   machinery    = 37,
   repair_inst  = 41,
   electricity  = 42,
+  adv_biogas = 43,
   sewerage     = 45,
   construction = 46,
   land_transp  = 50, 

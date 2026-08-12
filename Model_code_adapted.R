@@ -52,8 +52,11 @@ national_accounts <- read_xlsx("nama_10_gdp_EU27.xlsx", sheet = "Sheet 1", range
 ##########################################
 
 nYears = 20             #Number of years
-nIndustries = 89        #Industries of Eurostat input-output table
+nIndustries = 73        #Industries of Eurostat input-output table
 
+##################################################################################################################################################
+### from here on, I still need to adaot and then add to MERGED code ###
+##################################################################################################################################################
 
 #Initialisation
 

@@ -48,7 +48,7 @@ build_fuel_column <- function(fuel_name, scenario_year_key) {
 # 5. MULTI-SCENARIO EXECUTION & MATRIX POPULATION ENGINE
 # ===================================================================
 
-N <- 80
+N <- 73
 I_mat <- diag(N)
 
 # Master storage containers for multi-scenario results
@@ -63,11 +63,14 @@ multipliers_all_scenarios <- data.frame()
 for (scen_key in names(scenario_config)) {
   
   # 5.1 Initialize Scenario Matrices
+## lists are initialized outside the loop to store the output matrices of each scenari without overwriting previosu results
   A_dom <- matrix(0, nrow = N, ncol = N)
   A_imp <- matrix(0, nrow = N, ncol = N)
   X_vec <- numeric(N)
   
   # 5.2 Loop through all fuel sectors active in the current scenario
+## Instead of targeting only adv_biodiesel, this inner loop iterates through every active biofuel sector present in the current scenario configuration
+
   for (fuel_name in names(scenario_config[[scen_key]])) {
     
     if (!fuel_name %in% names(BIOFUEL_SECTORS)) next
@@ -89,6 +92,8 @@ for (scen_key in names(scenario_config)) {
     }
     
     # Populate Imported Technical Matrix A_imp
+## The function build_ivc_vector() labels imported feedstocks with an _imp suffix (e.g., agriculture_imp).
+##To map this coefficient to the correct input sector index in $A_{imp}$, gsub("_imp$", "", imp_sec) strips the string suffix so that agriculture_imp correctly evaluates to "agriculture", matching key 1 in INPUT_SECTORS.
     for (imp_sec in names(res_fuel$a_imp)) {
       clean_sec_name <- gsub("_imp$", "", imp_sec) # Strip "_imp" suffix to match INPUT_SECTORS
       if (clean_sec_name %in% names(INPUT_SECTORS)) {

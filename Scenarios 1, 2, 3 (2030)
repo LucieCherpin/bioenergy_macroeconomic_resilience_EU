@@ -18,7 +18,7 @@ BIOFUEL_SECTORS <- list(
   adv_bio_hfo = 28,              # Row/col  index for advanced bio-HFO
   RFNBOs = 29,                   # Row/col  index for RFNBOs             
   adv_biogas = 43                # adv_biogas = 43
-)
+) 
 
 
 # Intermediate Input Supply sectors 
@@ -297,8 +297,9 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
 ### update all values in Sc 2 and 3
 ### omit  feedtsock attribution with zero
 
+scenario_config <- list(
 
-"S1_2030" = list(
+    "S1_2030" = list(
   ### advanced biodiesel
   adv_biodiesel = list(
     abs_production_eur = ???,  ## adapt, find right value
@@ -618,6 +619,7 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
   )
 
 )
+)
 
 
 # ===================================================================
@@ -626,11 +628,11 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
 
 build_fuel_column <- function(fuel_name, scenario_year_key) {
   
-  fuel_cfg <- scenario_config[[scenario_year_key]][[fuel_name]]
+  fuel_cfg <- scenario_config[[scenario_year_key]][[fuel_name]]    ## 
   weights  <- fuel_cfg$weights
   
   # Run sample IVC to dynamically extract structure length & names
-  sample_ivc <- names(weights)[1]
+  sample_ivc <- names(weights)[1]       ### picks the first actvie IVC listed in the scenario, i.e. IVC1 (FAME)
   sample_res <- build_ivc_vector(
     prod_cost    = IVC_TECH_LIBRARY[[sample_ivc]]$prod_cost,
     market_value = IVC_TECH_LIBRARY[[sample_ivc]]$market_value,

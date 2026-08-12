@@ -45,18 +45,16 @@ if (nrow(IO_EU_imports) < (nIndustries + 1) || ncol(IO_EU_imports) < (nIndustrie
 ### STEP 2: Sector mappings & config (edit as needed)
 ##########################################
 
-# BIOFUEL_SECTORS: keep as-is for now, but check bounds relative to nIndustries
 BIOFUEL_SECTORS <- list(
-  conv_biodiesel = 23,
-  conv_biogasoline = 25,
-  conv_bio_kerosene = 27,
-  conv_bio_hfo = 29,
-  adv_biodiesel = 24,
-  adv_biogasoline = 26,
-  adv_bio_kerosene = 28,
-  adv_bio_hfo = 30,
-  RFNBOs = 31,
-  adv_biogas = 46
+  conv_biodiesel = 22,           # Row/col index for conventional biodiesel
+  adv_biodiesel = 23,            # Row/col  index for advanced biodiesel
+  conv_biogasoline = 24,         # Row/col  index for conventional biogasoline
+  adv_biogasoline = 25,          # Row/col  index for advanced biogasoline
+  conv_bio_kerosene = 26,        # Row/col  index for conventional bio-kerosene
+  adv_bio_kerosene = 27,         # Row/col  index for advanced bio-kerosene
+  adv_bio_hfo = 28,              # Row/col  index for advanced bio-HFO
+  RFNBOs = 29,
+  adv_biogas = 43
 )
 
 # Validate indices fit within nIndustries

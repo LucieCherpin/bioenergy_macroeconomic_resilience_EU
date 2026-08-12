@@ -9,14 +9,14 @@
 # Mapping biofuel sectors to  IO table indices
 
 BIOFUEL_SECTORS <- list(
-  conv_biodiesel = 23,           # Row index for conventional biodiesel
-  conv_biogasoline = 25,         # Row index for conventional biogasoline
-  conv_bio_kerosene = 27,        # Row index for conventional bio-kerosene
-  conv_bio_hfo = 29,             # Row index for conventional bio-HFO
-  adv_biodiesel = 24,            # Row index for advanced biodiesel
-  adv_biogasoline = 26,          # Row index for advanced biogasoline
-  adv_bio_kerosene = 28,         # Row index for advanced bio-kerosene
-  adv_bio_hfo = 30,              # Row index for advanced bio-HFO
+  conv_biodiesel = 23,           # Row/col index for conventional biodiesel
+  conv_biogasoline = 25,         # Row/col  index for conventional biogasoline
+  conv_bio_kerosene = 27,        # Row/col  index for conventional bio-kerosene
+  conv_bio_hfo = 29,             # Row/col  index for conventional bio-HFO
+  adv_biodiesel = 24,            # Row/col  index for advanced biodiesel
+  adv_biogasoline = 26,          # Row/col  index for advanced biogasoline
+  adv_bio_kerosene = 28,         # Row/col  index for advanced bio-kerosene
+  adv_bio_hfo = 30,              # Row/col  index for advanced bio-HFO
   RFNBOs = 31,
   adv_biogas = 46
 )
@@ -71,7 +71,7 @@ dist_opex_standard  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20
                          repair_inst = 0.15, land_transp = 0.05)
 
 # Engineering cost breakdowns per IVC technology
-## add all IVCs here 
+## add all IVCs here, 11a road missing still
 ## and rework dist_capex and dist_opex, wrong values still
 IVC_TECH_LIBRARY <- list(  
 
@@ -302,7 +302,7 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
   ###advanced biodiesel
     adv_biodiesel = list(
      abs_production_eur = ???,    ## adpat, find right value
-      weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),
+      weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),      ## these weights will change in each scenario!
       dist_feed = list(
         IVC1   = c(agriculture = 0.0, agriculture_imp = 1.0),
         IVC2HVO   = c(agriculture = 0.0, agriculture_imp = 1.0),
@@ -336,7 +336,7 @@ adv_biokerosene = list(
  ###advanced bio-HFO
 adv_bio_hfo = list(
  abs_production_eur = ???,
-      weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),
+      weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),  
       dist_feed = list(
         IVC1   = c(agriculture = 0.0, agriculture_imp = 1.0),
         IVC2HVO   = c(agriculture = 0.0, agriculture_imp = 1.0),
@@ -361,15 +361,19 @@ adv_bio_hfo = list(
 build_fuel_column <- function(fuel_name, scenario_year_key) {
   
   # Fetch parameters for specific fuel, scenario, and year
-  fuel_cfg <- scenario_config[[scenario_year_key]][[fuel_name]]
-  weights  <- fuel_cfg$weights
+  fuel_cfg <- scenario_config[[scenario_year_key]][[fuel_name]]       ## fuel_cfg is a generic placeholder so tah  build_fuel_column() can work for any fuel in the model
+  weights  <- fuel_cfg$weights ##retrieves the weighted IVC contributions from above
   
-  # Initialize empty vectors
+    # Initialize empty vectors
+## create vectors of zero; these will store the running total o input requirements as the function loops through each IVC
+## matches the number of domestic and imported input sectors;
+## check: how many are actually relevant?  
   num_dom <- 16 # length of a_dom vector
   a_dom_aggregate <- numeric(num_dom)
   a_imp_aggregate <- numeric(2)
   
   # Loop over active IVCs and aggregate
+  # again, generic placeholders here
     for (ivc_id in names(weights)) {
     w_k <- weights[ivc_id]
 
@@ -389,9 +393,11 @@ build_fuel_column <- function(fuel_name, scenario_year_key) {
     # ---------------------------------------------------------------
     dist_feed_k    <- fuel_cfg$dist_feed[[ivc_id]]
 
-    
-    
+    # ---------------------------------------------------------------
     # Run calculation for this IVC
+    # ---------------------------------------------------------------
+
+## ivc_res stands for IVC result; i.e. a temporarry variable name used to store the output returned by the build_ivc_vector()
    ivc_res <- build_ivc_vector(
       prod_cost    = prod_cost_k,       # Read from IVC_TECH_LIBRARY
       market_value = market_value_k,    # Read from IVC_TECH_LIBRARY
@@ -402,6 +408,7 @@ build_fuel_column <- function(fuel_name, scenario_year_key) {
     )
     
     # Weighted recombination
+## uses the hitherto empty vectors created above
     if (is.null(names(a_dom_aggregate))) names(a_dom_aggregate) <- names(ivc_res$a_dom)
     if (is.null(names(a_imp_aggregate))) names(a_imp_aggregate) <- names(ivc_res$a_imp)
     
@@ -422,14 +429,14 @@ A_dom_S1_2030 <- matrix(0, nrow = N, ncol = N)
 A_imp_S1_2030 <- matrix(0, nrow = N, ncol = N)
 
 # 2. Assemble 'adv_biodiesel' column with 1 clean function call
-res_adv_bio <- build_fuel_column("adv_biodiesel", "S1_2030")
+res_adv_bio <- build_fuel_column("adv_biodiesel", "S1_2030")       ## R evaluates scenairo_config[["S1_2030"]][["adv_biodiesel"]] and temporarily stores these rules in fuel_cfg # calls Section 4 to obatin the final weighted input vector
 
 # 3. Inject into Master Matrices
 target_col <- BIOFUEL_SECTORS$adv_biodiesel
 
 for (sec_name in names(res_adv_bio$a_dom)) {
   row_idx <- INPUT_SECTORS[[sec_name]]
-  A_dom_S1_2030[row_idx, target_col] <- res_adv_bio$a_dom[sec_name]
+  A_dom_S1_2030[row_idx, target_col] <- res_adv_bio$a_dom[sec_name]    
 }
 
 A_imp_S1_2030[INPUT_SECTORS$agriculture, target_col] <- res_adv_bio$a_imp["agriculture_imp"]

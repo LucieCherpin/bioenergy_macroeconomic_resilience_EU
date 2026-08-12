@@ -53,9 +53,9 @@ INPUT_SECTORS <- list(
 # Standard distributions that do not change by scenario/year
 
 dist_capex_standard <- c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
-                         construction = 0.15, architecture = 0.30, computer_opt = 0.03)
+                         construction = 0.15, architecture = 0.30, computer_el = 0.03)
 
-dist_opex_standard  <- c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
+dist_opex_standard  <- c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20, 
                          repair_inst = 0.15, land_transp = 0.05)
 
 # Engineering cost breakdowns per IVC technology
@@ -69,8 +69,8 @@ IVC1 = list(
     market_value = 1450,
     alpha        = c(feed = 0.59770115, capex = 0.09540230, opex = 0.30689655),
     dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
-                     construction = 0.15, architecture = 0.30, computer_opt = 0.03),
-    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_head = 0.20, 
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20, 
                      repair_inst = 0.15, land_transp = 0.05)
   ),
 
@@ -80,8 +80,8 @@ IVC1 = list(
     market_value = 1750.00,
     alpha        = c(feed = 0.476579400, capex = 0.208902273, opex = 0.314518300),
     dist_capex   = c(fab_metal = 0.050, elec_equip = 0.020, machinery = 0.450, 
-                     construction = 0.150, architecture = 0.300, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.350, chemicals = 0.250, legal_head = 0.200, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.350, chemicals = 0.250, legal_acc = 0.200, 
                      repair_inst = 0.150, land_transp = 0.050)
   ),
 # --- IVC2 HEFA (Advanced Bio-kerosene) ---
@@ -90,8 +90,8 @@ IVC1 = list(
     market_value = 2380.00,
     alpha        = c(feed = 0.4800000, capex = 0.2080000, opex = 0.3120000),
     dist_capex   = c(fab_metal = 0.050, elec_equip = 0.020, machinery = 0.450, 
-                     construction = 0.150, architecture = 0.300, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.350, chemicals = 0.250, legal_head = 0.200, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.350, chemicals = 0.250, legal_acc = 0.200, 
                      repair_inst = 0.150, land_transp = 0.050)
   ),
   
@@ -101,8 +101,8 @@ IVC1 = list(
     market_value = 1000,
     alpha        = c(feed = 0.2269522, capex = 0.400599025, opex = 0.3724488),
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
-                     construction = 0.150, architecture = 0.300, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_head = 0.150, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_acc = 0.150, 
                      repair_inst = 0.100, land_transp = 0.050)
   ),
 
@@ -112,8 +112,8 @@ IVC1 = list(
     market_value = 1000,
     alpha        = c(feed = 0.2269522, capex = 0.400599025, opex = 0.3724488),
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
-                     construction = 0.150, architecture = 0.300, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_head = 0.150, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_acc = 0.150, 
                      repair_inst = 0.100, land_transp = 0.050)
   ),
 
@@ -123,8 +123,8 @@ IVC7 = list(
     market_value = 1275.00,
     alpha        = c(feed = -0.0205790, capex = 0.590578966, opex = 0.430000100), # Feedstock share is negative due to waste revenue/tipping fees
     dist_capex   = c(fab_metal = 0.050, elec_equip = 0.020, machinery = 0.400, 
-                     construction = 0.300, architecture = 0.200, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_head = 0.150, 
+                     construction = 0.300, architecture = 0.200, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_acc = 0.150, 
                      repair_inst = 0.100, land_transp = 0.050)
   ),
 # --- IVC 8a (Advanced Bio-HFO) ---
@@ -133,8 +133,8 @@ IVC7 = list(
     market_value = 935.00,
     alpha        = c(feed = 0.203339900, capex = 0.479360763, opex = 0.317299300),
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
-                     construction = 0.100, architecture = 0.300, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_head = 0.300, 
+                     construction = 0.100, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_acc = 0.300, 
                      repair_inst = 0.300, land_transp = 0.000)
   ),
 
@@ -144,8 +144,8 @@ IVC7 = list(
     market_value = 935.00,
     alpha        = c(feed = 0.756410256, capex = 0.145299145, opex = 0.098290598),
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
-                     construction = 0.100, architecture = 0.300, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_head = 0.300, 
+                     construction = 0.100, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_acc = 0.300, 
                      repair_inst = 0.300, land_transp = 0.000)
   ),
 
@@ -155,8 +155,8 @@ IVC7 = list(
     market_value = 935.00,
     alpha        = c(feed = 0.348823250, capex = 0.431593888, opex = 0.219582862),
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.600, 
-                     construction = 0.100, architecture = 0.250, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.650, chemicals = 0.100, legal_head = 0.150, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.650, chemicals = 0.100, legal_acc = 0.150, 
                      repair_inst = 0.100, land_transp = 0.000)
   ),
 
@@ -166,8 +166,8 @@ IVC7 = list(
     market_value = 1275.00,
     alpha        = c(feed = 0.292351717, capex = 0.324655845, opex = 0.382992437),
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.600, 
-                     construction = 0.100, architecture = 0.250, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.650, chemicals = 0.100, legal_head = 0.150, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.650, chemicals = 0.100, legal_acc = 0.150, 
                      repair_inst = 0.100, land_transp = 0.000)
   )
 
@@ -177,8 +177,8 @@ IVC7 = list(
     market_value = 2380.00,
     alpha        = c(feed = 0.191106800, capex = 0.487021000, opex = 0.321872000),
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
-                     construction = 0.100, architecture = 0.300, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_head = 0.300, 
+                     construction = 0.100, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_acc = 0.300, 
                      repair_inst = 0.300, land_transp = 0.000)
   ),
 
@@ -189,8 +189,8 @@ IVC7 = list(
     market_value = 1000,
     alpha        = c(feed = 0.3208764, capex = 0.281365656, opex = 0.3977579),
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
-                     construction = 0.150, architecture = 0.300, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_head = 0.150, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_acc = 0.150, 
                      repair_inst = 0.100, land_transp = 0.050)
   ),
 
@@ -200,8 +200,8 @@ IVC7 = list(
     market_value = 1750,
     alpha        = c(feed = 0.1321131, capex = 0.50371231, opex = 0.3641746),
     dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
-                     construction = 0.100, architecture = 0.250, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_head = 0.200, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_acc = 0.200, 
                      repair_inst = 0.300, land_transp = 0.100)
   ),
 
@@ -211,8 +211,8 @@ IVC7 = list(
     market_value = 1150,
     alpha        = c(feed = 0.1217770, capex = 0.393577182, opex = 0.4846458),
     dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
-                     construction = 0.100, architecture = 0.250, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_head = 0.200, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_acc = 0.200, 
                      repair_inst = 0.300, land_transp = 0.100)
   ),
 
@@ -222,8 +222,8 @@ IVC7 = list(
     market_value = 1150,
     alpha        = c(feed = 0.292548351, capex = 0.317045718, opex = 0.390405932),
     dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
-                     construction = 0.100, architecture = 0.250, computer_opt = 0.030),
-    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_head = 0.200, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_acc = 0.200, 
                      repair_inst = 0.300, land_transp = 0.100)
   ),
 
@@ -261,10 +261,10 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
     machinery    = get_v(a_capex, "machinery"),
     construction = get_v(a_capex, "construction"),
     architecture = get_v(a_capex, "architecture"),
-    computer_opt = get_v(a_capex, "computer_opt"),
+    computer_el = get_v(a_capex, "computer_el"),
     electricity  = get_v(a_opex, "electricity"),
     chemicals    = get_v(a_feed, "chemicals") + get_v(a_opex, "chemicals"),
-    legal_head   = get_v(a_opex, "legal_head"),
+    legal_acc   = get_v(a_opex, "legal_acc"),
     repair_inst  = get_v(a_opex, "repair_inst"),
     land_transp  = get_v(a_opex, "land_transp")
   )

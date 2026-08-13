@@ -308,61 +308,55 @@ scenario_config <- list(
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
       IVC1           = c(feed = 0.59770115, capex = 0.09540230, opex = 0.30689655),
-      IVC2HVO        = c(feed = 0.62000000, capex = 0.10000000, opex = 0.28000000),
-      IVC13a         = c(feed = 0.55000000, capex = 0.15000000, opex = 0.30000000),
-      IVC13bshipping = c(feed = 0.58000000, capex = 0.12000000, opex = 0.30000000)
+      IVC2HVO        = c(feed = 0.476579435, capex = 0.208902273, opex = 0.314518292),
+      IVC13a         = c(feed = 0.132113077, capex = 0.50371231, opex = 0.364174614),
+      IVC13b_mar = c(feed = 0.292548351, capex = 0.317045718, opex = 0.390405932)
     ),
     
     dist_feed = list(
       IVC1           = c(agriculture = 0.0, agriculture_imp = 1.0),
-      IVC2HVO        = c(agriculture = 0.0, agriculture_imp = 1.0),
-      IVC13a         = c(agriculture = 0.515152, forestry = 0.262022, paper = 0.208388, food_bev = 0.014438, agriculture_imp = 0.0),
-      IVC13bshipping = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
+      IVC2HVO        = c(agriculture = 0.14497, adv_biodiesel = 0,72677, chemicals = 0,12825),
+      IVC13a         = c(agriculture = 0.55703, forestry = 0.22890, paper = 0.20022, food_bev = 0.01387, sewerage = 0.0),
+      IVC13b_mar = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
     )
   ),
   
   ### advanced biogasoline
   adv_biogasoline = list(
     abs_production_eur = ???,  ## find right values
-    weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),
+    weights = c(IVC5 = 0.7930434, IVC12 = 0.1576435, IVC13a = 0.0342907, IVC13b_road = 0.0150226),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
-      IVC1           = c(feed = 0.59770115, capex = 0.09540230, opex = 0.30689655),
-      IVC2HVO        = c(feed = 0.62000000, capex = 0.10000000, opex = 0.28000000),
+      IVC5           = c(feed = 0.59770115, capex = 0.09540230, opex = 0.30689655),
+      IVC12        = c(feed = 0.62000000, capex = 0.10000000, opex = 0.28000000),
       IVC13a         = c(feed = 0.55000000, capex = 0.15000000, opex = 0.30000000),
-      IVC13bshipping = c(feed = 0.58000000, capex = 0.12000000, opex = 0.30000000)
+      IVC13b_road = c(feed = 0.58000000, capex = 0.12000000, opex = 0.30000000)
     ),
     
     dist_feed = list(
-      IVC1           = c(agriculture = 0.0, agriculture_imp = 1.0),
-      IVC2HVO        = c(agriculture = 0.0, agriculture_imp = 1.0),
-      IVC13a         = c(agriculture = 0.515152, forestry = 0.262022, paper = 0.208388, food_bev = 0.014438, agriculture_imp = 0.0),
-      IVC13bshipping = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
+      IVC5          = c(agriculture = 0.0, paper = 1.0),
+      IVC12        = c(adv_biogas = 1.0),
+      IVC13a         = c(agriculture = 0.515152, forestry = 0.262022, paper = 0.208388, food_bev = 0.014438, sewerage = 0.0),
+      IVC13b_road = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, sewerage = 0.0)
     )
   ),
 
 ### advanced bio-kerosene
   adv_biokerosene = list(
     abs_production_eur = 2094400000,  # 2,094,400,000 EUR
-    weights = c(IVC2HEFA = 0.9418605, IVC11a = 0.0581395),
+    weights = c(IVC2_HEFA = 0.9418605, IVC11a_SAF = 0.0581395),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
-      IVC2HEFA = c(feed = 0.48000000, capex = 0.20800000, opex = 0.31200000),
-      IVC11a   = c(feed = 0.19110682, capex = 0.48702100, opex = 0.32187200)
+      IVC2_HEFA = c(feed = 0.48000000, capex = 0.20800000, opex = 0.31200000),
+      IVC11a_SAF   = c(feed = 0.19110682, capex = 0.48702100, opex = 0.32187200)
     ),
     
     # Scenario-specific feedstock input distribution vectors per IVC
     dist_feed = list(
-      IVC2HEFA = c(agriculture   = 0.569930, adv_biodiesel = 0.365560, chemicals     = 0.064511),
-      IVC11a = c(
-        agriculture   = 0.572754,
-        forestry      = 0.219387,
-        paper         = 0.191936,
-        food_bev      = 0.014264,
-        adv_biodiesel = 0.001660
-      )
+      IVC2_HEFA = c(agriculture = 0.569930, adv_biodiesel = 0.365560, chemicals = 0.064511),
+      IVC11a = c(agriculture = 0.572754, forestry = 0.219387, paper = 0.191936, food_bev = 0.014264, adv_biodiesel = 0.001660)
     )
   ), 
 
@@ -379,8 +373,8 @@ scenario_config <- list(
     
     # Scenario-specific feedstock input distribution vectors per IVC
     dist_feed = list(
-      IVC8a = c(agriculture = 0.555604, forestry = 0.212818, paper = 0.186189, adv_biodiesel = 0.031552, food_bev      = 0.013837),
-      IVC8b = c(adv_biogas    = 1.000000)
+      IVC8a = c(agriculture = 0.555604, forestry = 0.212818, paper = 0.186189, adv_biodiesel = 0.031552, food_bev = 0.013837),
+      IVC8b = c(adv_biogas = 1.000000)
     )
   ), 
 
@@ -402,6 +396,81 @@ scenario_config <- list(
     )
   ),
 
+### advanced biogas
+adv_biogas = list(
+ abs_production_eur = 
+    weights = c(IVC7 = 1.0, IVC9a = 0.0),
+    
+    # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+    alpha = list(
+      IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000),
+      IVC9a = c(feed = 0.154612, capex = 0.583026, opex = 0.262362)      ### should I even include 9a if it contributes zero here? 
+    ),
+    
+    # Scenario-specific feedstock input distribution vectors per IVC
+    dist_feed = list(
+      IVC7 = c(agriculture = ?, food = ?, sewerage = ?, chemicals =?),
+      IVC9a = c(agriculture = ?, food = ?, sewerage = ?, forestry = paper = adv_biodiesel = ?)
+    )
+  ),
+#############################
+### conventional biofuels ###
+#############################
+
+### conv_biodiesel
+
+conv_biodiesel = list(
+abs_production_eur = ???,
+weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_lipids = ??, IVC_H_lipds = ), 
+
+# Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+    alpha = list(
+      IVC_T_FF = c(feed = 0.74, capex = 0.07, opex = 0.19),            ### these are actually also constant, not changing across scenarios/ years
+      IVC_HT_FF = c(feed = 0.72, capex = 0.10, opex = 0.18),
+      IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
+      IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
+      IVC_T_lipds = c(feed = 0.74, capex = 0.04, opex = 0.22),
+      IVC_HT_lipds = c(feed = 0.67, capex = 0.13, opex = 0.20),
+    ),
+
+# Scenario-specific feedstock input distribution vectors per IVC          
+    dist_feed = list(
+      IVC_T_FF = c(food_bev = 1),    ### check whether all is domestic
+      IVC_HT_FF = c(food_bev = 1),
+      IVC_T_CC = c(agriculture = 1),
+      IVC_HT_CC = c(agriculture = 1),
+      IVC_T_lipds = c(food_bev = 1),      ### check how much is domestic/ imported
+      IVC_HT_lipds_road = c(food_bev = 1),      ### check how much is domestic/ imported
+    )
+    ),
+
+### conv_biogasoline
+conv_biogasoline = list(
+abs_production_eur = ???,
+weights = c(IVC_EF_FF = 1), 
+# Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+    alpha = list(
+      IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20),                    ### these are actually also constant, not changing across scenarios/ years
+    ),
+    # Scenario-specific feedstock input distribution vectors per IVC           
+    dist_feed = list(
+      IVC_EF_FF = c(agriculture = 1),
+    )
+  ),
+
+### conv_bio_kerosene
+conv_bio_kerosene = list(
+abs_production_eur = ???,
+weights = c(IVC_EF_FF = 1), 
+# Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+    alpha = list(
+      IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19),
+    ),
+    # Scenario-specific feedstock input distribution vectors per IVC            
+    dist_feed = list(
+      IVC_HT_lipds_SAF = c(food = 1),      #### check whether imported or domestic
+    )
+  )
 )
 
 
@@ -434,43 +503,44 @@ scenario_config <- list(
       IVC13bmaritime = c(agriculture   = 0.659084, forestry      = 0.146554, paper         = 0.179642, food_bev      = 0.014719)
     )
   ), 
-
- ### advanced biogasoline
+  ### advanced biogasoline
   adv_biogasoline = list(
     abs_production_eur = ???,  ## find right values
-    weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),
+    weights = c(IVC5 = 0.7930434, IVC12 = 0.1576435, IVC13a = 0.0342907, IVC13b_road = 0.0150226),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
-      IVC1           = c(feed = 0.59770115, capex = 0.09540230, opex = 0.30689655),
-      IVC2HVO        = c(feed = 0.62000000, capex = 0.10000000, opex = 0.28000000),
+      IVC5           = c(feed = 0.59770115, capex = 0.09540230, opex = 0.30689655),
+      IVC12        = c(feed = 0.62000000, capex = 0.10000000, opex = 0.28000000),
       IVC13a         = c(feed = 0.55000000, capex = 0.15000000, opex = 0.30000000),
-      IVC13bshipping = c(feed = 0.58000000, capex = 0.12000000, opex = 0.30000000)
+      IVC13b_road = c(feed = 0.58000000, capex = 0.12000000, opex = 0.30000000)
     ),
     
     dist_feed = list(
-      IVC1           = c(agriculture = 0.0, agriculture_imp = 1.0),
-      IVC2HVO        = c(agriculture = 0.0, agriculture_imp = 1.0),
+      IVC5          = c(agriculture = 0.0, agriculture_imp = 1.0),
+      IVC12        = c(agriculture = 0.0, agriculture_imp = 1.0),
       IVC13a         = c(agriculture = 0.515152, forestry = 0.262022, paper = 0.208388, food_bev = 0.014438, agriculture_imp = 0.0),
-      IVC13bshipping = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
+      IVC13b_road = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
     )
   ),
+
+
 
 ### advanced bio-kerosene
   adv_biokerosene = list(
     abs_production_eur = 2094400000,  # 2,094,400,000 EUR
-    weights = c(IVC2HEFA = 0.9418605, IVC11a = 0.0581395),
+    weights = c(IVC2_HEFA = 0.9418605, IVC11a_SAF = 0.0581395),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
-      IVC2HEFA = c(feed = 0.48000000, capex = 0.20800000, opex = 0.31200000),
-      IVC11a   = c(feed = 0.19110682, capex = 0.48702100, opex = 0.32187200)
+      IVC2_HEFA = c(feed = 0.48000000, capex = 0.20800000, opex = 0.31200000),
+      IVC11a_SAF   = c(feed = 0.19110682, capex = 0.48702100, opex = 0.32187200)
     ),
     
     # Scenario-specific feedstock input distribution vectors per IVC
     dist_feed = list(
-      IVC2HEFA = c(agriculture   = 0.569930, adv_biodiesel = 0.365560, chemicals     = 0.064511),
-      IVC11a = c(agriculture   = 0.572754, forestry      = 0.219387, paper         = 0.191936, food_bev      = 0.014264, adv_biodiesel = 0.001660)
+      IVC2_HEFA = c(agriculture = 0.569930, adv_biodiesel = 0.365560, chemicals = 0.064511), ## sectors correct, but values not correct yet
+      IVC11a_SAF = c(agriculture  = 0.572754, forestry = 0.219387, paper = 0.191936, food_bev = 0.014264, adv_biodiesel = 0.001660, sewerage = 0.0)
     )
   ), 
 
@@ -487,7 +557,7 @@ scenario_config <- list(
     
     # Scenario-specific feedstock input distribution vectors per IVC
     dist_feed = list(
-      IVC8a = c(agriculture = 0.555604, forestry = 0.212818, paper = 0.186189, adv_biodiesel = 0.031552, food_bev      = 0.013837),
+      IVC8a = c(agriculture = 0.555604, forestry = 0.212818, paper = 0.186189, adv_biodiesel = 0.031552, food_bev = 0.013837, seweage = 0.0),
       IVC8b = c(adv_biogas  = 1.000000)
     )
   ), 
@@ -508,8 +578,85 @@ scenario_config <- list(
       IVC8c = c(chemicals = 1.000000),
       IVC9b = c(chemicals = 1.000000)
     )
-  )
+  ), 
 
+### advanced biogas
+adv_biogas = list(
+ abs_production_eur = 
+    weights = c(IVC7 = 1.0, IVC9a = 0.0), ### adapt, 9a now contributes
+    
+    # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+    alpha = list(
+      IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000),
+      IVC9a = c(feed = 0.154612, capex = 0.583026, opex = 0.262362)      ### should I even include 9a if it contributes zero here? 
+    ),
+    
+    # Scenario-specific feedstock input distribution vectors per IVC
+    dist_feed = list(
+      IVC7 = c(agriculture = ?, food = ?, sewerage = ?, chemicals =?),
+      IVC9a = c(agriculture = ?, food = ?, sewerage = ?, forestry = paper = adv_biodiesel = ?)
+    )
+  ),
+
+#############################
+### conventional biofuels ###
+#############################
+
+
+### conv_biodiesel
+
+conv_biodiesel = list(
+abs_production_eur = ???,
+weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_lipids = ??, IVC_H_lipds = ), 
+
+# Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+    alpha = list(
+      IVC_T_FF = c(feed = 0.74, capex = 0.07, opex = 0.19),            ### these are actually also constant, not changing across scenarios/ years
+      IVC_HT_FF = c(feed = 0.72, capex = 0.10, opex = 0.18),
+      IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
+      IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
+      IVC_T_lipds = c(feed = 0.74, capex = 0.04, opex = 0.22),
+      IVC_HT_lipds = c(feed = 0.67, capex = 0.13, opex = 0.20),
+    ),
+
+# Scenario-specific feedstock input distribution vectors per IVC          
+    dist_feed = list(
+      IVC_T_FF = c(food_bev = 1),    ### check whether all is domestic
+      IVC_HT_FF = c(food_bev = 1),
+      IVC_T_CC = c(agriculture = 1),
+      IVC_HT_CC = c(agriculture = 1),
+      IVC_T_lipds = c(food_bev = 1),      ### check how much is domestic/ imported
+      IVC_HT_lipds_road = c(food_bev = 1),      ### check how much is domestic/ imported
+    )
+    ),
+
+### conv_biogasoline
+conv_biogasoline = list(
+abs_production_eur = ???,
+weights = c(IVC_EF_FF = 1), 
+# Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+    alpha = list(
+      IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20),                    ### these are actually also constant, not changing across scenarios/ years
+    ),
+    # Scenario-specific feedstock input distribution vectors per IVC           
+    dist_feed = list(
+      IVC_EF_FF = c(agriculture = 1),
+    )
+  ),
+
+### conv_bio_kerosene
+conv_bio_kerosene = list(
+abs_production_eur = ???,
+weights = c(IVC_EF_FF = 1), 
+# Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+    alpha = list(
+      IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19),
+    ),
+    # Scenario-specific feedstock input distribution vectors per IVC            
+    dist_feed = list(
+      IVC_HT_lipds_SAF = c(food = 1),      #### check whether imported or domestic
+    )
+  )
 )
 
 ##############################################################################
@@ -524,22 +671,22 @@ scenario_config <- list(
     
     # Pathway share weights (Physical volume in tonnes: c(0.0468, 0.6133, 0.1999, 0.1399))
     # If modeling monetary shares instead: c(IVC2HVO = 0.0256846, IVC11aroad = 0.7080072, IVC13a = 0.1367126, IVC13bmaritime = 0.1295957)
-    weights = c(IVC2HVO = 0.0467996, IVC11aroad = 0.6133438, IVC13a = 0.1999156, IVC13bmaritime = 0.1399410),
+    weights = c(IVC2_HVO = 0.0467996, IVC11a_road = 0.6133438, IVC13a = 0.1999156, IVC13b_mar = 0.1399410),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
-      IVC2HVO        = c(feed = 0.47423088, capex = 0.20980000, opex = 0.31590000),
-      IVC11aroad     = c(feed = 0.10989100, capex = 0.53590000, opex = 0.35420000),
+      IVC2_HVO     = c(feed = 0.47423088, capex = 0.20980000, opex = 0.31590000),
+      IVC11a_road     = c(feed = 0.10989100, capex = 0.53590000, opex = 0.35420000),
       IVC13a         = c(feed = 0.13167923, capex = 0.50400000, opex = 0.36440000),
-      IVC13bmaritime = c(feed = 0.29338087, capex = 0.31670000, opex = 0.38990000)
+      IVC13b_mar = c(feed = 0.29338087, capex = 0.31670000, opex = 0.38990000)
     ),
     
     # Scenario-specific feedstock input distribution vectors per IVC
     dist_feed = list(
-      IVC2HVO = c(agriculture = 0.210755, adv_biodiesel = 0.670858, chemicals = 0.118387),
-      IVC11aroad = c(agriculture   = 0.621964, forestry = 0.148703, paper = 0.182277, food_bev = 0.014502, adv_biodiesel = 0.032554),
-      IVC13a = c(agriculture = 0.627305, forestry = 0.160874, paper = 0.197195, food_bev = 0.014627),
-      IVC13bmaritime = c(agriculture = 0.659084, forestry = 0.146554, paper = 0.179642, food_bev = 0.014719)
+      IVC2_HVO = c(agriculture = 0.210755, adv_biodiesel = 0.670858, chemicals = 0.118387),
+      IVC11a_road = c(agriculture = 0.621964, forestry = 0.148703, paper = 0.182277, food_bev = 0.014502, adv_biodiesel = 0.032554),
+      IVC13a = c(agriculture = 0.627305, forestry = 0.160874, paper = 0.197195, food_bev = 0.014627, sewerage = ??),
+      IVC13b_mar = c(agriculture = 0.659084, forestry = 0.146554, paper = 0.179642, food_bev = 0.014719, sewerage = ??)
     )
   ), 
 
@@ -550,17 +697,17 @@ scenario_config <- list(
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
-      IVC1           = c(feed = 0.59770115, capex = 0.09540230, opex = 0.30689655),
-      IVC2HVO        = c(feed = 0.62000000, capex = 0.10000000, opex = 0.28000000),
+      IVC5           = c(feed = 0.59770115, capex = 0.09540230, opex = 0.30689655),
+      IVC12        = c(feed = 0.62000000, capex = 0.10000000, opex = 0.28000000),
       IVC13a         = c(feed = 0.55000000, capex = 0.15000000, opex = 0.30000000),
-      IVC13bshipping = c(feed = 0.58000000, capex = 0.12000000, opex = 0.30000000)
+      IVC13b_road = c(feed = 0.58000000, capex = 0.12000000, opex = 0.30000000)
     ),
     
     dist_feed = list(
-      IVC1           = c(agriculture = 0.0, agriculture_imp = 1.0),
-      IVC2HVO        = c(agriculture = 0.0, agriculture_imp = 1.0),
+      IVC5          = c(agriculture = 0.0, paper = 1.0),
+      IVC12        = c(adv_biogas = 1.0),
       IVC13a         = c(agriculture = 0.515152, forestry = 0.262022, paper = 0.208388, food_bev = 0.014438, agriculture_imp = 0.0),
-      IVC13bshipping = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
+      IVC13b_road = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
     )
   ),
 
@@ -616,9 +763,67 @@ scenario_config <- list(
       IVC8c = c(chemicals = 1.000000),
       IVC9b = c(chemicals = 1.000000)
     )
-  )
+  ), 
 
-)
+
+#############################
+### conventional biofuels ###
+#############################
+
+### conv_biodiesel
+
+conv_biodiesel = list(
+abs_production_eur = ???,
+weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_lipids = ??, IVC_H_lipds = ), 
+
+# Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+    alpha = list(
+      IVC_T_FF = c(feed = 0.74, capex = 0.07, opex = 0.19),            ### these are actually also constant, not changing across scenarios/ years
+      IVC_HT_FF = c(feed = 0.72, capex = 0.10, opex = 0.18),
+      IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
+      IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
+      IVC_T_lipds = c(feed = 0.74, capex = 0.04, opex = 0.22),
+      IVC_HT_lipds = c(feed = 0.67, capex = 0.13, opex = 0.20),
+    ),
+
+# Scenario-specific feedstock input distribution vectors per IVC          
+    dist_feed = list(
+      IVC_T_FF = c(food_bev = 1),    ### check whether all is domestic
+      IVC_HT_FF = c(food_bev = 1),
+      IVC_T_CC = c(agriculture = 1),
+      IVC_HT_CC = c(agriculture = 1),
+      IVC_T_lipds = c(food_bev = 1),      ### check how much is domestic/ imported
+      IVC_HT_lipds_road = c(food_bev = 1),      ### check how much is domestic/ imported
+    )
+    ),
+
+### conv_biogasoline
+conv_biogasoline = list(
+abs_production_eur = ???,
+weights = c(IVC_EF_FF = 1), 
+# Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+    alpha = list(
+      IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20),                    ### these are actually also constant, not changing across scenarios/ years
+    ),
+    # Scenario-specific feedstock input distribution vectors per IVC           
+    dist_feed = list(
+      IVC_EF_FF = c(agriculture = 1),
+    )
+  ),
+
+### conv_bio_kerosene
+conv_bio_kerosene = list(
+abs_production_eur = ???,
+weights = c(IVC_EF_FF = 1), 
+# Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+    alpha = list(
+      IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19),
+    ),
+    # Scenario-specific feedstock input distribution vectors per IVC            
+    dist_feed = list(
+      IVC_HT_lipds_SAF = c(food = 1),      #### check whether imported or domestic
+    )
+  )
 )
 
 

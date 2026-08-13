@@ -221,15 +221,79 @@ IVC7 = list(
                      repair_inst = 0.300, land_transp = 0.100)
   ),
 
- # --- Conventional: ---
-  Conv_ = list(
+ ########## Conventional biofuels #########
+
+  IVC_T_FF = list(
     prod_cost    = 1598.13,
     market_value = 1750,
-    dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
-                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_acc = 0.200, 
-                     repair_inst = 0.300, land_transp = 0.100)
+    dist_capex   = c(fab_metal = 0.07, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100; seweareh = 0.0)
   ),
+
+IVC_HT_FF = list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.020, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
+  ),
+
+IVC_T_CC =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100)
+  ),
+
+IVC_HT_CC =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.050)
+  ),
+
+IVC_T_lipids =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100)
+  ),
+
+IVC_HT_lipids_road =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
+  ),
+
+IVC_HT_lipids_SAF =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
+  ),
+
+IVC_EF_FF = list(
+ prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, 
+                     construction = 0.150, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.10)
+  )
 
 )
 
@@ -315,7 +379,7 @@ scenario_config <- list(
     
     dist_feed = list(
       IVC1           = c(agriculture = 0.0, agriculture_imp = 1.0),
-      IVC2HVO        = c(agriculture = 0.14497, adv_biodiesel = 0,72677, chemicals = 0,12825),
+      IVC2HVO        = c(agriculture = 0.14497, adv_biodiesel = 0.72677, chemicals = 0.12825),
       IVC13a         = c(agriculture = 0.55703, forestry = 0.22890, paper = 0.20022, food_bev = 0.01387, sewerage = 0.0),
       IVC13b_mar = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, agriculture_imp = 0.0)
     )
@@ -421,7 +485,7 @@ adv_biogas = list(
 
 conv_biodiesel = list(
 abs_production_eur = ???,
-weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_lipids = ??, IVC_H_lipds = ), 
+weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_lipids = ??, IVC_HT_lipds_road = ??), 
 
 # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
@@ -430,7 +494,7 @@ weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_
       IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
       IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
       IVC_T_lipds = c(feed = 0.74, capex = 0.04, opex = 0.22),
-      IVC_HT_lipds = c(feed = 0.67, capex = 0.13, opex = 0.20),
+      IVC_HT_lipds_road = c(feed = 0.67, capex = 0.13, opex = 0.20),
     ),
 
 # Scenario-specific feedstock input distribution vectors per IVC          
@@ -461,7 +525,7 @@ weights = c(IVC_EF_FF = 1),
 ### conv_bio_kerosene
 conv_bio_kerosene = list(
 abs_production_eur = ???,
-weights = c(IVC_EF_FF = 1), 
+weights = c(IVC_HT_lipds_SAF = 1), 
 # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
       IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19),

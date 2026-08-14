@@ -64,7 +64,7 @@ final_expenditure <- as.numeric(national_accounts[3,2])       #P3 - Total final 
 
 ###P3 - Total final expenditure (C + G) by industry
 
-t_f_e_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries+1), nIndustries+3]))                   ## is this really in row 2 that sectors start? isn't it row 3?
+t_f_e_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries+1), nIndustries+3]))                  ## "2:" because the first row is the label row and not yet values
 t_f_e_im <- as.numeric(unlist(IO_EU_imports[2:(nIndustries+1), nIndustries+3]))
 
 t_f_e <- t_f_e_dom + t_f_e_imp
@@ -83,24 +83,45 @@ D_tax_i = matrix(rep(expenditure_tax_i, times = nYears),nrow = nYears, byrow = T
 #TU & TFU - Total use & total final use
 total_use <- as.matrix(as.numeric(unlist(IO_Austria[2:(nIndustries + 1), nIndustries + 17])))      #TU - Total use by industry
 FINAL = matrix(rep(total_use, times = nYears), nrow = nYears, byrow = TRUE)   #TU - Total use by industry matrix
+
 final_use <- as.numeric(unlist(IO_Austria[2:(nIndustries + 1), nIndustries + 18]))                  #TFU - Total final use by industry
 f_i = matrix(rep(final_use, times = nYears), nrow = nYears, byrow = TRUE)       #TFU - Total final use by industry matrix
 
 
 #Production and sales
-gva_i <- t(as.matrix(as.numeric(unlist(IO_Austria[nIndustries + 2, 3:(nIndustries + 2)]))))   #B1G - Gross value added by industry
+gva_i <- t(as.matrix(unlist(IO_EU_domestic[nIndustries + 2, 3:(nIndustries + 2)]))))   #B1G - Gross value added by industry
 GVA_i = matrix(rep(gva_i, times = nYears), nrow = nYears, byrow = TRUE)     #B1G - Gross value added by industry matrix  
 GVA = matrix(rep(sum(gva_i), times = nYears), nrow = nYears, byrow = TRUE)  #B1G - Gross value added matrix 
-sales <- as.matrix(as.numeric(unlist(IO_Austria[nIndustries + 10, 3:(nIndustries + 2)])))      #P1 - Total sales (output) by industry
-SALES_i <- matrix(rep(sales, times = nYears), nrow = nYears, byrow = TRUE)    #P1 - Total sales (output) by industry matrix
+
+## only measuring doemstic EU output generation by industry, 
+
+sales   <- as.matrix(as.numeric(unlist(IO_EU_domestic[nIndustries + 10, 3:(nIndustries + 2)])))           #P1 - Total sales (output) by industry
+SALES_i <- matrix(rep(sales, times = nYears), nrow = nYears, byrow = TRUE)               #P1 - Total sales (output) by industry matrix
 #delta_SALES <- matrix(rep(0, times = nYears), ncol= nIndustries, nrow = nYears, byrow = TRUE)     #Excess Supply: Change of Sales
+
+### not affected by imports/ domestic split
 q_s <- as.matrix(as.numeric(unlist(IO_Austria[nIndustries + 19, 3:(nIndustries + 2)])))         #TS_BP - Total supply by industry
 q_s[q_s == 0] <- 1e-6                                                       #Necessary for calculations
 Q_s_i = matrix(rep(q_s, times = nYears), nrow = nYears, byrow = TRUE)         #TS_BP - Total supply by industry matrix
-x <- as.matrix(as.numeric(unlist(IO_Austria[2:(nIndustries + 1), nIndustries + 17])))           #TU - Total use by industry
-X_i = matrix(rep(x, times = nYears), nrow = nYears, byrow = TRUE)             #TU - Total use by industry matrix
-i_d <- as.numeric(unlist(IO_Austria[nIndustries + 11, 3:(nIndustries + 2)]))                    #P2_ADJ - Total intermediate consumption by industry
-I_D_i = matrix(rep(i_d, times = nYears), nrow = nYears, byrow = TRUE)       #P2_ADJ - Total intermediate consumption by industry matrix
+
+
+### total use of inetrmediate inpust only domestic, not looking at output generated outside the EU
+x   <- as.matrix(as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 17])))          #TU - Total use by industry
+X_i <- matrix(rep(x, times = nYears), nrow = nYears, byrow = TRUE)            #TU - Total use by industry matrix
+
+
+
+### industry consumption is both doemstic and imported!
+#P2_ADJ - Total intermediate consumption by industry
+i_d_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 11, 3:(nIndustries + 2)]))
+i_d_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 11, 3:(nIndustries + 2)]))
+i_d_tot <- i_d_dom + i_d_imp
+
+#P2_ADJ - Total intermediate consumption by industry matrix
+
+I_D_dom_i <- matrix(rep(i_d_dom, times = nYears), nrow = nYears, byrow = TRUE)
+I_D_imp_i <- matrix(rep(i_d_imp, times = nYears), nrow = nYears, byrow = TRUE)
+I_D_i     <- matrix(rep(i_d_tot, times = nYears), nrow = nYears, byrow = TRUE)
 
 ##########################################
 ###Final Expenditure

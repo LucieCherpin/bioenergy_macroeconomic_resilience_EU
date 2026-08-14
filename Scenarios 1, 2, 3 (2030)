@@ -46,20 +46,27 @@ INPUT_SECTORS <- list(
 )
 
 
+# Product Tax Rates (as a fraction of total output value X_i)
+TAX_RATES <- list(
+  default    = 0.0091481, # Rate for all standard biofuel sectors
+  adv_biogas = 0.0017690  # Rate for Advanced Biogas
+)
+
+# Key IO Row/Column Accounting Indices
+ROW_TAXES_LESS_SUBSIDIES <- 90 # Row 90: Net product taxes
+ROW_GVA                  <- 91 # Row 91: Gross Value Added
+ROW_TOTAL_OUTPUT         <- 92 # Row 92: Total Output
+COL_FINAL_CONSUMPTION    <- 70 # Final Demand Column (e.g. Column CC)
+
 
 # ===================================================================
 # 2. FIXED/ STATIC TECHNOLOGY BLUEPRINTS (IVC-speciifc) 
 # ===================================================================
-# Standard distributions that do not change by scenario/year
 
-dist_capex_standard <- c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
-                         construction = 0.15, architecture = 0.30, computer_el = 0.03)
 
-dist_opex_standard  <- c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20, 
-                         repair_inst = 0.15, land_transp = 0.05)
 
 # Engineering cost breakdowns per IVC technology
-## and rework dist_capex and dist_opex, wrong values still
+##  rework dist_capex and dist_opex, wrong values still
 IVC_TECH_LIBRARY <- list(  
 
 # --- IVC 1 (Biodiesel baseline) ---
@@ -951,6 +958,7 @@ build_fuel_column <- function(fuel_name, scenario_year_key) {
 # 5. MULTI-SCENARIO EXECUTION & MATRIX POPULATION ENGINE
 # ===================================================================
 
+N <- 92 ## 73 rows within Z matrix + accounting rows)
 N <- 73
 I_mat <- diag(N)
 
@@ -960,6 +968,7 @@ A_imp_list <- list()
 Z_dom_list <- list()
 Z_imp_list <- list()
 L_dom_list <- list()
+Y_mat_list <- list()
 multipliers_all_scenarios <- data.frame()
 
 # Loop through all scenario keys defined in scenario_config (e.g., "S1_2030", "S2_2030", "S3_2030")
@@ -969,6 +978,7 @@ for (scen_key in names(scenario_config)) {
 ## lists are initialized outside the loop to store the output matrices of each scenari without overwriting previosu results
   A_dom <- matrix(0, nrow = N, ncol = N)
   A_imp <- matrix(0, nrow = N, ncol = N)
+  Y_mat <- matrix(0, nrow = N, ncol = 100)
   X_vec <- numeric(N)
   
   # 5.2 Loop through all fuel sectors active in the current scenario

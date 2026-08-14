@@ -26,8 +26,6 @@ options(scipen = 999)
 
 #Input-Output Table EU27 (Eurostat)
 
-#### to do: check how many industries in the end; also: kann ich einfach eine Zeile/ Spalte ausblenden, die dann nciht mitberechnet wird? (Um original und adapted e.g. chmeical sector zu rechnen=
-
 IO_EU_domestic <- read_xlsx("IOT_EU_2023_domestic_biofuels_disaggregated.xlsx", sheet= "Sheet 1", range = "A9:CP104", col_names = T)
 IO_EU_domestic <- as.data.frame(IO_EU_domestic)
 

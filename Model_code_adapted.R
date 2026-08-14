@@ -63,7 +63,7 @@ nIndustries = 73        #Industries of Eurostat input-output table
 #P3 - Final expenditure
 final_expenditure <- as.numeric(national_accounts[3,2])       #P3 - Total final expenditure (C + G)
 
-t_f_e <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries+1), nIndustries+3])) +
+t_f_e <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries+1), nIndustries+3])) +                   ## is this really in row 2 that sectors start? isn't it row 3?
          as.numeric(unlist(IO_EU_imports[2:(nIndustries+1), nIndustries+3]))
 
 t_f_e <- as.numeric(unlist(IO_Austria[2:(nIndustries + 1), nIndustries + 3]))             #P3 - Total final expenditure (C + G) by industry

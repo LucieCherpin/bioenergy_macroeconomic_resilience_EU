@@ -1005,7 +1005,7 @@ for (scen_key in names(scenario_config)) {
       }
     }
   }
-  
+
   # 5.3 Absolute Transaction Matrices (Z)
   Z_dom <- A_dom %*% diag(X_vec)
   Z_imp <- A_imp %*% diag(X_vec)

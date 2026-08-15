@@ -64,7 +64,6 @@ COL_FINAL_CONSUMPTION    <- 70 # Final Demand Column (e.g. Column CC)
 # ===================================================================
 
 
-
 # Engineering cost breakdowns per IVC technology
 ##  rework dist_capex and dist_opex, wrong values still
 IVC_TECH_LIBRARY <- list(  

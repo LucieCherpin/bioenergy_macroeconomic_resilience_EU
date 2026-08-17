@@ -94,11 +94,10 @@ TAX_RATES <- list(
 )
 
 # Key IO Row/Column Accounting Indices
-ROW_TAXES_LESS_SUBSIDIES <- 90 # Row 90: Net product taxes
-ROW_GVA                  <- 91 # Row 91: Gross Value Added
-ROW_TOTAL_OUTPUT         <- 92 # Row 92: Total Output
-COL_FINAL_CONSUMPTION    <- 70 # Final Demand Column (e.g. Column CC)
-
+ROW_GVA                  <- nIndutsries + 1
+ROW_TAXES_LESS_SUBSIDIES <- nIndutries + 7
+ROW_TOTAL_OUTPUT         <- nIndustries + 9
+COL_FINAL_CONSUMPTION    <- nIndustries + 1
 
 # ===================================================================
 # 2. FIXED/ STATIC TECHNOLOGY BLUEPRINTS (IVC-speciifc) 

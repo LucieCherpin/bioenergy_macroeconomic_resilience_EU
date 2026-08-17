@@ -218,12 +218,12 @@ A_dom <- as.matrix(sweep(Z_dom_i, 2, q_s, FUN = '/'))  # Domestic technical coef
 A_imp <- as.matrix(sweep(Z_imp_i, 2, q_s, FUN = '/'))  # Import technical coefficients
 A_tot <- A_dom + A_imp                                 # Total technological coefficients
 
-diag <- diag(ncol = ncol(A_dom), nrow = nrow(A))                         #Create diagonal matrix
+diag <- diag(ncol = ncol(A_dom), nrow = nrow(A_dom))                         #Create diagonal matrix
 L_dom <- solve(diag-A_dom)                                                   #Leontief inverse          ## imports not cosnidered, because they don't trigger domestic production feedback loops 
 
 #Check for total final use
-TotalFinalUse <- total_use - (A %*% x)    
-TotalFinalUseCheck <- (diag-A) %*% x
+TotalFinalUse <- total_use - (A_dom %*% x)    
+TotalFinalUseCheck <- (diag-A_dom) %*% x
 isTRUE(all.equal(TotalFinalUse, TotalFinalUseCheck, final_use, tolerance = 1e-3))
 
 #Check for total use

@@ -41,6 +41,388 @@ national_accounts <- read_xlsx("nama_10_gdp_EU27.xlsx", sheet = "Sheet 1", range
 #Employment E.G:
 #employment <- read_xlsx("nama_10_a64_EU27.xlsx", sheet = "Sheet 1", range = "A11:X77", col_names = T)
 
+#################################################################################################################################################################################################################
+## BIOOFULES PART INTEGRATED ###
+#################################################################################################################################################################################################################
+# ===================================================================
+# 1. SECTOR MAPPING
+# ===================================================================
+
+# Mapping biofuel sectors to  IO table indices
+
+BIOFUEL_SECTORS <- list(
+  conv_biodiesel = 22,           # Row/col index for conventional biodiesel
+  adv_biodiesel = 23,            # Row/col  index for advanced biodiesel
+  conv_biogasoline = 24,         # Row/col  index for conventional biogasoline
+  adv_biogasoline = 25,          # Row/col  index for advanced biogasoline
+  conv_bio_kerosene = 26,        # Row/col  index for conventional bio-kerosene
+  adv_bio_kerosene = 27,         # Row/col  index for advanced bio-kerosene
+  adv_bio_hfo = 28,              # Row/col  index for advanced bio-HFO
+  RFNBOs = 29,                   # Row/col  index for RFNBOs             
+  adv_biogas = 43                # Row/col  index for advanced biogas    
+) 
+
+# Intermediate Input Supply sectors 
+## check whether these are all!
+
+INPUT_SECTORS <- list(
+  agriculture  = 1,
+  forestry     = 2,
+  food_bev     = 15,
+  paper        = 18,
+  chemicals    = 21,
+  adv_biodiesel = 23,
+  fab_metal    = 34, 
+  computer_el  = 35,
+  elec_equip   = 36,
+  machinery    = 37,
+  repair_inst  = 41,
+  electricity  = 42,
+  adv_biogas = 43,
+  sewerage     = 45,
+  construction = 46,
+  land_transp  = 50, 
+  legal_acc    = 64,
+  architecture = 65
+)
+
+
+# Product Tax Rates (as a fraction of total output value X_i)
+TAX_RATES <- list(
+  default    = 0.0091481, # Rate for all standard biofuel sectors
+  adv_biogas = 0.0017690  # Rate for Advanced Biogas
+)
+
+# Key IO Row/Column Accounting Indices
+ROW_TAXES_LESS_SUBSIDIES <- 90 # Row 90: Net product taxes
+ROW_GVA                  <- 91 # Row 91: Gross Value Added
+ROW_TOTAL_OUTPUT         <- 92 # Row 92: Total Output
+COL_FINAL_CONSUMPTION    <- 70 # Final Demand Column (e.g. Column CC)
+
+
+# ===================================================================
+# 2. FIXED/ STATIC TECHNOLOGY BLUEPRINTS (IVC-speciifc) 
+# ===================================================================
+
+
+# Engineering cost breakdowns per IVC technology
+##  rework dist_capex and dist_opex, wrong values still
+IVC_TECH_LIBRARY <- list(  
+
+# --- IVC 1 (Biodiesel baseline) ---
+IVC1 = list(
+    prod_cost    = 870,
+    market_value = 1450,
+    coprod_abs = 
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20, 
+                     repair_inst = 0.15, land_transp = 0.05), 
+    dist_coprod = c(chemicals = 0.60, agriculture =0.4)                              ##### added this: dustribution of value of co-products to different sectors; do that for all other IVCs as well ## check whether this is a reasonable allocation
+  ),
+
+# --- IVC2 HVO (Advanced Bio-kerosene) ---
+  IVC2_HVO = list(
+    prod_cost    = 1287.68,
+    market_value = 1750.00,
+    dist_capex   = c(fab_metal = 0.050, elec_equip = 0.020, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.350, chemicals = 0.250, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.050)
+     dist_coprod = c(    )
+  ),
+# --- IVC2 HEFA (Advanced Bio-kerosene) ---
+  IVC2_HEFA = list(
+    prod_cost    = 1811.29,
+    market_value = 2380.00,
+    dist_capex   = c(fab_metal = 0.050, elec_equip = 0.020, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.350, chemicals = 0.250, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.050),
+    dist_coprod = c(    )
+  ),
+  
+  # --- IVC 5 (Advanced Biogasoline) ---
+  IVC5 = list(
+    prod_cost    = 1385.43,
+    market_value = 1000,
+    dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_acc = 0.150, 
+                     repair_inst = 0.100, land_transp = 0.050),
+    dist_coprod = c(    )
+  ),
+
+  # --- IVC 6 (SAF) ---
+  IVC6 = list(
+    prod_cost    = 1385.43,
+    market_value = 1000,
+    dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_acc = 0.150, 
+                     repair_inst = 0.100, land_transp = 0.050),
+    dist_coprod = c(    )
+  ),
+
+# --- IVC 7 (Advanced Biogas) ---
+IVC7 = list(
+    prod_cost    = 1024.42,
+    market_value = 1275.00,
+    dist_capex   = c(fab_metal = 0.050, elec_equip = 0.020, machinery = 0.400, 
+                     construction = 0.300, architecture = 0.200, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_acc = 0.150, 
+                     repair_inst = 0.100, land_transp = 0.050),
+    dist_coprod = c(    )
+  ),
+# --- IVC 8a (Advanced Bio-HFO) ---
+  IVC8a = list(
+    prod_cost    = 586.20,
+    market_value = 935.00,
+    dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_acc = 0.300, 
+                     repair_inst = 0.300, land_transp = 0.000),
+    dist_coprod = c(    )
+  ),
+
+# --- IVC 8b ---
+  IVC8b = list(
+    prod_cost    = 936.00,
+    market_value = 935.00,
+    dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_acc = 0.300, 
+                     repair_inst = 0.300, land_transp = 0.000),
+    dist_coprod = c(    )
+  ),
+
+  # --- IVC 8c (Production RFNBOs) ---
+  IVC8c = list(
+    prod_cost    = 132.07,
+    market_value = 935.00,
+    dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.600, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.650, chemicals = 0.100, legal_acc = 0.150, 
+                     repair_inst = 0.100, land_transp = 0.000),
+    dist_coprod = c(    ),
+  ),
+
+# --- IVC 9b (Production RFNBOs) ---
+  IVC9b = list(
+    prod_cost    = 394.26,
+    market_value = 1275.00,
+    dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.600, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.650, chemicals = 0.100, legal_acc = 0.150, 
+                     repair_inst = 0.100, land_transp = 0.000),
+    dist_coprod = c(    )
+  )
+
+# --- IVC 11a for road ---
+ IVC11a_road = list(
+    prod_cost    = 2692.57,
+    market_value = 2380.00,
+    dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_acc = 0.300, 
+                     repair_inst = 0.300, land_transp = 0.000),
+    dist_coprod = c(    )
+  ),
+
+# --- IVC 11a for aviation ---
+  IVC11a_SAF = list(
+    prod_cost    = 2967.02,
+    market_value = 2380.00,
+    dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_acc = 0.300, 
+                     repair_inst = 0.300, land_transp = 0.000),
+    dist_coprod = c(    )
+  ),
+
+
+  # --- IVC 12 / road (Advanced Biogasoline) ---
+  IVC12 = list(
+    prod_cost    = 988.04,
+    market_value = 1000,
+    dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.200, chemicals = 0.500, legal_acc = 0.150, 
+                     repair_inst = 0.100, land_transp = 0.050),
+    dist_coprod = c(    )
+  ),
+
+  # --- IVC 13a / half (Advanced Biogasoline or Advanced Biodiesel) ---
+  IVC13a = list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_acc = 0.200, 
+                     repair_inst = 0.300, land_transp = 0.100),
+    dist_coprod = c(    )
+  ),
+
+  # --- IVC 13b / road (Advanced Biogasoline) ---
+  IVC13b_road = list(
+    prod_cost    = 1740.45,
+    market_value = 1150,
+    dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_acc = 0.200, 
+                     repair_inst = 0.300, land_transp = 0.100),
+    dist_coprod = c(    )
+  ),
+
+  # --- IVC 13b / shipping ---
+  IVC13b_mar = list(
+    prod_cost    = 2160.57,
+    market_value = 1150,
+    dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.150, chemicals = 0.250, legal_acc = 0.200, 
+                     repair_inst = 0.300, land_transp = 0.100),
+    dist_coprod = c(    )
+  ),
+
+ ########## Conventional biofuels #########
+
+  IVC_T_FF = list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100; seweareh = 0.0)
+  ),
+
+IVC_HT_FF = list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.020, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
+  ),
+
+IVC_T_CC =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100)
+  ),
+
+IVC_HT_CC =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.050)
+  ),
+
+IVC_T_lipids =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100)
+  ),
+
+IVC_HT_lipids_road =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
+  ),
+
+IVC_HT_lipids_SAF =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
+  ),
+
+IVC_EF_FF = list(
+ prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, 
+                     construction = 0.150, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.10)
+  )
+
+)
+
+
+
+
+# ===================================================================
+# 2. CORE COEFFICIENT CALCULATOR (PURE FUNCTION)
+# ===================================================================
+
+build_ivc_vector <- function(prod_cost, market_value, alpha_cost, coprod_abs,
+                             dist_feed, dist_capex, dist_opex, dist_coprod) {
+  
+  r_k     <- prod_cost / market_value
+  s_feed  <- r_k * alpha_cost["feed"]
+  s_capex <- r_k * alpha_cost["capex"]
+  s_opex  <- r_k * alpha_cost["opex"]
+
+  a_feed  <- s_feed  * dist_feed
+  a_capex <- s_capex * dist_capex
+  a_opex  <- s_opex  * dist_opex
+  a_coprod <- (coprod_abs/ market value) * dist_coprod
+
+  get_v <- function(vec, k) if (k %in% names(vec)) unname(vec[k]) else 0
+
+# here some feedstock sectors are missing
+  a_dom <- c(
+    agriculture  = get_v(a_feed, "agriculture"),
+    forestry     = get_v(a_feed, "forestry"),
+    paper        = get_v(a_feed, "paper"),
+    food_bev     = get_v(a_feed, "food_bev"),
+    sewerage     = get_v(a_feed, "sewerage"),
+    adv_biodiesel = get_v(a_feed, "adv_biodiesel"), 
+    adv_biogas    = get_v(a_feed, "adv_biogas"),    
+    fab_metal    = get_v(a_capex, "fab_metal"),
+    elec_equip   = get_v(a_capex, "elec_equip"),
+    machinery    = get_v(a_capex, "machinery"),
+    construction = get_v(a_capex, "construction"),
+    architecture = get_v(a_capex, "architecture"),
+    computer_el = get_v(a_capex, "computer_el"),
+    electricity  = get_v(a_opex, "electricity"),
+    chemicals    = get_v(a_feed, "chemicals") + get_v(a_opex, "chemicals"),
+    legal_acc   = get_v(a_opex, "legal_acc"),
+    repair_inst  = get_v(a_opex, "repair_inst"),
+    land_transp  = get_v(a_opex, "land_transp")
+  )
+
+for (sec in names(a_coprod)) {
+    if (sec %in% names(a_dom)) {
+      a_dom[sec] <- a_dom[sec] - a_coprod[sec]
+    }
+  }
+  
+  a_imp <- c(
+    agriculture_imp = get_v(a_feed, "agriculture_imp"),
+    food_bev_imp   = get_v(a_feed, "food_bev_imp")
+  )
+  
+  return(list(a_dom = a_dom, a_imp = a_imp))
+}
+
+#################################################################################################################################################################################################################
+
+
+
 #####################################################################
 ###STEP 2: Defining Coefficients (Exogenous Variables and Parameters)
 #####################################################################
@@ -240,16 +622,16 @@ Z_imp_i <- matrix(as.numeric(Z_imp), nrow = nIndustries, ncol = nIndustries)
 Z_tot_i <- Z_dom_i + Z_imp_i
 
 # Technical coefficients matrices
-A_dom <- as.matrix(sweep(Z_dom_i, 2, q_s, FUN = '/'))  # Domestic technical coefficients              #Divide each entry of the IOT by total output - Jan: Needs to be put into the loop and get updated via some change. Aditya: The shares should be changed,
-A_imp <- as.matrix(sweep(Z_imp_i, 2, q_s, FUN = '/'))  # Import technical coefficients
-A_tot <- A_dom + A_imp                                 # Total technological coefficients
+A_dom_base <- as.matrix(sweep(Z_dom_i, 2, q_s, FUN = '/'))  # Domestic technical coefficients              #Divide each entry of the IOT by total output - Jan: Needs to be put into the loop and get updated via some change. Aditya: The shares should be changed,
+A_imp_base <- as.matrix(sweep(Z_imp_i, 2, q_s, FUN = '/'))  # Import technical coefficients
+A_tot_base <- A_dom_base + A_imp_base                                 # Total technological coefficients
 
-diag <- diag(ncol = ncol(A_dom), nrow = nrow(A_dom))                         #Create diagonal matrix
-L_dom <- solve(diag-A_dom)                                                   #Leontief inverse          ## imports not cosnidered, because they don't trigger domestic production feedback loops 
+I_mat <- diag(nIndustries)                       #Create diagonal matrix
+L_dom_base <- solve(I_mat - A_dom_base)                                               #Leontief inverse          ## imports not cosnidered, because they don't trigger domestic production feedback loops 
 
 #Check for total final use
-TotalFinalUse <- total_use - (A_dom %*% x)    
-TotalFinalUseCheck <- (diag-A_dom) %*% x
+TotalFinalUse <- total_use - (A_dom_base %*% x)    
+TotalFinalUseCheck <- (diag-A_dom_base) %*% x
 isTRUE(all.equal(TotalFinalUse, TotalFinalUseCheck, final_use, tolerance = 1e-3))
 
 #Check for total use

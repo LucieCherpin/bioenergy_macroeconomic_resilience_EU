@@ -122,6 +122,32 @@ I_D_i     <- matrix(rep(i_d_tot, times = nYears), nrow = nYears, byrow = TRUE)
 ##########################################
 ###Final Expenditure
 ##########################################
+
+
+#### expediture on biofules: ###
+## unpack the list I created in the other file, containing all the different biofuel sectors
+idx_biofuels <- unlist(BIOFUEL_SECTORS)    
+
+
+## adapt values 
+biofuel_targets_total <- c(
+  conv_biodiesel    = 100,
+  adv_biodiesel     = 100,
+  conv_biogasoline  = 100,
+  adv_biogasoline   = 100,
+  conv_bio_kerosene = 100,
+  adv_bio_kerosene  = 100,
+  adv_bio_hfo       = 100,
+  RFNBOs            = 100,
+  adv_biogas        = 100
+)
+
+## distribute the biofuels on household and governemtn expenditure ## I assumed a 90%/10% split, but discuss
+hh_cons[idx_biofuels] <- 0.90 * biofuel_targets_total
+g_i[idx_biofuels]     <- 0.10 * biofuel_targets_total
+
+
+
 ## for this whole part, both domestic and imports matter (since actors of the economy spend on both imports and domestgic produciton)
 
 

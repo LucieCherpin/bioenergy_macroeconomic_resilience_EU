@@ -968,8 +968,15 @@ build_fuel_column <- function(fuel_name, scenario_year_key) {
     a_dom_aggregate <- a_dom_aggregate + (w_k * ivc_res$a_dom)
     a_imp_aggregate <- a_imp_aggregate + (w_k * ivc_res$a_imp)
   }
-  
-  return(list(a_dom = a_dom_aggregate, a_imp = a_imp_aggregate))
+
+
+tax_rate <- if (fuel_name %in% names(TAX_RATES)) TAX_RATES[[fuel_name]] else TAX_RATES$default
+
+  return(list(
+    a_dom = a_dom_aggregate, 
+    a_imp = a_imp_aggregate, 
+    tax_rate = tax_rate
+  ))
 }
 
 
@@ -977,15 +984,9 @@ build_fuel_column <- function(fuel_name, scenario_year_key) {
 # 5. MULTI-SCENARIO EXECUTION & MATRIX POPULATION ENGINE
 # ===================================================================
 
-N <- 73
+N_interm <- 73 ## number of industries
+N_total <- 92 ## industries plus accounting rows
 I_mat <- diag(N)
-
-## storage for scenario matrices A, Z, L, X
-scenario_results <- list()
-
-## table to  store multiplier metrcies acorss all scenaiors
-multipliers_all_scenarios <- data.frame()
-
 
 
 # Master storage containers for multi-scenario results
@@ -994,7 +995,7 @@ A_imp_list <- list()
 Z_dom_list <- list()
 Z_imp_list <- list()
 L_dom_list <- list()
-Y_mat_list <- list()
+VA_mat_list <- list()
 multipliers_all_scenarios <- data.frame()
 
 # Loop through all scenario keys defined in scenario_config (e.g., "S1_2030", "S2_2030", "S3_2030")
@@ -1004,6 +1005,7 @@ for (scen_key in names(scenario_config)) {
 ## lists are initialized outside the loop to store the output matrices of each scenari without overwriting previosu results
   A_dom <- matrix(0, nrow = N, ncol = N)
   A_imp <- matrix(0, nrow = N, ncol = N)
+  VA_mat <- matrix(0, nrow = N_total,  ncol = N_interm)  # Stores Taxes (90) & GVA (91)  
   X_vec <- numeric(N)
   
   # 5.2 Loop through all fuel sectors active in the current scenario
@@ -1030,8 +1032,8 @@ for (scen_key in names(scenario_config)) {
     }
     
     # Populate Imported Technical Matrix A_imp
-## The function build_ivc_vector() labels imported feedstocks with an _imp suffix (e.g., agriculture_imp).
-##To map this coefficient to the correct input sector index in $A_{imp}$, gsub("_imp$", "", imp_sec) strips the string suffix so that agriculture_imp correctly evaluates to "agriculture", matching key 1 in INPUT_SECTORS.
+    ## The function build_ivc_vector() labels imported feedstocks with an _imp suffix (e.g., agriculture_imp).
+    ##To map this coefficient to the correct input sector index in $A_{imp}$, gsub("_imp$", "", imp_sec) strips the string suffix so that agriculture_imp correctly evaluates to "agriculture", matching key 1 in INPUT_SECTORS.
     for (imp_sec in names(res_fuel$a_imp)) {
       clean_sec_name <- gsub("_imp$", "", imp_sec) # Strip "_imp" suffix to match INPUT_SECTORS
       if (clean_sec_name %in% names(INPUT_SECTORS)) {
@@ -1040,6 +1042,15 @@ for (scen_key in names(scenario_config)) {
       }
     }
   }
+
+  ## populate primary inputs
+  tax_coef <- res_fuel$tax_rate
+    sum_dom  <- sum(A_dom[, target_col])
+    sum_imp  <- sum(A_imp[, target_col])
+    gva_coef <- 1 - (sum_dom + sum_imp + tax_coef)
+    
+    VA_mat[ROW_TAXES_LESS_SUBSIDIES, target_col] <- tax_coef
+    VA_mat[ROW_GVA,                  target_col] <- gva_coef
 
   # 5.3 Absolute Transaction Matrices (Z)
   Z_dom <- A_dom %*% diag(X_vec)
@@ -1067,6 +1078,8 @@ for (scen_key in names(scenario_config)) {
     total_mult   <- sum(L_dom[, col_idx])
     direct_req   <- sum(A_dom[, col_idx])
     indirect_mult <- total_mult - 1 - direct_req
+    tax_rate_val  <- VA_mat[ROW_TAXES_LESS_SUBSIDIES, col_idx]
+    gva_rate_val  <- VA_mat[ROW_GVA, col_idx]
     
     multipliers_all_scenarios <- rbind(
       multipliers_all_scenarios, 
@@ -1077,6 +1090,8 @@ for (scen_key in names(scenario_config)) {
         Direct_Inputs  = round(direct_req, 4),
         Indirect_Mult  = round(indirect_mult, 4),
         Total_Output_M = round(total_mult, 4),
+        Net_Tax_Coef   = round(tax_rate_val, 5),
+        GVA_Coef       = round(gva_rate_val, 4),
         stringsAsFactors = FALSE
       )
     )

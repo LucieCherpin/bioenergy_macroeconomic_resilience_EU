@@ -374,15 +374,8 @@ scenario_config <- list(
   adv_biodiesel = list(
     abs_production_eur = ???,  ## adapt, find right value
     dist_use = c(
-    # --- Intermediate Consumption (Matrix Z) ---
-    land_transport     = 0.35, # H49: Commercial road freight & logistics
-    wholesale          = 0.20, # G46: Bulk fuel distribution terminals
-    maritime_transport = 0.05, # H50: Shipping fleets
-    
-    # --- Final Demand Vectors (Matrix Y) ---
-    household_demand   = 0.25, # Y_H: Retail gas stations for personal passenger cars
-    government_demand  = 0.05, # Y_G: Public fleet green procurement (police, emergency)
-  ),
+    final_demand = 1),
+
     weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),  ## these weights will change in each scenario!
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC

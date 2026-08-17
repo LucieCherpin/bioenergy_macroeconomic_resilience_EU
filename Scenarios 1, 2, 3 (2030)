@@ -20,7 +20,6 @@ BIOFUEL_SECTORS <- list(
   adv_biogas = 43                # Row/col  index for advanced biogas    
 ) 
 
-
 # Intermediate Input Supply sectors 
 ## check whether these are all!
 

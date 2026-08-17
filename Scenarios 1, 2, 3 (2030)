@@ -17,7 +17,7 @@ BIOFUEL_SECTORS <- list(
   adv_bio_kerosene = 27,         # Row/col  index for advanced bio-kerosene
   adv_bio_hfo = 28,              # Row/col  index for advanced bio-HFO
   RFNBOs = 29,                   # Row/col  index for RFNBOs             
-  adv_biogas = 43                # adv_biogas = 43
+  adv_biogas = 43                # Row/col  index for advanced biogas    
 ) 
 
 

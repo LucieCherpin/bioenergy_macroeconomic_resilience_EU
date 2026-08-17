@@ -567,7 +567,8 @@ weights = c(IVC_HT_lipds_SAF = 1),
       IVC_HT_lipds_SAF = c(food = 1),      #### check whether imported or domestic
     )
   )
-)
+), 
+
 
 
 ##############################################################################
@@ -753,7 +754,7 @@ weights = c(IVC_EF_FF = 1),
       IVC_HT_lipds_SAF = c(food = 1),      #### check whether imported or domestic
     )
   )
-)
+),
 
 ##############################################################################
 #### Scenario (3) -- 2030 ###
@@ -976,9 +977,16 @@ build_fuel_column <- function(fuel_name, scenario_year_key) {
 # 5. MULTI-SCENARIO EXECUTION & MATRIX POPULATION ENGINE
 # ===================================================================
 
-N <- 92 ## 73 rows within Z matrix + accounting rows)
 N <- 73
 I_mat <- diag(N)
+
+## storage for scenario matrices A, Z, L, X
+scenario_results <- list()
+
+## table to  store multiplier metrcies acorss all scenaiors
+multipliers_all_scenarios <- data.frame()
+
+
 
 # Master storage containers for multi-scenario results
 A_dom_list <- list()
@@ -996,7 +1004,6 @@ for (scen_key in names(scenario_config)) {
 ## lists are initialized outside the loop to store the output matrices of each scenari without overwriting previosu results
   A_dom <- matrix(0, nrow = N, ncol = N)
   A_imp <- matrix(0, nrow = N, ncol = N)
-  Y_mat <- matrix(0, nrow = N, ncol = 100)
   X_vec <- numeric(N)
   
   # 5.2 Loop through all fuel sectors active in the current scenario

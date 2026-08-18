@@ -154,6 +154,8 @@ g_i[idx_biofuels]     <- 0.10 * biofuel_targets_total
 #Total consumption shares by industry
 ## logic: spending on industry i (Vector of N industries) /divided by/ total spending across all industries (single scalar sum)  
 
+## make domestic/ imports separate: beta_bar_dom and beta_bar_imp
+
 beta_bar <- as.matrix(
   (as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 4])) + as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 4])) +          ## column: final consumption expenditure by government ## rows of all industries, i.e. a vector of length N 
    as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 5])) + as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 5])) +          ## final consumtpion expenditure by households
@@ -230,18 +232,16 @@ C_i_tax <- matrix(rep(consumption_tax_i, times = nYears),nrow = nYears, byrow = 
 
 # Goods x goods matrix Z (Domestic)
 Z_dom   <- as.matrix(IO_EU_domestic[2:(nIndustries + 1), 3:(nIndustries + 2)], col_names = F)
-Z_dom_i <- matrix(as.numeric(Z_dom), nrow = nIndustries, ncol = nIndustries)
 
 # Goods x goods matrix Z (Imports)
 Z_imp   <- as.matrix(IO_EU_imports[2:(nIndustries + 1), 3:(nIndustries + 2)], col_names = F)
-Z_imp_i <- matrix(as.numeric(Z_imp), nrow = nIndustries, ncol = nIndustries)
 
 # Total intermediate transactions matrix Z
-Z_tot_i <- Z_dom_i + Z_imp_i
+Z_tot <- Z_dom + Z_imp
 
 # Technical coefficients matrices
-A_dom <- as.matrix(sweep(Z_dom_i, 2, q_s, FUN = '/'))  # Domestic technical coefficients              #Divide each entry of the IOT by total output - Jan: Needs to be put into the loop and get updated via some change. Aditya: The shares should be changed,
-A_imp <- as.matrix(sweep(Z_imp_i, 2, q_s, FUN = '/'))  # Import technical coefficients
+A_dom <- as.matrix(sweep(Z_dom, 2, q_s, FUN = '/'))  # Domestic technical coefficients              #Divide each entry of the IOT by total output - Jan: Needs to be put into the loop and get updated via some change. Aditya: The shares should be changed,
+A_imp <- as.matrix(sweep(Z_imp, 2, q_s, FUN = '/'))  # Import technical coefficients
 A_tot <- A_dom + A_imp                                 # Total technological coefficients
 
 diag <- diag(ncol = ncol(A_dom), nrow = nrow(A_dom))                         #Create diagonal matrix
@@ -292,19 +292,7 @@ for (i in 2:nYears){
     #Define System of Equations     
     #####################################
     
-    # POPULATION
-    
-    # Adult population (ages 20+) — groups II, III, IV
-    #pop_adult_i <- sum(POP[i, 2:4]) * 1e6
-    
-    # Population change
-    #delta_pop <- numeric(length(agegroups))
-
-    #Total population (million people)
-    #POP[i, ] <- POP[i-1, ] + delta_pop
-      
-    #Working age population (people)
-    #working_age_pop <- sum(POP[i, 2:4]) * 1e6
+  
     
 
     #A) Define input-output structure
@@ -314,14 +302,8 @@ for (i in 2:nYears){
     
     #Total final use
     f_i[i,] = D_i[i,] + GCF_i[i,] + EX_i[i,]
-    
-    #Imports-  Linus: work in progress, developing the skeleton for later integration - see line 770 for initialisation
-    #IM_i[i,] = IM_L %*% IM_f[i, ]   #  for the case that we are developing an A-matrix for imports
-    #IM_i[i,] = IM_i[i-1,] - this should be 
-    
-
-    
-    #Exports
+  
+    #Exports ## couple exports to total use
     EX_i[i, ] <- EX_i[i-1,] 
 
     #Total use by industry (Leontief production function): Domestic

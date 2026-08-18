@@ -957,7 +957,9 @@ sample_res <- build_ivc_vector(
     dist_capex   = IVC_TECH_LIBRARY[[sample_ivc]]$dist_capex,
     dist_opex    = IVC_TECH_LIBRARY[[sample_ivc]]$dist_opex,
   )
-  
+
+## creates a vector filled with zeros tha tmatches the exact length and sector names of a_dom/ a_imp
+
   a_dom_aggregate <- setNames(numeric(length(sample_res$a_dom)), names(sample_res$a_dom))
   a_imp_aggregate <- setNames(numeric(length(sample_res$a_imp)), names(sample_res$a_imp))
   
@@ -982,7 +984,8 @@ ivc_prod_cost <- fuel_cfg$prod_cost[[ivc_id]]
       dist_capex   = tech_base$dist_capex,
       dist_opex    = tech_base$dist_opex
     )
-    
+
+## the weighted domestic and imported inputs needed for the biofuel product overall (averaging the inputs needed for the individual IVCs contributing to that product)
     a_dom_aggregate <- a_dom_aggregate + (w_k * ivc_res$a_dom)
     a_imp_aggregate <- a_imp_aggregate + (w_k * ivc_res$a_imp)
   }
@@ -997,10 +1000,117 @@ tax_rate <- if (fuel_name %in% names(TAX_RATES)) TAX_RATES[[fuel_name]] else TAX
   ))
 }
 
+############################################################################################################################################################################################################
+### new try: compute Z_imp, Z_dom, X, and Y ###
+############################################################################################################################################################################################################
 
 # ===================================================================
-# 5. MULTI-SCENARIO EXECUTION
+# 5. SCENARIO-SPECIFIC Z, X, AND Y MATRIX EXTRACTION
 # ===================================================================
+
+N_interm <- 73  # Number of industries 
+
+# creates empty named lists to store the resulting matrices and vectors for every scenario
+Z_dom_list <- list()    ## domestic intermediate transaction matrix
+Z_imp_list <- list()    ##  imports intermdeiate trasnaction matrix (the two together = production costs)
+X_vec_list <- list()    ## (domestic) output vector (had to fit market value)
+Y_dom_list <- list()    ## domestic final demand vector
+
+# Loop through all scenarios (S1_2030, S2_2030, S3_2030, etc.)
+for (scen_key in names(scenario_config)) {
+  
+  # Initialize empty matrices/vectors for current scenario
+  A_dom <- matrix(0, nrow = N_interm, ncol = N_interm) ## matrix
+  A_imp <- matrix(0, nrow = N_interm, ncol = N_interm)  ## matrix
+  X     <- numeric(N_interm) ##vector (or better to create a matrix directly?)
+  
+  # -----------------------------------------------------------------
+  # 5.1 Populate Technical Coefficient Matrices (A) and Output (X)
+  # -----------------------------------------------------------------
+  for (fuel_name in names(scenario_config[[scen_key]])) {
+    
+    if (!fuel_name %in% names(BIOFUEL_SECTORS)) next
+    
+    target_col <- BIOFUEL_SECTORS[[fuel_name]]    ### maps the biofules name to its correspnding sector index/ column position in the 73x73 matrix
+    
+    # 1. Store Total Sectoral Output X
+    X[target_col] <- scenario_config[[scen_key]][[fuel_name]][["abs_production_eur"]]      ## since absolute production euro is the total market value of what is produced by that biofuel product
+    
+    # 2. Build aggregated technical input coefficients for fuel column
+    res_fuel <- build_fuel_column(fuel_name, scen_key)
+    
+    # 3. Populate A_dom
+    for (sec_name in names(res_fuel$a_dom)) {
+      if (sec_name %in% names(INPUT_SECTORS)) {
+        row_idx <- INPUT_SECTORS[[sec_name]]    ## maps each supplying sector name to its corresponding matrix row position
+        A_dom[row_idx, target_col] <- res_fuel$a_dom[sec_name]      ## insert the the technical coefficient, constructs colmn "target_col" of the domestic A matrix
+      }
+    }
+    
+    # 4. Populate A_imp    ## stripy import suffixes to locate the matching row index, then populates column target_col of the imported A_imp
+    for (imp_sec in names(res_fuel$a_imp)) {
+      clean_sec_name <- gsub("_imp$", "", imp_sec)
+      if (clean_sec_name %in% names(INPUT_SECTORS)) {
+        row_idx <- INPUT_SECTORS[[clean_sec_name]]
+        A_imp[row_idx, target_col] <- res_fuel$a_imp[imp_sec]
+      }
+    }
+  }
+  
+  # -----------------------------------------------------------------
+  # 5.2 Calculate Transaction Matrices (Z)
+  # -----------------------------------------------------------------
+  # Z = A * diag(X)    ### diag(X) constructs a 73x73 diagonal matrix witj output values
+  Z_dom <- A_dom %*% diag(X)  ##  matrix multiplication 
+  Z_imp <- A_imp %*% diag(X)
+  
+  # Set row and column names for easy inspection
+## don't know if this is necessary
+  rownames(Z_dom) <- colnames(Z_dom) <- 1:N_interm
+  rownames(Z_imp) <- colnames(Z_imp) <- 1:N_interm
+  names(X)        <- 1:N_interm
+  
+  # -----------------------------------------------------------------
+  # 5.3 Calculate Final Demand Vector (Y)
+  # -----------------------------------------------------------------
+  # Row sums of Z_dom represent total intermediate sales by each sector
+  intermediate_demand_dom <- rowSums(Z_dom)
+  
+  # Y = X - Z_dom %*% 1
+  Y_dom <- X - intermediate_demand_dom
+  names(Y_dom) <- 1:N_interm
+  
+  # -----------------------------------------------------------------
+  # 5.4 Store Scenario Results
+  # -----------------------------------------------------------------
+  Z_dom_list[[scen_key]] <- Z_dom
+  Z_imp_list[[scen_key]] <- Z_imp
+  X_vec_list[[scen_key]] <- X
+  Y_dom_list[[scen_key]] <- Y_dom
+}
+
+# ===================================================================
+# 6. ACCESSING RESULTS (EXAMPLE FOR S1_2030)
+# ===================================================================
+
+# Domestic Intermediate Transaction Matrix (73x73)
+Z_dom_S1_2030 <- Z_dom_list[["S1_2030"]]
+
+# Imported Intermediate Transaction Matrix (73x73)
+Z_imp_S1_2030 <- Z_imp_list[["S1_2030"]]
+
+# Total Sector Output Vector (Length 73)
+X_S1_2030     <- X_vec_list[["S1_2030"]]
+
+# Domestic Final Demand Vector (Length 73)
+Y_dom_S1_2030 <- Y_dom_list[["S1_2030"]]
+
+############################################################################################################################################################################################################
+############################################################################################################################################################################################################
+# ===================================================================
+# 5. OLD VERSION - MULTI-SCENARIO EXECUTION
+# ===================================================================
+
 
 N_interm <- 73 ## number of industries
 N_total <- 92 ## industries plus accounting rows

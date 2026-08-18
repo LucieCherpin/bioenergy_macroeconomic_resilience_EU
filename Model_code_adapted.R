@@ -26,10 +26,10 @@ options(scipen = 999)
 
 #Input-Output Table EU27 (Eurostat)
 
-IO_EU_domestic <- read_xlsx("IOT_EU_2023_domestic_biofuels_disaggregated.xlsx", sheet= "Sheet 1", range = "A9:CP104", col_names = T)
+IO_EU_domestic <- read_xlsx("IOT_EU27_Domestic uses_10_08.xlsx", sheet= "Sheet 1", range = "A9:CP104", col_names = T)
 IO_EU_domestic <- as.data.frame(IO_EU_domestic)
 
-IO_EU_imports <- read_xlsx("IOT_EU_2023_imports_biofuels_disaggregated.xlsx", sheet= "Sheet 1", range = "A9:CP104", col_names = T)
+IO_EU_imports <- read_xlsx("IOT_EU27_imports_10_08.xlsx", sheet= "Sheet 1", range = "A9:CP104", col_names = T)
 IO_EU_imports <- as.data.frame(IO_EU_imports)
 
 

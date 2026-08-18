@@ -940,11 +940,11 @@ build_fuel_column <- function(fuel_name, scenario_year_key) {
   sample_ivc <- names(weights)[1]       ### picks the first actvie IVC listed in the scenario, i.e. IVC1 (FAME)
 
 
-
-    # 1. Produktionskosten abrufen
+## retrieve production costs
+    # 1. für advanced, ist es in fuel_cfg
   sample_prod_cost <- fuel_cfg$prod_cost[[sample_ivc]]
   
-  # 2. Fallback auf IVC_TECH_LIBRARY, falls nicht in prod_cost vorhanden
+  # 2. für convenrtional (da konstant), in IVC_TECH_LIBRARY
   if (is.null(sample_prod_cost)) {
     sample_prod_cost <- IVC_TECH_LIBRARY[[sample_ivc]]$prod_cost
   }
@@ -963,8 +963,7 @@ sample_res <- build_ivc_vector(
   
   # Loop over active IVCs and aggregate
 
-## question: ivc_id not defined yet!
-
+## nimmt sich die IVCs heraus, die in weights vorkommen
 for (ivc_id in names(weights)) {
     w_k <- weights[ivc_id]
     tech_base <- IVC_TECH_LIBRARY[[ivc_id]]
@@ -1000,7 +999,7 @@ tax_rate <- if (fuel_name %in% names(TAX_RATES)) TAX_RATES[[fuel_name]] else TAX
 
 
 # ===================================================================
-# 5. MULTI-SCENARIO EXECUTION & MATRIX POPULATION ENGINE
+# 5. MULTI-SCENARIO EXECUTION
 # ===================================================================
 
 N_interm <- 73 ## number of industries

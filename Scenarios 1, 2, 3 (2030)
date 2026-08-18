@@ -1023,6 +1023,9 @@ delta_X <- L_dom %*% delta_Y
 Z_dom_list <- list()
 Z_imp_list <- list()
 
+## tentative output function
+X = Z_dom + Z_imp + Y_dom + Exp + taxes
+
 multipliers_all_scenarios <- data.frame()
 
 # Loop through all scenario keys defined in scenario_config (e.g., "S1_2030", "S2_2030", "S3_2030")
@@ -1032,6 +1035,7 @@ for (scen_key in names(scenario_config)) {
 ## lists are initialized outside the loop to store the output matrices of each scenari without overwriting previosu results
   A_dom <- matrix(0, nrow = N, ncol = N)
   A_imp <- matrix(0, nrow = N, ncol = N)
+
   
   X_vec <- numeric(N)
   

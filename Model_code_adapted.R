@@ -21,9 +21,6 @@ options(scipen = 999)
 ##########################################
 ###Import Data
 ##########################################
-
-#### adpated: switch from  Austria to EU; have two tables for doemstic cosnumption and imports
-
 #Input-Output Table EU27 (Eurostat)
 
 IO_EU_domestic <- read_xlsx("IOT_EU27_Domestic uses_10_08.xlsx", sheet= "Sheet 1", range = "A9:CP104", col_names = T)
@@ -31,7 +28,6 @@ IO_EU_domestic <- as.data.frame(IO_EU_domestic)
 
 IO_EU_imports <- read_xlsx("IOT_EU27_imports_10_08.xlsx", sheet= "Sheet 1", range = "A9:CP104", col_names = T)
 IO_EU_imports <- as.data.frame(IO_EU_imports)
-
 
 #National Accounts
 national_accounts <- read_xlsx("nama_10_gdp_EU27.xlsx", sheet = "Sheet 1", range = "A10:B48", col_names = F)

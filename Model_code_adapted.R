@@ -186,8 +186,8 @@ g_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 4])
 g_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 4]))
 g_cons_tax_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 8, nIndustries + 4]))   #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure
 g_cons_tax_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 8, nIndustries + 4]))
-g_cons_tax_i_dom <- beta_g_bar * g_cons_tax_dom                 #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure by industry
-g_cons_tax_i_imp <- beta_g_bar * g_cons_tax_imp
+g_cons_tax_i_dom <- beta_g_bar_dom * g_cons_tax_dom                 #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure by industry
+g_cons_tax_i_imp <- beta_g_bar_imp * g_cons_tax_imp
 
 G_dom = matrix(data = sum(g_dom), ncol = nYears)              #P3_S13 - Government expenditure matrix
 G_tax = matrix(data = sum(g_cons_tax_dom), ncol = nYears)         #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure matrix

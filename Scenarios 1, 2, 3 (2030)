@@ -55,7 +55,7 @@ TAX_RATES <- list(
 nIndustries <- 73
 
 
-ROW_GVA                  <- nIndutsries + 1
+ROW_GVA                  <- nIndutsries + 1    ## don't know if this is needed here of whether it is done in the main code already
 ROW_TAXES_LESS_SUBSIDIES <- nIndutries + 7
 ROW_TOTAL_OUTPUT         <- nIndustries + 9
 COL_FINAL_CONSUMPTION    <- nIndustries + 1
@@ -66,12 +66,12 @@ COL_FINAL_CONSUMPTION    <- nIndustries + 1
 
 
 # Cost components per IVC that stay the SAME across time and scenarios
+## production costs
 
 IVC_TECH_LIBRARY <- list(  
 
 # --- IVC 1 (Biodiesel baseline) ---
 IVC1 = list(
-    prod_cost    = 870,
     market_value = 1450,
     dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
                      construction = 0.15, architecture = 0.30, computer_el = 0.03),
@@ -81,7 +81,6 @@ IVC1 = list(
 
 # --- IVC2 HVO (Advanced Bio-kerosene) ---
   IVC2_HVO = list(
-    prod_cost    = 1287.68,
     market_value = 1750.00,
     dist_capex   = c(fab_metal = 0.050, elec_equip = 0.020, machinery = 0.450, 
                      construction = 0.150, architecture = 0.300, computer_el = 0.030),
@@ -90,7 +89,6 @@ IVC1 = list(
   ),
 # --- IVC2 HEFA (Advanced Bio-kerosene) ---
   IVC2_HEFA = list(
-    prod_cost    = 1811.29,
     market_value = 2380.00,
     dist_capex   = c(fab_metal = 0.050, elec_equip = 0.020, machinery = 0.450, 
                      construction = 0.150, architecture = 0.300, computer_el = 0.030),
@@ -100,7 +98,6 @@ IVC1 = list(
   
   # --- IVC 5 (Advanced Biogasoline) ---
   IVC5 = list(
-    prod_cost    = 1385.43,
     market_value = 1000,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
                      construction = 0.150, architecture = 0.300, computer_el = 0.030),
@@ -110,7 +107,6 @@ IVC1 = list(
 
   # --- IVC 6 (SAF) ---
   IVC6 = list(
-    prod_cost    = 1385.43,
     market_value = 1000,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
                      construction = 0.150, architecture = 0.300, computer_el = 0.030),
@@ -120,7 +116,6 @@ IVC1 = list(
 
 # --- IVC 7 (Advanced Biogas) ---
 IVC7 = list(
-    prod_cost    = 1024.42,
     market_value = 1275.00,
     dist_capex   = c(fab_metal = 0.050, elec_equip = 0.020, machinery = 0.400, 
                      construction = 0.300, architecture = 0.200, computer_el = 0.030),
@@ -129,7 +124,6 @@ IVC7 = list(
   ),
 # --- IVC 8a (Advanced Bio-HFO) ---
   IVC8a = list(
-    prod_cost    = 586.20,
     market_value = 935.00,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
                      construction = 0.100, architecture = 0.300, computer_el = 0.030),
@@ -139,7 +133,6 @@ IVC7 = list(
 
 # --- IVC 8b ---
   IVC8b = list(
-    prod_cost    = 936.00,
     market_value = 935.00,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
                      construction = 0.100, architecture = 0.300, computer_el = 0.030),
@@ -149,7 +142,6 @@ IVC7 = list(
 
   # --- IVC 8c (Production RFNBOs) ---
   IVC8c = list(
-    prod_cost    = 132.07,
     market_value = 935.00,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.600, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
@@ -157,19 +149,26 @@ IVC7 = list(
                      repair_inst = 0.100, land_transp = 0.000)
   ),
 
+ # --- IVC 9a (Biogas) ---
+  IVC9a = list(
+    market_value = 1275.
+    dist_capex   = c(elec_equip = 0.020, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_acc = 0.300, 
+                     repair_inst = 0.300)
+  ),
+
 # --- IVC 9b (Production RFNBOs) ---
   IVC9b = list(
-    prod_cost    = 394.26,
     market_value = 1275.00,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.600, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
     dist_opex    = c(electricity = 0.650, chemicals = 0.100, legal_acc = 0.150, 
                      repair_inst = 0.100, land_transp = 0.000)
-  )
+  ),
 
 # --- IVC 11a for road ---
  IVC11a_road = list(
-    prod_cost    = 2692.57,
     market_value = 2380.00,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
                      construction = 0.100, architecture = 0.300, computer_el = 0.030),
@@ -179,7 +178,6 @@ IVC7 = list(
 
 # --- IVC 11a for aviation ---
   IVC11a_SAF = list(
-    prod_cost    = 2967.02,
     market_value = 2380.00,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
                      construction = 0.100, architecture = 0.300, computer_el = 0.030),
@@ -190,7 +188,6 @@ IVC7 = list(
 
   # --- IVC 12 / road (Advanced Biogasoline) ---
   IVC12 = list(
-    prod_cost    = 988.04,
     market_value = 1000,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
                      construction = 0.150, architecture = 0.300, computer_el = 0.030),
@@ -200,7 +197,6 @@ IVC7 = list(
 
   # --- IVC 13a / half (Advanced Biogasoline or Advanced Biodiesel) ---
   IVC13a = list(
-    prod_cost    = 1598.13,
     market_value = 1750,
     dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
@@ -210,7 +206,6 @@ IVC7 = list(
 
   # --- IVC 13b / road (Advanced Biogasoline) ---
   IVC13b_road = list(
-    prod_cost    = 1740.45,
     market_value = 1150,
     dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
@@ -220,7 +215,6 @@ IVC7 = list(
 
   # --- IVC 13b / shipping ---
   IVC13b_mar = list(
-    prod_cost    = 2160.57,
     market_value = 1150,
     dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
@@ -311,7 +305,7 @@ IVC_EF_FF = list(
 # 2. CORE COEFFICIENT CALCULATOR (PURE FUNCTION)
 # ===================================================================
 
-build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
+build_ivc_vector <- function(prod_cost, market_value, alpha_cost,          
                              dist_feed, dist_capex, dist_opex) {
   
   r_k     <- prod_cost / market_value        ## r_k = share of production costs of market value
@@ -328,7 +322,7 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
   get_v <- function(vec, k) if (k %in% names(vec)) unname(vec[k]) else 0      ## if sector "k" exists, it extracts its calculated numeric value; if sector does NOT exist, it returns 0 (instead of throwing an error)
 
 
-## constrcts technical coefficient vectors a_dom and a_imp
+## constructs technical coefficient vectors a_dom and a_imp
   a_dom <- c(
     agriculture  = get_v(a_feed, "agriculture"),
     forestry     = get_v(a_feed, "forestry"),
@@ -378,19 +372,27 @@ scenario_config <- list(
   ### advanced biodiesel
   adv_biodiesel = list(
     abs_production_eur = 3108.28
-    weights = c(IVC1 = 0.79304, IVC2HVO = 0.15764, IVC13a = 0.03429, IVC13bshipping = 0.01502),  ## these weights will change in each scenario!
+    weights = c(IVC1 = 0.79304, IVC2_HVO = 0.15764, IVC13a = 0.03429, IVC13bshipping = 0.01502),  ## these weights will change in each scenario
+
+
+    prod_cost = list(
+      IVC1           = 870
+      IVC2_HVO        = 1287.68
+      IVC13a         = 1598.13
+      IVC13b_mar = 2160.57
+    ),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
       IVC1           = c(feed = 0.5977011, capex = 0.0954023, opex = 0.3068966),
-      IVC2HVO        = c(feed = 0.476579435, capex = 0.208902273, opex = 0.314518292),
+      IVC2_HVO        = c(feed = 0.476579435, capex = 0.208902273, opex = 0.314518292),
       IVC13a         = c(feed = 0.132113077, capex = 0.50371231, opex = 0.364174614),
       IVC13b_mar = c(feed = 0.292548351, capex = 0.317045718, opex = 0.390405932)
     ),
     
     dist_feed = list(
       IVC1           = c(agriculture_imp = 1.0),
-      IVC2HVO        = c(agriculture = 0.14497, adv_biodiesel = 0.72677, chemicals = 0.12825),
+      IVC2_HVO        = c(agriculture = 0.14497, adv_biodiesel = 0.72677, chemicals = 0.12825),
       IVC13a         = c(agriculture = 0.55703, forestry = 0.22890, paper = 0.20022, food_bev = 0.01387)
       IVC13b_mar = c(agriculture = 0,.590480, forestry = 0.210894, paper = 0.184505, food_bev = 0.014121)
     )
@@ -401,7 +403,12 @@ scenario_config <- list(
     abs_production_eur = 615.78
     weights = c(IVC5 = 0.3663, IVC12 = 0.3663, IVC13a = 0.2234, IVC13b_road = 0.0440),
     
-    # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+  prod_cost = list(
+      IVC5           = 1385.43
+      IVC12        = 988.04
+      IVC13a         = 1598.13
+      IVC13b_road = 1740.45),
+
     alpha = list(
       IVC5           = c(feed = 0.227, capex = 0.4006, opex = 0.3724),
       IVC12        = c(feed = 0.62000000, capex = 0.10000000, opex = 0.28000000),
@@ -421,6 +428,10 @@ scenario_config <- list(
   adv_biokerosene = list(
     abs_production_eur = 2094.40, 
     weights = c(IVC2_HEFA = 0.9418605, IVC11a_SAF = 0.0581395),
+
+    prod_cost = list(
+      IVC2_HEFA = 1811.29
+      IVC11a_SAF   = 2967.02),
     
     alpha = list(
       IVC2_HEFA = c(feed = 0.48000000, capex = 0.20800000, opex = 0.31200000),
@@ -437,6 +448,10 @@ scenario_config <- list(
   adv_bio_hfo = list(
     abs_production_eur = 841.50, 
     weights = c(IVC8a = 0.5000000, IVC8b = 0.5000000),
+
+     prod_cost = list(
+      IVC8a = 586.20
+      IVC8b = 936.00),
     
     alpha = list(
       IVC8a = c(feed = 0.20333994, capex = 0.47936076, opex = 0.31729929),
@@ -453,6 +468,11 @@ scenario_config <- list(
   rfnbos = list(
     abs_production_eur = 201.19
     weights = c(IVC8c = 0.8019559, IVC9b = 0.1980441),
+    
+    prod_cost = list(
+      IVC8c = 132.07
+      IVC9b = 394.26),
+    
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
@@ -473,6 +493,11 @@ adv_biogas = list(
     weights = c(IVC7 = 1.0, IVC9a = 0.0),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
+
+      prod_cost = list(
+      IVC7 = 1024.42
+      IVC9a = 1369.48),
+    
     alpha = list(
       IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000),
       IVC9a = c(feed = 0.154612, capex = 0.583026, opex = 0.262362)      ### should I even include 9a if it contributes zero here? 
@@ -551,11 +576,17 @@ weights = c(IVC_HT_lipds_SAF = 1),
 "S2_2030" = list(
   adv_biodiesel = list(
     abs_production_eur = 13022.4647
-    weights = c(IVC2HVO = 0.0399, IVC11aroad = 0.7112, IVC13a = 0.1705, IVC13b_mar = 0.0784),
+    weights = c(IVC2_HVO = 0.0399, IVC11aroad = 0.7112, IVC13a = 0.1705, IVC13b_mar = 0.0784),
+
+   prod_cost = list(
+      IVC2_HVO = 
+      IVC11_road =
+      IVC13a = 
+      IVC13b_mar = ),
   
     ### now using LCoP 2030 high  
       alpha = list(
-      IVC2HVO        = c(feed = 0.4742, capex = 0.2098, opex = 0.3159),
+      IVC2_HVO        = c(feed = 0.4742, capex = 0.2098, opex = 0.3159),
       IVC11aroad     = c(feed = 0.1099, capex = 0.5359, opex = 0.3542),
       IVC13a         = c(feed = 0.1317, capex = 0.5039, opex = 0.3646),
       IVC13b_mar = c(feed = 0.2934, capex = 0.3167, opex = 0.3899)
@@ -563,7 +594,7 @@ weights = c(IVC_HT_lipds_SAF = 1),
     
     # Scenario-specific feedstock input distribution vectors per IVC
     dist_feed = list(
-      IVC2HVO = c(agriculture = 0.210755, adv_biodiesel = 0.670858, chemicals = 0.118387),
+      IVC2_HVO = c(agriculture = 0.210755, adv_biodiesel = 0.670858, chemicals = 0.118387),
       IVC11aroad = c(agriculture = 0.6220, forestry = 0.1487, paper = 0.1823, food_bev = 0.0145, adv_biodiesel = 0.0326),
       IVC13a = c(agriculture   = 0.6273, forestry = 0.1609, paper = 0.1972, food_bev = 0.0146),
       IVC13b_mar = c(agriculture = 0.6591, forestry = 0.1466, paper = 0.1796, food_bev = 0.0147)
@@ -756,7 +787,7 @@ weights = c(IVC_EF_FF = 1),
  ### advanced biogasoline
   adv_biogasoline = list(
     abs_production_eur = ???,  ## find right values
-    weights = c(IVC1 = 0.7930434, IVC2HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),
+    weights = c(IVC1 = 0.7930434, IVC2_HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
@@ -901,10 +932,21 @@ build_fuel_column <- function(fuel_name, scenario_year_key) {
   
   # Run sample IVC to dynamically extract structure length & names
   sample_ivc <- names(weights)[1]       ### picks the first actvie IVC listed in the scenario, i.e. IVC1 (FAME)
-  sample_res <- build_ivc_vector(
-    prod_cost    = IVC_TECH_LIBRARY[[sample_ivc]]$prod_cost,
+
+
+
+    # 1. Produktionskosten abrufen
+  sample_prod_cost <- fuel_cfg$prod_cost[[sample_ivc]]
+  
+  # 2. Fallback auf IVC_TECH_LIBRARY, falls nicht in prod_cost vorhanden
+  if (is.null(sample_prod_cost)) {
+    sample_prod_cost <- IVC_TECH_LIBRARY[[sample_ivc]]$prod_cost
+  }
+
+sample_res <- build_ivc_vector(
+    prod_cost    = sample_prod_cost,
     market_value = IVC_TECH_LIBRARY[[sample_ivc]]$market_value,
-    alpha_cost   = IVC_TECH_LIBRARY[[sample_ivc]]$alpha,
+    alpha_cost   = fuel_cfg$alpha[[sample_ivc]],
     dist_feed    = fuel_cfg$dist_feed[[sample_ivc]],
     dist_capex   = IVC_TECH_LIBRARY[[sample_ivc]]$dist_capex,
     dist_opex    = IVC_TECH_LIBRARY[[sample_ivc]]$dist_opex,
@@ -916,13 +958,18 @@ build_fuel_column <- function(fuel_name, scenario_year_key) {
   # Loop over active IVCs and aggregate
   for (ivc_id in names(weights)) {
     w_k <- weights[ivc_id]
-
     tech_base <- IVC_TECH_LIBRARY[[ivc_id]]
-    
+
+# Produktionskosten für die aktuelle IVC ermitteln
+ivc_prod_cost <- fuel_cfg$prod_cost[[ivc_id]]
+    if (is.null(ivc_prod_cost)) {
+      ivc_prod_cost <- tech_base$prod_cost
+    }
+
     ivc_res <- build_ivc_vector(
-      prod_cost    = tech_base$prod_cost,
+      prod_cost    = ivc_prod_cost
       market_value = tech_base$market_value,
-      alpha_cost   = tech_base$alpha,
+      alpha_cost   = fuel_cfg$alpha[[ivc_id]],
       dist_feed    = fuel_cfg$dist_feed[[ivc_id]],
       dist_capex   = tech_base$dist_capex,
       dist_opex    = tech_base$dist_opex

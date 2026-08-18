@@ -305,7 +305,7 @@ IVC_EF_FF = list(
 # 2. CORE COEFFICIENT CALCULATOR (PURE FUNCTION)
 # ===================================================================
 
-
+### vector at the IVC-level!
 
 build_ivc_vector <- function(prod_cost, market_value, alpha_cost,          
                              dist_feed, dist_capex, dist_opex) {
@@ -929,6 +929,8 @@ weights = c(IVC_EF_FF = 1),
 
 ## technical input coefficient vector
 
+
+### in constrast to "build_ivc_vectro", this one works at the sector/ product level
 build_fuel_column <- function(fuel_name, scenario_year_key) {
   
   fuel_cfg <- scenario_config[[scenario_year_key]][[fuel_name]]    ## 

@@ -236,8 +236,8 @@ Z_dom   <- as.matrix(IO_EU_domestic[2:(nIndustries + 1), 3:(nIndustries + 2)], c
 # Goods x goods matrix Z (Imports)
 Z_imp   <- as.matrix(IO_EU_imports[2:(nIndustries + 1), 3:(nIndustries + 2)], col_names = F)
 
-# Total intermediate transactions matrix Z
-Z_tot <- Z_dom + Z_imp
+# Total intermediate transactions matrix Z -  Outcommented
+#Z_tot <- Z_dom + Z_imp
 
 # Technical coefficients matrices
 A_dom <- as.matrix(sweep(Z_dom, 2, q_s, FUN = '/'))  # Domestic technical coefficients              #Divide each entry of the IOT by total output - Jan: Needs to be put into the loop and get updated via some change. Aditya: The shares should be changed,

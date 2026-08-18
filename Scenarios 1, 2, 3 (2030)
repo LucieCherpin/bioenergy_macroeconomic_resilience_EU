@@ -223,6 +223,8 @@ IVC7 = list(
   ),
 
  ########## Conventional biofuels #########
+## for convnetional biofuels, the production costs are also scenario-independent and constant, therefore already listed here
+
 
   IVC_T_FF = list(
     prod_cost    = 1598.13,
@@ -854,8 +856,8 @@ weights = c(IVC_EF_FF = 1),
     
     # Scenario-specific feedstock input distribution vectors per IVC
     dist_feed = list(
-      IVC8c = c(chemicals = 1.000000),
-      IVC9b = c(chemicals = 1.000000)
+      IVC8c = c(chemicals = 1),
+      IVC9b = c(chemicals = 1)
     )
   ), 
 
@@ -996,8 +998,17 @@ tax_rate <- if (fuel_name %in% names(TAX_RATES)) TAX_RATES[[fuel_name]] else TAX
 
 N_interm <- 73 ## number of industries
 N_total <- 92 ## industries plus accounting rows
-I_mat <- diag(N)
+I_mat <- diag(N_interm)
 
+
+### demand shock
+delta_Y <- numeric(N_interm)
+
+## 
+delta_Y[target_col] <- scenario_config[[scen_key]][[fuel_name]][["abs_production_eur"]]
+
+## 
+delta_X <- L_dom %*% delta_Y
 
 # Master storage containers for multi-scenario results
 A_dom_list <- list()

@@ -1017,12 +1017,12 @@ delta_Y[target_col] <- scenario_config[[scen_key]][[fuel_name]][["abs_production
 delta_X <- L_dom %*% delta_Y
 
 # Master storage containers for multi-scenario results
-A_dom_list <- list()
-A_imp_list <- list()
+## delete all A and VA and Leontief stuff
+## we need Y
+
 Z_dom_list <- list()
 Z_imp_list <- list()
-L_dom_list <- list()
-VA_mat_list <- list()
+
 multipliers_all_scenarios <- data.frame()
 
 # Loop through all scenario keys defined in scenario_config (e.g., "S1_2030", "S2_2030", "S3_2030")
@@ -1032,7 +1032,7 @@ for (scen_key in names(scenario_config)) {
 ## lists are initialized outside the loop to store the output matrices of each scenari without overwriting previosu results
   A_dom <- matrix(0, nrow = N, ncol = N)
   A_imp <- matrix(0, nrow = N, ncol = N)
-  VA_mat <- matrix(0, nrow = N_total,  ncol = N_interm)  # Stores Taxes (90) & GVA (91)  
+  
   X_vec <- numeric(N)
   
   # 5.2 Loop through all fuel sectors active in the current scenario

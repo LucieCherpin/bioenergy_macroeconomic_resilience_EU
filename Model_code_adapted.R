@@ -30,7 +30,7 @@ IO_EU_imports <- read_xlsx("IOT_EU27_imports_10_08.xlsx", sheet= "Sheet 1", rang
 IO_EU_imports <- as.data.frame(IO_EU_imports)
 
 #National Accounts
-national_accounts <- read_xlsx("nama_10_gdp_EU27.xlsx", sheet = "Sheet 1", range = "A10:B48", col_names = F)
+national_accounts <- read_xlsx("nama_10_gdp__EU27.xlsx", sheet = "Sheet 1", range = "A10:B48", col_names = F)
 
 #Here Integrate Extensions
 ### maybe don't use that one if I us ethe exiosbase extensions
@@ -61,7 +61,7 @@ final_expenditure <- as.numeric(national_accounts[3,2])       #P3 - Total final 
 ###P3 - Total final expenditure (C + G) by industry
 
 t_f_e_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries+1), nIndustries+3]))                  ## "2:" because the first row is the label row and not yet values
-t_f_e_im <- as.numeric(unlist(IO_EU_imports[2:(nIndustries+1), nIndustries+3]))
+t_f_e_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries+1), nIndustries+3]))
 
 #Total Final Expenditure - Do we need this?
 D_dom = matrix(rep(t_f_e_dom, times = nYears), nrow = nYears, byrow = TRUE)

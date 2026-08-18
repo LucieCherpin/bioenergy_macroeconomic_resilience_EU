@@ -169,51 +169,66 @@ beta_c_bar_imp <- as.matrix(
 beta_C_dom = matrix(rep(beta_c_bar_dom, times = nYears), nrow = nYears, byrow = TRUE)   # Household Consumption Shares Matrix (Domestic)
 beta_C_imp = matrix(rep(beta_c_bar_imp, times = nYears), nrow = nYears, byrow = TRUE)   # Household Consumption Shares Matrix (imports)
                                                                                                                      
-
 # Government expenditure shares by industry
-beta_g_bar <- as.matrix(
-  (as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 4])) + as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 4]))) /
-  (as.numeric(unlist(IO_EU_domestic[1, nIndustries + 4])) + as.numeric(unlist(IO_EU_imports[1, nIndustries + 4])))
+beta_g_bar_dom <- as.matrix(
+  as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 4])) /
+  as.numeric(unlist(IO_EU_domestic[1, nIndustries + 4]))
+)
+
+beta_g_bar_imp <- as.matrix(
+  as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 4])) /
+  as.numeric(unlist(IO_EU_imports[1, nIndustries + 4]))
 )
 
 #Real government expenditure composition
-beta_G = matrix(rep(beta_g_bar, times = nYears), nrow = nYears, byrow = TRUE) 
+beta_G_dom = matrix(rep(beta_g_bar_dom, times = nYears), nrow = nYears, byrow = TRUE)   # Government Expenditure Shares Matrix (Domestic)
+beta_G_imp = matrix(rep(beta_g_bar_imp, times = nYears), nrow = nYears, byrow = TRUE)   # Government Expenditure Shares Matrix (imports)
 
 #P3_S13 - Government expenditure
-g <- as.numeric(national_accounts[4,2])                 #P3_S13 - Government expenditure
-g_i <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 4])) +            #P3_S13 - Government expenditure by industry
-       as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 4]))
-g_cons_tax <- as.numeric(unlist(IO_EU_domestic[nIndustries + 8, nIndustries + 4])) +           #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure
-               as.numeric(unlist(IO_EU_imports[nIndustries + 8, nIndustries + 4]))
+g <- as.numeric(national_accounts[4,2])                                               #P3_S13 - Government expenditure
+g_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 4]))    #P3_S13 - Government expenditure by industry
+g_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 4]))
+g_cons_tax_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 8, nIndustries + 4]))   #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure
+g_cons_tax_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 8, nIndustries + 4]))
+g_cons_tax_i_dom <- beta_g_bar * g_cons_tax_dom                 #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure by industry
+g_cons_tax_i_imp <- beta_g_bar * g_cons_tax_imp
 
-g_cons_tax_i <- beta_g_bar * g_cons_tax                 #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure by industry
+G_dom = matrix(data = sum(g_dom), ncol = nYears)              #P3_S13 - Government expenditure matrix
+G_tax = matrix(data = sum(g_cons_tax_dom), ncol = nYears)         #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure matrix
+G_tax = matrix(data = sum(g_cons_tax_imp), ncol = nYears)
 
-G = matrix(data = sum(g_i), ncol = nYears)              #P3_S13 - Government expenditure matrix
-G_tax = matrix(data = sum(g_cons_tax), ncol = nYears)   #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure matrix
-
-G_i = matrix(rep(g_i, times = nYears), nrow = nYears, byrow = TRUE)                #P3_S13 - Government expenditure by industry matrix
-G_i_tax = matrix(rep(g_cons_tax_i, times = nYears), nrow = nYears, byrow = TRUE)   #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure by indusrty matrix
+G_i_dom = matrix(rep(g_dom, times = nYears), nrow = nYears, byrow = TRUE)                #P3_S13 - Government expenditure by industry matrix
+G_i_tax_dom = matrix(rep(g_cons_tax_i_dom, times = nYears), nrow = nYears, byrow = TRUE)   #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure by indusrty matrix
+G_i_imp = matrix(rep(g_imp, times = nYears), nrow = nYears, byrow = TRUE)                
+G_i_tax_dom = matrix(rep(g_cons_tax_i_imp, times = nYears), nrow = nYears, byrow = TRUE)
 
 #P3_S14_S15 - Household consumption
 cons <- as.numeric(national_accounts[7,2])                    #P3_S14_S15 - Household and NPISH consumption
-hh_cons <- as.matrix(as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 5])) +           #P3_S14 - Household consumption by industry
-                     as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 5])))
-npish_cons <- as.matrix(as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 6])) +           #P3_S15 - NPISH consumption by industry
-                        as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 6])))
+hh_cons_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 5]))
+hh_cons_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 5]))                       #P3_S14 - Household consumption by industry
+                     
+npish_cons_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 6]))
+npish_cons_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 6]))                    #P3_S15 - NPISH consumption by industry
 
-consumption <- hh_cons + npish_cons                           #P3_S14_S15 - Household and NPISH consumption by industry
+consumption_dom = hh_cons_dom + npish_cons_dom
+consumption_imp = hh_cons_imp + npish_cons_imp                         #P3_S14_S15 - Household and NPISH consumption by industry
 
-consumption_tax <- as.numeric(unlist(IO_EU_domestic[nIndustries + 8, nIndustries + 5])) +             #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption
-                    as.numeric(unlist(IO_EU_imports[nIndustries + 8, nIndustries + 5]))
-consumption_tax_i <- beta_c_bar * consumption_tax                                                      #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption by industry
+consumption_tax_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 8, nIndustries + 5]))
+consumption_tax_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 8, nIndustries + 5]))             #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption
 
+consumption_tax_i_dom <- beta_c_bar_dom * consumption_tax_dom                                                      #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption by industry
+consumption_tax_i_imp <- beta_c_bar_imp * consumption_tax_imp     
 
-C = matrix(data = sum(consumption), ncol = nYears)            #P3_S14_S15 - Household and NPISH consumption matrix
+C_dom = matrix(data = sum(consumption_dom), ncol = nYears)            #P3_S14_S15 - Household and NPISH consumption matrix
+C_imp = matrix(data = sum(consumption_imp), ncol = nYears)           
 
-C_tax = matrix(data = sum(consumption_tax), ncol = nYears)    #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption matrix
+C_tax_dom = matrix(data = sum(consumption_tax_dom), ncol = nYears)    #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption matrix
+C_tax_imp = matrix(data = sum(consumption_tax_imp), ncol = nYears) 
 
-C_i = matrix(rep(consumption, times = nYears), nrow = nYears, byrow = TRUE)            #P3_S14_S15 - Household and NPISH consumption by industry matrix
-C_i_tax <- matrix(rep(consumption_tax_i, times = nYears),nrow = nYears, byrow = TRUE)  #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption by industry matrix
+C_i_dom = matrix(rep(consumption_dom, times = nYears), nrow = nYears, byrow = TRUE)            #P3_S14_S15 - Household and NPISH consumption by industry matrix
+C_i_tax_dom <- matrix(rep(consumption_tax_i_dom, times = nYears),nrow = nYears, byrow = TRUE)  #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption by industry matrix
+C_i_imp = matrix(rep(consumption_imp, times = nYears), nrow = nYears, byrow = TRUE)    
+C_i_tax_imp <- matrix(rep(consumption_tax_i_imp, times = nYears),nrow = nYears, byrow = TRUE)
 
 ##########################################
 ###Technical coefficients matrix (A matrix)
@@ -233,8 +248,9 @@ A_dom <- as.matrix(sweep(Z_dom, 2, q_s, FUN = '/'))  # Domestic technical coeffi
 A_imp <- as.matrix(sweep(Z_imp, 2, q_s, FUN = '/'))  # Import technical coefficients
 A_tot <- A_dom + A_imp                                 # Total technological coefficients
 
-diag <- diag(ncol = ncol(A_dom), nrow = nrow(A_dom))                         #Create diagonal matrix
-L_dom <- solve(diag-A_dom)                                                   #Leontief inverse          ## imports not cosnidered, because they don't trigger domestic production feedback loops 
+diag <- diag(1, nrow = nIndustries, ncol = nIndustries)                        #Create diagonal matrix
+L_dom <- solve(diag  -A_dom)                                                  #Leontief inverse         
+L_imp <- solve(diag-A_imp)
 
 #Check for total final use
 TotalFinalUse <- total_use - (A_dom %*% x)    

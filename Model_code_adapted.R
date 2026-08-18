@@ -252,15 +252,24 @@ diag <- diag(1, nrow = nIndustries, ncol = nIndustries)                        #
 L_dom <- solve(diag  -A_dom)                                                  #Leontief inverse         
 L_imp <- solve(diag-A_imp)
 
-#Check for total final use
-TotalFinalUse <- total_use - (A_dom %*% x)    
-TotalFinalUseCheck <- (diag-A_dom) %*% x
-isTRUE(all.equal(TotalFinalUse, TotalFinalUseCheck, final_use, tolerance = 1e-3))
+# ---- Consistency checks separated by domestic / imports ----
+TotalFinalUse_dom  <- total_use_dom - (A_dom %*% x_dom)
+TotalFinalUseCheck_dom <- (I_n - A_dom) %*% x_dom
+isTRUE(all.equal(TotalFinalUse_dom, TotalFinalUseCheck_dom, f_tol = 1e-3))
 
-#Check for total use
-TotalUse <- (A_dom %*% q_s) + final_use
-TotalUseCheck <- L_dom%*%final_use
-isTRUE(all.equal(TotalUse, TotalUseCheck, total_use, tolerance = 1e-3))
+TotalFinalUse_imp  <- total_use_imp - (A_imp %*% x_imp)
+TotalFinalUseCheck_imp <- (I_n - A_imp) %*% x_imp
+isTRUE(all.equal(TotalFinalUse_imp, TotalFinalUseCheck_imp, f_tol = 1e-3))
+
+# Total use checks (domestic and imports)
+TotalUse_dom  <- (A_dom %*% q_s_dom) + final_use_dom
+TotalUseCheck_dom <- L_dom %*% final_use_dom
+isTRUE(all.equal(TotalUse_dom, TotalUseCheck_dom, f_tol = 1e-3))
+
+TotalUse_imp  <- (A_imp %*% q_s_imp) + final_use_imp
+TotalUseCheck_imp <- L_imp %*% final_use_imp
+isTRUE(all.equal(TotalUse_imp, TotalUseCheck_imp, f_tol = 1e-3))
+
 
 ##########################################
 ###Extensions
@@ -281,10 +290,6 @@ isTRUE(all.equal(TotalUse, TotalUseCheck, total_use, tolerance = 1e-3))
 #Deforestation Intensity
 #DEF_IN[i,] = DEF_IN[i,] / X_i[i,] # gives us deforestation per output of sector
 
-##########################################
-###Imports and Exports
-##########################################
-
 
 #Define time loop
 for (i in 2:nYears){
@@ -293,30 +298,27 @@ for (i in 2:nYears){
   
   for (iterations in 1:100){
     
-    #####################################
-    #Define System of Equations     
-    #####################################
-    
-  
-    
+    # Final expenditure by industry (domestic / imports)
+     D_dom[i, ] <- beta_C_dom[i, ] * C_dom[i] + beta_G_dom[i, ] * G_dom[i]
+     D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
 
-    #A) Define input-output structure
-    
-    #Total final expenditure by industry // here we have to substract taxes from C and G (when we have integrated taxes in C and G)
-    D_i[i,] = beta_C[i,]*C[i] + beta_G[i,]*G[i] 
-    
-    #Total final use
-    f_i[i,] = D_i[i,] + GCF_i[i,] + EX_i[i,]
-  
+    # Total final use f = D + GCF + EX (split)
+     f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
+     f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
+
+    # Domestic production from domestic final demand (Leontief)
+     X_dom[i, ] <- L_dom %*% f_dom[i, ]
+     X_imp[i, ] <- L_imp %*% f_imp[i, ]
+
     #Exports ## couple exports to total use
-    EX_i[i, ] <- EX_i[i-1,] 
-
-    #Total use by industry (Leontief production function): Domestic
-    X_i[i,] = L %*% f_i[i, ]   
+    #EX_i[i, ] <- EX_i[i-1,] 
     
     #Rest of the World
-    RoW[i,] = EX_i[i,] - IM_i[i,]
+    #RoW[i,] = EX_i[i,] - IM_i[i,]
 
+    #Optional totals
+    f_total <- f_dom[i, ] + f_imp[i, ]
+    X_total <- X_dom_ts[i, ] + X_imp_ts[i, ]
 
     #Household Consumption
     #C

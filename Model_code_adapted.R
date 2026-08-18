@@ -240,9 +240,9 @@ Z_imp   <- as.matrix(IO_EU_imports[2:(nIndustries + 1), 3:(nIndustries + 2)], co
 #Z_tot <- Z_dom + Z_imp
 
 # Technical coefficients matrices
-A_dom <- as.matrix(sweep(Z_dom, 2, q_s, FUN = '/'))  # Domestic technical coefficients              #Divide each entry of the IOT by total output - Jan: Needs to be put into the loop and get updated via some change. Aditya: The shares should be changed,
-A_imp <- as.matrix(sweep(Z_imp, 2, q_s, FUN = '/'))  # Import technical coefficients
-A_tot <- A_dom + A_imp                                 # Total technological coefficients
+A_dom <- as.matrix(sweep(Z_dom, 2, q_s_dom, FUN = '/'))  # Domestic technical coefficients              #Divide each entry of the IOT by total output - Jan: Needs to be put into the loop and get updated via some change. Aditya: The shares should be changed,
+A_imp <- as.matrix(sweep(Z_imp, 2, q_s_imp, FUN = '/'))  # Import technical coefficients
+#A_tot <- A_dom + A_imp                                 # Total technological coefficients
 
 diag <- diag(1, nrow = nIndustries, ncol = nIndustries)                        #Create diagonal matrix
 L_dom <- solve(diag  -A_dom)                                                  #Leontief inverse         

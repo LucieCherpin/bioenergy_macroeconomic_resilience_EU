@@ -1,5 +1,5 @@
 #####################################################################
-### MODULAR THREE-TIER MODELING FRAMEWORK
+## Scenarios 1, 2 and 3 for 2030 ###
 #####################################################################
 
 # ===================================================================
@@ -21,7 +21,6 @@ BIOFUEL_SECTORS <- list(
 ) 
 
 # Intermediate Input Supply sectors 
-## check whether these are all!
 
 INPUT_SECTORS <- list(
   agriculture  = 1,
@@ -45,6 +44,7 @@ INPUT_SECTORS <- list(
 )
 
 
+## assumed the same tax rate as in the corresponding sector (chemicals = default //electricity, gas, steam = adv_biogas)
 # Product Tax Rates (as a fraction of total output value X_i)
 TAX_RATES <- list(
   default    = 0.0091481, # Rate for all standard biofuel sectors
@@ -70,7 +70,7 @@ COL_FINAL_CONSUMPTION    <- nIndustries + 1
 
 IVC_TECH_LIBRARY <- list(  
 
-# --- IVC 1 (Biodiesel baseline) ---
+# --- IVC 1 (Advanced biodiesel) ---
 IVC1 = list(
     market_value = 1450,
     dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45, 
@@ -105,7 +105,7 @@ IVC1 = list(
                      repair_inst = 0.100, land_transp = 0.050)
   ),
 
-  # --- IVC 6 (SAF) ---
+  # --- IVC 6 (Advanced Bio-kerosene) ---
   IVC6 = list(
     market_value = 1000,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.500, 
@@ -131,7 +131,7 @@ IVC7 = list(
                      repair_inst = 0.300, land_transp = 0.000)
   ),
 
-# --- IVC 8b ---
+# --- IVC 8b (Advanced Bio-HFO)---
   IVC8b = list(
     market_value = 935.00,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
@@ -140,7 +140,7 @@ IVC7 = list(
                      repair_inst = 0.300, land_transp = 0.000)
   ),
 
-  # --- IVC 8c (Production RFNBOs) ---
+  # --- IVC 8c (RFNBOs) ---
   IVC8c = list(
     market_value = 935.00,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.600, 
@@ -149,7 +149,7 @@ IVC7 = list(
                      repair_inst = 0.100, land_transp = 0.000)
   ),
 
- # --- IVC 9a (Biogas) ---
+ # --- IVC 9a (Advanced biogas) ---
   IVC9a = list(
     market_value = 1275.
     dist_capex   = c(elec_equip = 0.020, machinery = 0.550, 
@@ -158,7 +158,7 @@ IVC7 = list(
                      repair_inst = 0.300)
   ),
 
-# --- IVC 9b (Production RFNBOs) ---
+# --- IVC 9b (RFNBOs) ---
   IVC9b = list(
     market_value = 1275.00,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.600, 
@@ -167,7 +167,7 @@ IVC7 = list(
                      repair_inst = 0.100, land_transp = 0.000)
   ),
 
-# --- IVC 11a for road ---
+# --- IVC 11a (Advanced biodiesel) ---
  IVC11a_road = list(
     market_value = 2380.00,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
@@ -176,7 +176,7 @@ IVC7 = list(
                      repair_inst = 0.300, land_transp = 0.000)
   ),
 
-# --- IVC 11a for aviation ---
+# --- IVC 11a (advanced bio-kerosene) ---
   IVC11a_SAF = list(
     market_value = 2380.00,
     dist_capex   = c(fab_metal = 0.000, elec_equip = 0.020, machinery = 0.550, 
@@ -213,7 +213,7 @@ IVC7 = list(
                      repair_inst = 0.300, land_transp = 0.100)
   ),
 
-  # --- IVC 13b / shipping ---
+  # --- IVC 13b (Advanced bio-HFO) ---
   IVC13b_mar = list(
     market_value = 1150,
     dist_capex   = c(fab_metal = 0.150, elec_equip = 0.020, machinery = 0.450, 
@@ -301,11 +301,11 @@ IVC_EF_FF = list(
 )
 
 
-
-
 # ===================================================================
 # 2. CORE COEFFICIENT CALCULATOR (PURE FUNCTION)
 # ===================================================================
+
+
 
 build_ivc_vector <- function(prod_cost, market_value, alpha_cost,          
                              dist_feed, dist_capex, dist_opex) {
@@ -927,6 +927,8 @@ weights = c(IVC_EF_FF = 1),
 # 4. UPDATED UNIVERSAL COLUMN ASSEMBLY ENGINE
 # ===================================================================
 
+## technical input coefficient vector
+
 build_fuel_column <- function(fuel_name, scenario_year_key) {
   
   fuel_cfg <- scenario_config[[scenario_year_key]][[fuel_name]]    ## 
@@ -958,7 +960,10 @@ sample_res <- build_ivc_vector(
   a_imp_aggregate <- setNames(numeric(length(sample_res$a_imp)), names(sample_res$a_imp))
   
   # Loop over active IVCs and aggregate
-  for (ivc_id in names(weights)) {
+
+## question: ivc_id not defined yet!
+
+for (ivc_id in names(weights)) {
     w_k <- weights[ivc_id]
     tech_base <- IVC_TECH_LIBRARY[[ivc_id]]
 

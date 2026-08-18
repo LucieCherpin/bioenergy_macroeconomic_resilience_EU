@@ -653,65 +653,63 @@ isTRUE(all.equal(TotalUse, TotalUseCheck, total_use, tolerance = 1e-3))
 # Storage for scenario results
 scenario_results <- list()
 
-# Loop through defined scenarios (e.g., S1_2030, S2_2030, S3_2030)[cite: 1]
-for (scen_key in names(scenario_config)) {[cite: 1]
+# Loop through defined scenarios (e.g., S1_2030, S2_2030, S3_2030)
+for (scen_key in names(scenario_config)) {
   
   # 1. Reset matrices to pristine baseline state
   A_dom_scen <- A_dom_base
   A_imp_scen <- A_imp_base
   
-  # 2. Update technical coefficients column-by-column for biofuel sectors[cite: 1, 2]
-  for (fuel_name in names(scenario_config[[scen_key]])) {[cite: 1]
-    if (!fuel_name %in% names(BIOFUEL_SECTORS)) next[cite: 1]
+  # 2. Update technical coefficients column-by-column for biofuel sectors
+  for (fuel_name in names(scenario_config[[scen_key]])) {
+    if (!fuel_name %in% names(BIOFUEL_SECTORS)) next
     
-    target_col <- BIOFUEL_SECTORS[[fuel_name]][cite: 1]
-    res_fuel   <- build_fuel_column(fuel_name, scen_key)[cite: 1]
+    target_col <- BIOFUEL_SECTORS[[fuel_name]]
+    res_fuel   <- build_fuel_column(fuel_name, scen_key)
     
     # Overwrite domestic coefficients column
-    for (sec_name in names(res_fuel$a_dom)) {[cite: 1]
-      if (sec_name %in% names(INPUT_SECTORS)) {[cite: 1]
-        A_dom_scen[INPUT_SECTORS[[sec_name]], target_col] <- res_fuel$a_dom[sec_name][cite: 1]
+    for (sec_name in names(res_fuel$a_dom)) {
+      if (sec_name %in% names(INPUT_SECTORS)) {
+        A_dom_scen[INPUT_SECTORS[[sec_name]], target_col] <- res_fuel$a_dom[sec_name]
       }
     }
     
     # Overwrite import coefficients column
-    for (imp_sec in names(res_fuel$a_imp)) {[cite: 1]
-      clean_sec <- gsub("_imp$", "", imp_sec)[cite: 1]
-      if (clean_sec %in% names(INPUT_SECTORS)) {[cite: 1]
-        A_imp_scen[INPUT_SECTORS[[clean_sec]], target_col] <- res_fuel$a_imp[imp_sec][cite: 1]
+    for (imp_sec in names(res_fuel$a_imp)) {
+      clean_sec <- gsub("_imp$", "", imp_sec)
+      if (clean_sec %in% names(INPUT_SECTORS)) {
+        A_imp_scen[INPUT_SECTORS[[clean_sec]], target_col] <- res_fuel$a_imp[imp_sec]
       }
     }
   }
   
-  # 3. Recalculate Leontief Inverse for updated technology[cite: 2]
-  L_dom_scen <- solve(diag - A_dom_scen)[cite: 2]
+  # 3. Recalculate Leontief Inverse for updated technology
+  L_dom_scen <- solve(I_mat - A_dom_scen)
   
-  # 4. Construct scenario final demand vector (f_scen)[cite: 2]
+  # 4. Construct scenario final demand vector (f_scen)
   final_use_scen <- final_use
-  for (fuel_name in names(scenario_config[[scen_key]])) {[cite: 1]
-    if (fuel_name %in% names(BIOFUEL_SECTORS)) {[cite: 1]
-      idx <- BIOFUEL_SECTORS[[fuel_name]][cite: 1]
-      prod_val <- scenario_config[[scen_key]][[fuel_name]][["abs_production_eur"]][cite: 1]
+  for (fuel_name in names(scenario_config[[scen_key]])) {
+    if (fuel_name %in% names(BIOFUEL_SECTORS)) {
+      idx <- BIOFUEL_SECTORS[[fuel_name]]
+      prod_val <- scenario_config[[scen_key]][[fuel_name]][["abs_production_eur"]]
       if (!is.null(prod_val) && !is.na(prod_val)) {
-        final_use_scen[idx] <- prod_val[cite: 1]
+        final_use_scen[idx] <- prod_val
       }
     }
   }
   
-  # 5. Compute new Gross Output vector (x = L_dom * f)[cite: 2]
-  x_scen <- L_dom_scen %*% final_use_scen[cite: 2]
+  # 5. Compute new Gross Output vector (x = L_dom * f)
+  x_scen <- L_dom_scen %*% final_use_scen
   
   # Store scenario results
   scenario_results[[scen_key]] <- list(
-    A_dom = A_dom_scen,
-    A_imp = A_imp_scen,
-    L_dom = L_dom_scen,
+    A_dom  = A_dom_scen,
+    A_imp  = A_imp_scen,
+    L_dom  = L_dom_scen,
     f_scen = final_use_scen,
     x_scen = x_scen
   )
 }
-
-
 
 
 

@@ -107,9 +107,9 @@ Q_s_dom_i = matrix(rep(q_s_dom, times = nYears), nrow = nYears, byrow = TRUE)   
 
 ### total use of intermediate inputs
 x_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 17]))                   #TU - Total use by industry
-x_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 17]))
+#x_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 17]))
 X_dom = matrix(rep(x_dom, times = nYears), nrow = nYears, byrow = TRUE)                             #TU - Total use by industry matrix
-X_imp = matrix(rep(x_imp, times = nYears), nrow = nYears, byrow = TRUE)
+#X_imp = matrix(rep(x_imp, times = nYears), nrow = nYears, byrow = TRUE)
 
 #P2_ADJ - Total intermediate consumption by industry
 i_d_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 11, 3:(nIndustries + 2)]))   #P2_ADJ - Total intermediate consumption by industry
@@ -322,6 +322,37 @@ M_total[1, ]        <- M_intermediate[1, ] + M_final[1, ]
 #DEF_IN[i,] = DEF_IN[i,] / X_i[i,] # gives us deforestation per output of sector
 
 
+# ===================================================================
+#  SCENARIOS: SPECIFIC Z, X, AND Y MATRIX EXTRACTION
+# ===================================================================
+    
+    
+    #Scenario 1: 2030 Initialisation
+    A_dom_S1_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    A_imp_S1_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    Z_dom_S1_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    Z_imp_S1_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    X_S1_2030     <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    L_dom_S1_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    
+    #Scenario 2: 2030 Initialisation
+    A_dom_S2_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    A_imp_S2_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    Z_dom_S2_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    Z_imp_S2_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    X_S2_2030     <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    L_dom_S2_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    
+    #Scenario 3: 2030 Initialisation
+    A_dom_S3_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    A_imp_S3_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    Z_dom_S3_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    Z_imp_S3_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    X_S3_2030     <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    L_dom_S3_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
+    
+
+
 #Define time loop
 for (i in 2:nYears){
   
@@ -349,7 +380,7 @@ for (i in 2:nYears){
     
     #Optional totals
     f_total <- f_dom[i, ] + f_imp[i, ]
-    X_total <- X_dom[i, ] + X_imp[i, ]
+    #X_total <- X_dom[i, ] + X_imp[i, ]
     
     #Household Consumption
     #C

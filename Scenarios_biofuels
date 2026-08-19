@@ -334,7 +334,7 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
     forestry     = get_v(a_feed, "forestry"),
     paper        = get_v(a_feed, "paper"),
     food_bev     = get_v(a_feed, "food_bev"),
-    sewerage     = get_v(a_feed, "sewerage") + get_v(a_opex, "sewerage")
+    sewerage     = get_v(a_feed, "sewerage") + get_v(a_opex, "sewerage"),
     adv_biodiesel = get_v(a_feed, "adv_biodiesel"), 
     adv_biogas    = get_v(a_feed, "adv_biogas"),    
     fab_metal    = get_v(a_capex, "fab_metal"),
@@ -400,7 +400,7 @@ scenario_config <- list(
       IVC1           = c(agriculture_imp = 1.0),
       IVC2_HVO        = c(agriculture = 0.14497, adv_biodiesel = 0.72677, chemicals = 0.12825),
       IVC13a         = c(agriculture = 0.55703, forestry = 0.22890, paper = 0.20022, food_bev = 0.01387)
-      IVC13b_mar = c(agriculture = 0,.590480, forestry = 0.210894, paper = 0.184505, food_bev = 0.014121)
+      IVC13b_mar = c(agriculture = 0.590480, forestry = 0.210894, paper = 0.184505, food_bev = 0.014121)
     )
   ),
   
@@ -523,14 +523,14 @@ adv_biogas = list(
 
 conv_biodiesel = list(
     abs_production_eur = 19194.17,
-    weights = c(IVC_T_FF = 0.2644 IVC_HT_FF = 0.2279, IVC_T_CC = 0.1943, IVC_HT_CC = 0.0978, IVC_T_lipids = 0.1518, IVC_HT_lipds_road = 0.0638), 
+    weights = c(IVC_T_FF = 0.2644 IVC_HT_FF = 0.2279, IVC_T_CC = 0.1943, IVC_HT_CC = 0.0978, IVC_T_lipids = 0.1518, IVC_HT_lipids_road = 0.0638), 
     alpha = list(
       IVC_T_FF = c(feed = 0.74, capex = 0.07, opex = 0.19),            #
       IVC_HT_FF = c(feed = 0.72, capex = 0.10, opex = 0.18),
       IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
       IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
-      IVC_T_lipds = c(feed = 0.74, capex = 0.04, opex = 0.22),
-      IVC_HT_lipds_road = c(feed = 0.67, capex = 0.13, opex = 0.20),
+      IVC_T_lipids = c(feed = 0.74, capex = 0.04, opex = 0.22),
+      IVC_HT_lipids_road = c(feed = 0.67, capex = 0.13, opex = 0.20),
     ),
       
     dist_feed = list(
@@ -538,8 +538,8 @@ conv_biodiesel = list(
       IVC_HT_FF = c(food_bev = 1),
       IVC_T_CC = c(agriculture = 1),
       IVC_HT_CC = c(agriculture = 1),
-      IVC_T_lipds = c(food_bev = 1),      ### check how much is domestic/ imported
-      IVC_HT_lipds_road = c(food_bev = 1),      ### check how much is domestic/ imported
+      IVC_T_lipids = c(food_bev = 1),      ### check how much is domestic/ imported
+      IVC_HT_lipids_road = c(food_bev = 1),      ### check how much is domestic/ imported
     )
     ),
 
@@ -560,14 +560,14 @@ weights = c(IVC_EF_FF = 1),
 ### conv_bio_kerosene
 conv_bio_kerosene = list(
 abs_production_eur = 966.98,
-weights = c(IVC_HT_lipds_SAF = 1), 
+weights = c(IVC_HT_lipids_SAF = 1), 
 # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
       IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19),
     ),
     # Scenario-specific feedstock input distribution vectors per IVC            
     dist_feed = list(
-      IVC_HT_lipds_SAF = c(food = 1),      #### check whether imported or domestic
+      IVC_HT_lipids_SAF = c(food = 1),      #### check whether imported or domestic
     )
   )
 ), 
@@ -660,7 +660,7 @@ weights = c(IVC_HT_lipds_SAF = 1),
     
     # Scenario-specific feedstock input distribution vectors per IVC
     dist_feed = list(
-      IVC8a = c(agriculture = 0.555604, forestry = 0.212818, paper = 0.186189, adv_biodiesel = 0.031552, food_bev = 0.013837, seweage = 0.0),
+      IVC8a = c(agriculture = 0.555604, forestry = 0.212818, paper = 0.186189, adv_biodiesel = 0.031552, food_bev = 0.013837, sewerage = 0.0),
       IVC8b = c(adv_biogas  = 1.000000)
     )
   ), 
@@ -710,7 +710,7 @@ adv_biogas = list(
 
 conv_biodiesel = list(
 abs_production_eur = 15867.82,
-weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_lipids = ??, IVC_H_lipds = ), 
+weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_lipids = ??, IVC_H_lipids = ), 
 
 # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
@@ -718,8 +718,8 @@ weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_
       IVC_HT_FF = c(feed = 0.72, capex = 0.10, opex = 0.18),
       IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
       IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
-      IVC_T_lipds = c(feed = 0.74, capex = 0.04, opex = 0.22),
-      IVC_HT_lipds = c(feed = 0.67, capex = 0.13, opex = 0.20),
+      IVC_T_lipids = c(feed = 0.74, capex = 0.04, opex = 0.22),
+      IVC_HT_lipids = c(feed = 0.67, capex = 0.13, opex = 0.20),
     ),
 
 # Scenario-specific feedstock input distribution vectors per IVC          
@@ -728,8 +728,8 @@ weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_
       IVC_HT_FF = c(food_bev = 1),
       IVC_T_CC = c(agriculture = 1),
       IVC_HT_CC = c(agriculture = 1),
-      IVC_T_lipds = c(food_bev = 1),      ### check how much is domestic/ imported
-      IVC_HT_lipds_road = c(food_bev = 1),      ### check how much is domestic/ imported
+      IVC_T_lipids = c(food_bev = 1),      ### check how much is domestic/ imported
+      IVC_HT_lipids_road = c(food_bev = 1),      ### check how much is domestic/ imported
     )
     ),
 
@@ -739,7 +739,7 @@ abs_production_eur = 814.44
 weights = c(IVC_EF_FF = 1), 
 # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
-      IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20),                    ### these are actually also constant, not changing across scenarios/ years
+      IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20),                    
     ),
     # Scenario-specific feedstock input distribution vectors per IVC           
     dist_feed = list(
@@ -757,7 +757,7 @@ weights = c(IVC_EF_FF = 1),
     ),
     # Scenario-specific feedstock input distribution vectors per IVC            
     dist_feed = list(
-      IVC_HT_lipds_SAF = c(food = 1),      #### check whether imported or domestic
+      IVC_HT_lipids_SAF = c(food = 1),      #### check whether imported or domestic
     )
   )
 ),
@@ -814,17 +814,17 @@ weights = c(IVC_EF_FF = 1),
 ### advanced bio-kerosene
   adv_biokerosene = list(
     abs_production_eur = 2094400000,  # 2,094,400,000 EUR
-    weights = c(IVC2HEFA = 0.9418605, IVC11a = 0.0581395),
+    weights = c(IVC2_HEFA = 0.9418605, IVC11a = 0.0581395),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
-      IVC2HEFA = c(feed = 0.48000000, capex = 0.20800000, opex = 0.31200000),
+      IVC2_HEFA = c(feed = 0.48000000, capex = 0.20800000, opex = 0.31200000),
       IVC11a   = c(feed = 0.19110682, capex = 0.48702100, opex = 0.32187200)
     ),
     
     # Scenario-specific feedstock input distribution vectors per IVC
     dist_feed = list(
-      IVC2HEFA = c(agriculture   = 0.569930, adv_biodiesel = 0.365560, chemicals     = 0.064511),
+      IVC2_HEFA = c(agriculture   = 0.569930, adv_biodiesel = 0.365560, chemicals     = 0.064511),
       IVC11a = c(agriculture   = 0.572754, forestry      = 0.219387, paper         = 0.191936, food_bev      = 0.014264, adv_biodiesel = 0.001660)
     )
   ), 
@@ -874,7 +874,7 @@ weights = c(IVC_EF_FF = 1),
 
 conv_biodiesel = list(
 abs_production_eur = ???,
-weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_lipids = ??, IVC_H_lipds = ), 
+weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_lipids = ??, IVC_H_lipids = ), 
 
 # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
@@ -882,8 +882,8 @@ weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_
       IVC_HT_FF = c(feed = 0.72, capex = 0.10, opex = 0.18),
       IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
       IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
-      IVC_T_lipds = c(feed = 0.74, capex = 0.04, opex = 0.22),
-      IVC_HT_lipds = c(feed = 0.67, capex = 0.13, opex = 0.20),
+      IVC_T_lipids = c(feed = 0.74, capex = 0.04, opex = 0.22),
+      IVC_HT_lipids = c(feed = 0.67, capex = 0.13, opex = 0.20),
     ),
 
 # Scenario-specific feedstock input distribution vectors per IVC          
@@ -892,8 +892,8 @@ weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_
       IVC_HT_FF = c(food_bev = 1),
       IVC_T_CC = c(agriculture = 1),
       IVC_HT_CC = c(agriculture = 1),
-      IVC_T_lipds = c(food_bev = 1),      ### check how much is domestic/ imported
-      IVC_HT_lipds_road = c(food_bev = 1),      ### check how much is domestic/ imported
+      IVC_T_lipids = c(food_bev = 1),      ### check how much is domestic/ imported
+      IVC_HT_lipids_road = c(food_bev = 1),      ### check how much is domestic/ imported
     )
     ),
 
@@ -921,7 +921,7 @@ weights = c(IVC_EF_FF = 1),
     ),
     # Scenario-specific feedstock input distribution vectors per IVC            
     dist_feed = list(
-      IVC_HT_lipds_SAF = c(food = 1),      #### check whether imported or domestic
+      IVC_HT_lipids_SAF = c(food = 1),      #### check whether imported or domestic
     )
   )
 )
@@ -981,7 +981,7 @@ ivc_prod_cost <- fuel_cfg$prod_cost[[ivc_id]]
     }
 
     ivc_res <- build_ivc_vector(
-      prod_cost    = ivc_prod_cost
+      prod_cost    = ivc_prod_cost,
       market_value = tech_base$market_value,
       alpha_cost   = fuel_cfg$alpha[[ivc_id]],
       dist_feed    = fuel_cfg$dist_feed[[ivc_id]],
@@ -1012,8 +1012,6 @@ tax_rate <- if (fuel_name %in% names(TAX_RATES)) TAX_RATES[[fuel_name]] else TAX
 # 6. SCENARIO-SPECIFIC Z, X, AND Y MATRIX EXTRACTION
 # ===================================================================
 
-N_interm <- 73  # Number of industries 
-
 # creates empty named lists to store the resulting matrices and vectors for every scenario
 Z_dom_list <- list()    ## domestic intermediate transaction matrix
 Z_imp_list <- list()    ##  imports intermdeiate trasnaction matrix (the two together = production costs)
@@ -1024,9 +1022,9 @@ Y_dom_list <- list()    ## domestic final demand vector
 for (scen_key in names(scenario_config)) {
   
   # Initialize empty matrices/vectors for current scenario
-  A_dom <- matrix(0, nrow = N_interm, ncol = N_interm) ## matrix
-  A_imp <- matrix(0, nrow = N_interm, ncol = N_interm)  ## matrix
-  X     <- numeric(N_interm) ##vector (or better to create a matrix directly?)
+  A_dom <- matrix(0, nrow = nIndustries, ncol = nIndustries) ## matrix
+  A_imp <- matrix(0, nrow = nIndustries, ncol = nIndustries)  ## matrix
+  X     <- numeric(nIndustries) ##vector (or better to create a matrix directly?)
   
   # -----------------------------------------------------------------
   # 5.1 Populate Technical Coefficient Matrices (A) and Output (X)
@@ -1070,9 +1068,9 @@ for (scen_key in names(scenario_config)) {
   
   # Set row and column names for easy inspection
 ## don't know if this is necessary
-  rownames(Z_dom) <- colnames(Z_dom) <- 1:N_interm
-  rownames(Z_imp) <- colnames(Z_imp) <- 1:N_interm
-  names(X)        <- 1:N_interm
+  rownames(Z_dom) <- colnames(Z_dom) <- 1:nIndustries
+  rownames(Z_imp) <- colnames(Z_imp) <- 1:nIndustries
+  names(X)        <- 1:nIndustries
   
   # -----------------------------------------------------------------
   # 5.3 Calculate Final Demand Vector (Y)
@@ -1082,7 +1080,7 @@ for (scen_key in names(scenario_config)) {
   
   # Y = X - Z_dom %*% 1
   Y_dom <- X - intermediate_demand_dom
-  names(Y_dom) <- 1:N_interm
+  names(Y_dom) <- 1:nIndustries
   
   # -----------------------------------------------------------------
   # 5.4 Store Scenario Results
@@ -1116,13 +1114,13 @@ Y_dom_S1_2030 <- Y_dom_list[["S1_2030"]]
 # ===================================================================
 
 
-N_interm <- 73 ## number of industries
+nIndustries <- 73 ## number of industries
 N_total <- 92 ## industries plus accounting rows
-I_mat <- diag(N_interm)
+I_mat <- diag(nIndustries)
 
 
 ### demand shock
-delta_Y <- numeric(N_interm)
+delta_Y <- numeric(nIndustries)
 
 ## 
 delta_Y[target_col] <- scenario_config[[scen_key]][[fuel_name]][["abs_production_eur"]]
@@ -1147,7 +1145,7 @@ for (scen_key in names(scenario_config)) {
   
   # 5.1 Initialize Scenario Matrices
 ## lists are initialized outside the loop to store the output matrices of each scenari without overwriting previosu results
-  A_dom <- matrix(0, nrow = N, ncol = N)
+  A_dom <- matrix(0, nrow = nIndustries, ncol = nIndustries)
   A_imp <- matrix(0, nrow = N, ncol = N)
 
   

@@ -21,6 +21,10 @@ options(scipen = 999)
 ##########################################
 ###Import Data
 ##########################################
+
+#Source Scenarios Script
+#source("Scenarios_biofuels")
+
 #Input-Output Table EU27 (Eurostat)
 
 IO_EU_domestic <- read_xlsx("IOT_EU27_Domestic.xlsx", sheet= "Sheet 1", range = "A9:CP104", col_names = T)

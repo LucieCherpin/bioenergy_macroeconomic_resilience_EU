@@ -27,10 +27,10 @@ options(scipen = 999)
 
 #Input-Output Table EU27 (Eurostat)
 
-IO_EU_domestic <- read_xlsx("IOT_EU27_Domestic.xlsx", sheet= "Sheet 1 ", range = "A9:CP104", col_names = T)
+IO_EU_domestic <- read_xlsx("domestic_iot.xlsx", sheet= "Sheet_1", range = "A2:CP104", col_names = T)
 IO_EU_domestic <- as.data.frame(IO_EU_domestic)
 
-IO_EU_imports <- read_xlsx("IOT_EU27_imports_10_08.xlsx", sheet= "Sheet 1", range = "A9:CP104", col_names = T)
+IO_EU_imports <- read_xlsx("imports_iot.xlsx", sheet= "Sheet_1", range = "A2:CP104", col_names = T)
 IO_EU_imports <- as.data.frame(IO_EU_imports)
 
 #National Accounts
@@ -64,26 +64,20 @@ final_expenditure <- as.numeric(national_accounts[3,2])       #P3 - Total final 
 
 ###P3 - Total final expenditure (C + G) by industry
 
-t_f_e_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries+1), nIndustries+3]))                  ## "2:" because the first row is the label row and not yet values
+t_f_e_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries+1), nIndustries+1]))                  
 t_f_e_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries+1), nIndustries+3]))
 
 #Total Final Expenditure - Do we need this?
-D_dom = matrix(rep(t_f_e_dom, times = nYears), nrow = nYears, byrow = TRUE)
-D_imp = matrix(rep(t_f_e_imp, times = nYears), nrow = nYears, byrow = TRUE)
+#D_dom = matrix(rep(t_f_e_dom, times = nYears), nrow = nYears, byrow = TRUE)
+#D_imp = matrix(rep(t_f_e_imp, times = nYears), nrow = nYears, byrow = TRUE)
 
 ### D21X31 - Taxes less subsidies on products as part of final expenditure
-expenditure_tax_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 8, nIndustries + 3]))    ### column nIndustries + 3 is "final consumotion expenditure"
-expenditure_tax_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 8, nIndustries + 3]))          
+#expenditure_tax_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 8, nIndustries + 3]))    ### column nIndustries + 3 is "final consumotion expenditure"
+          
 
-D_tax_dom = matrix(rep(expenditure_tax_dom, times = nYears), nrow = nYears, byrow = TRUE)   #D21X31 - Taxes less subsidies on products as part of final expenditure by industry matrix
-D_tax_imp = matrix(rep(expenditure_tax_imp, times = nYears), nrow = nYears, byrow = TRUE)
+#D_tax_dom = matrix(rep(expenditure_tax_dom, times = nYears), nrow = nYears, byrow = TRUE)   #D21X31 - Taxes less subsidies on products as part of final expenditure by industry matrix
 
-#TU & TFU - Total use & total final use
-total_use_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 17]))     #TU - Total use by industry
-total_use_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 17]))
 
-FINAL_dom = matrix(rep(total_use_dom, times = nYears), nrow = nYears, byrow = TRUE)    #TU - Total use by industry matrix
-FINAL_imp = matrix(rep(total_use_imp, times = nYears), nrow = nYears, byrow = TRUE)
 
 final_use_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 18]))    #TFU - Total final use by industry
 final_use_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 18]))
@@ -92,24 +86,24 @@ f_dom = matrix(rep(final_use_dom, times = nYears), nrow = nYears, byrow = TRUE) 
 f_imp = matrix(rep(final_use_imp, times = nYears), nrow = nYears, byrow = TRUE)
 
 #Production and sales, only looking at domestic
-gva_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 2, 3:(nIndustries + 2)])) #B1G - Gross value added by industry
-gva_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 2, 3:(nIndustries + 2)]))
-GVA_dom = matrix(rep(gva_dom, times = nYears), nrow = nYears, byrow = TRUE)   #B1G - Gross value added by industry matrix  
-GVA_imp = matrix(rep(gva_imp, times = nYears), nrow = nYears, byrow = TRUE)
+#gva_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 2, 3:(nIndustries + 2)])) #B1G - Gross value added by industry
+#gva_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 2, 3:(nIndustries + 2)]))
+#GVA_dom = matrix(rep(gva_dom, times = nYears), nrow = nYears, byrow = TRUE)   #B1G - Gross value added by industry matrix  
+#GVA_imp = matrix(rep(gva_imp, times = nYears), nrow = nYears, byrow = TRUE)
 
 ## only measuring doemstic EU output generation by industry, 
-sales_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 10, 3:(nIndustries + 2)]))  #P1 - Total sales (output) by industry
-sales_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 10, 3:(nIndustries + 2)]))
+#sales_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 10, 3:(nIndustries + 2)]))  #P1 - Total sales (output) by industry
+#sales_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 10, 3:(nIndustries + 2)]))
 
-SALES_dom = matrix(rep(sales_dom, times = nYears), nrow = nYears, byrow = TRUE)    #P1 - Total sales (output) by industry matrix
-SALES_imp = matrix(rep(sales_imp, times = nYears), nrow = nYears, byrow = TRUE)
+#SALES_dom = matrix(rep(sales_dom, times = nYears), nrow = nYears, byrow = TRUE)    #P1 - Total sales (output) by industry matrix
+#SALES_imp = matrix(rep(sales_imp, times = nYears), nrow = nYears, byrow = TRUE)
 
 q_s_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 19, 3:(nIndustries + 2)]))  #TS_BP - Total supply by industry
-q_s_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 19, 3:(nIndustries + 2)]))
+#q_s_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 19, 3:(nIndustries + 2)]))
 q_s_dom[q_s_dom == 0] <- 1e-6                                                                #Necessary for calculations
-q_s_imp[q_s_imp == 0] <- 1e-6                                                                
+#q_s_imp[q_s_imp == 0] <- 1e-6                                                                
 Q_s_dom_i = matrix(rep(q_s_dom, times = nYears), nrow = nYears, byrow = TRUE)   #TS_BP - Total supply by industry matrix
-Q_s_imp_i = matrix(rep(q_s_imp, times = nYears), nrow = nYears, byrow = TRUE)
+#Q_s_imp_i = matrix(rep(q_s_imp, times = nYears), nrow = nYears, byrow = TRUE)
 
 ### total use of intermediate inputs
 x_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 17]))                   #TU - Total use by industry
@@ -130,54 +124,54 @@ I_D_imp_i <- matrix(rep(i_d_imp, times = nYears), nrow = nYears, byrow = TRUE)
 #Total consumption shares by industry
 beta_bar_dom <- as.matrix(
   (as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 4])) +
-   as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 5])) +
-   as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 6])))
+     as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 5])) +
+     as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 6])))
   /
-  (as.numeric(unlist(IO_EU_domestic[1, nIndustries + 4])) +
-   as.numeric(unlist(IO_EU_domestic[1, nIndustries + 5])) +
-   as.numeric(unlist(IO_EU_domestic[1, nIndustries + 6])))
+    (as.numeric(unlist(IO_EU_domestic[1, nIndustries + 4])) +
+       as.numeric(unlist(IO_EU_domestic[1, nIndustries + 5])) +
+       as.numeric(unlist(IO_EU_domestic[1, nIndustries + 6])))
 )
-                                                                 
+
 beta_bar_imp <- as.matrix(
   (as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 4])) +
-   as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 5])) +
-   as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 6])))
+     as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 5])) +
+     as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 6])))
   /
-  (as.numeric(unlist(IO_EU_imports[1, nIndustries + 4])) +
-   as.numeric(unlist(IO_EU_imports[1, nIndustries + 5])) +
-   as.numeric(unlist(IO_EU_imports[1, nIndustries + 6])))
+    (as.numeric(unlist(IO_EU_imports[1, nIndustries + 4])) +
+       as.numeric(unlist(IO_EU_imports[1, nIndustries + 5])) +
+       as.numeric(unlist(IO_EU_imports[1, nIndustries + 6])))
 )
 
 # Household consumption shares by industry (HH + NPISH)
 beta_c_bar_dom <- as.matrix(
   (as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 5])) +
-   as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 6])))
+     as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 6])))
   /
-  (as.numeric(unlist(IO_EU_domestic[1, nIndustries + 5])) +
-   as.numeric(unlist(IO_EU_domestic[1, nIndustries + 6])))
+    (as.numeric(unlist(IO_EU_domestic[1, nIndustries + 5])) +
+       as.numeric(unlist(IO_EU_domestic[1, nIndustries + 6])))
 )
 
 beta_c_bar_imp <- as.matrix(
   (as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 5])) +
-   as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 6])))
+     as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 6])))
   /
-  (as.numeric(unlist(IO_EU_imports[1, nIndustries + 5])) +
-   as.numeric(unlist(IO_EU_imports[1, nIndustries + 6])))
+    (as.numeric(unlist(IO_EU_imports[1, nIndustries + 5])) +
+       as.numeric(unlist(IO_EU_imports[1, nIndustries + 6])))
 )
 
 #Household consumption shares by industry (HH + NPISH) Matrix
 beta_C_dom = matrix(rep(beta_c_bar_dom, times = nYears), nrow = nYears, byrow = TRUE)   # Household Consumption Shares Matrix (Domestic)
 beta_C_imp = matrix(rep(beta_c_bar_imp, times = nYears), nrow = nYears, byrow = TRUE)   # Household Consumption Shares Matrix (imports)
-                                                                                                                     
+
 # Government expenditure shares by industry
 beta_g_bar_dom <- as.matrix(
   as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 4])) /
-  as.numeric(unlist(IO_EU_domestic[1, nIndustries + 4]))
+    as.numeric(unlist(IO_EU_domestic[1, nIndustries + 4]))
 )
 
 beta_g_bar_imp <- as.matrix(
   as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 4])) /
-  as.numeric(unlist(IO_EU_imports[1, nIndustries + 4]))
+    as.numeric(unlist(IO_EU_imports[1, nIndustries + 4]))
 )
 
 #Real government expenditure composition
@@ -206,7 +200,7 @@ G_i_tax_dom = matrix(rep(g_cons_tax_i_imp, times = nYears), nrow = nYears, byrow
 cons <- as.numeric(national_accounts[7,2])                    #P3_S14_S15 - Household and NPISH consumption
 hh_cons_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 5]))
 hh_cons_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 5]))                       #P3_S14 - Household consumption by industry
-                     
+
 npish_cons_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 6]))
 npish_cons_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 6]))                    #P3_S15 - NPISH consumption by industry
 
@@ -230,45 +224,59 @@ C_i_tax_dom <- matrix(rep(consumption_tax_i_dom, times = nYears),nrow = nYears, 
 C_i_imp = matrix(rep(consumption_imp, times = nYears), nrow = nYears, byrow = TRUE)    
 C_i_tax_imp <- matrix(rep(consumption_tax_i_imp, times = nYears),nrow = nYears, byrow = TRUE)
 
+
+D_dom[i, ] <- beta_C_dom[i, ] * C_dom[i] + beta_G_dom[i, ] * G_dom[i]
+D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
+
 ##########################################
 ###Technical coefficients matrix (A matrix)
 ##########################################
 
 # Goods x goods matrix Z (Domestic)
-Z_dom   <- as.matrix(IO_EU_domestic[2:(nIndustries + 1), 3:(nIndustries + 2)], col_names = F)
+Z_dom <- matrix(
+  as.numeric(as.character(unlist(IO_EU_domestic[2:(nIndustries + 1), 3:(nIndustries + 2)]))),
+  nrow = nIndustries, ncol = nIndustries
+)
 
 # Goods x goods matrix Z (Imports)
-Z_imp   <- as.matrix(IO_EU_imports[2:(nIndustries + 1), 3:(nIndustries + 2)], col_names = F)
+Z_imp <- matrix(
+  as.numeric(as.character(unlist(IO_EU_imports[2:(nIndustries + 1), 3:(nIndustries + 2)]))),
+  nrow = nIndustries, ncol = nIndustries
+)
 
-# Total intermediate transactions matrix Z -  Outcommented
-#Z_tot <- Z_dom + Z_imp
+
 
 # Technical coefficients matrices
 A_dom <- as.matrix(sweep(Z_dom, 2, q_s_dom, FUN = '/'))  # Domestic technical coefficients              #Divide each entry of the IOT by total output - Jan: Needs to be put into the loop and get updated via some change. Aditya: The shares should be changed,
-A_imp <- as.matrix(sweep(Z_imp, 2, q_s_imp, FUN = '/'))  # Import technical coefficients
+#A_imp <- as.matrix(sweep(Z_imp, 2, q_s_imp, FUN = '/'))  # Import technical coefficients
 #A_tot <- A_dom + A_imp                                 # Total technological coefficients
+na_pos <- which(is.na(A_dom), arr.ind = TRUE)
+if (nrow(na_pos) > 0) {
+  message("Replacing ", nrow(na_pos), " NA(s) in A_dom with 0.")
+  print(head(na_pos, 20))
+}
+A_dom[is.na(A_dom)] <- 0
 
 diag <- diag(1, nrow = nIndustries, ncol = nIndustries)                        #Create diagonal matrix
-L_dom <- solve(diag  -A_dom)                                                  #Leontief inverse         
+L_dom <- solve(diag-A_dom)                                                  #Leontief inverse         
 L_imp <- solve(diag-A_imp)
 
 # ---- Consistency checks separated by domestic / imports ----
-TotalFinalUse_dom  <- total_use_dom - (A_dom %*% x_dom)
-TotalFinalUseCheck_dom <- (I_n - A_dom) %*% x_dom
-isTRUE(all.equal(TotalFinalUse_dom, TotalFinalUseCheck_dom, f_tol = 1e-3))
+#TotalFinalUse_dom  <- total_use_dom - (A_dom %*% x_dom)
+#TotalFinalUseCheck_dom <- (I_n - A_dom) %*% x_dom
+#isTRUE(all.equal(TotalFinalUse_dom, TotalFinalUseCheck_dom, f_tol = 1e-3))
 
-TotalFinalUse_imp  <- total_use_imp - (A_imp %*% x_imp)
-TotalFinalUseCheck_imp <- (I_n - A_imp) %*% x_imp
-isTRUE(all.equal(TotalFinalUse_imp, TotalFinalUseCheck_imp, f_tol = 1e-3))
+#TotalFinalUse_imp  <- total_use_imp - (A_imp %*% x_imp)
+#TotalFinalUseCheck_imp <- (I_n - A_imp) %*% x_imp
+#isTRUE(all.equal(TotalFinalUse_imp, TotalFinalUseCheck_imp, f_tol = 1e-3))
 
 # Total use checks (domestic and imports)
-TotalUse_dom  <- (A_dom %*% q_s_dom) + final_use_dom
-TotalUseCheck_dom <- L_dom %*% final_use_dom
-isTRUE(all.equal(TotalUse_dom, TotalUseCheck_dom, f_tol = 1e-3))
+#TotalUse_dom  <- (A_dom %*% q_s_dom) + final_use_dom
+#TotalUseCheck_dom <- L_dom %*% final_use_dom
+#isTRUE(all.equal(TotalUse_dom, TotalUseCheck_dom, f_tol = 1e-3))
 
-TotalUse_imp  <- (A_imp %*% q_s_imp) + final_use_imp
-TotalUseCheck_imp <- L_imp %*% final_use_imp
-isTRUE(all.equal(TotalUse_imp, TotalUseCheck_imp, f_tol = 1e-3))
+#TotalUse_imp  <- (A_imp %*% q_s_imp) + final_use_imp
+#TotalUseCheck_imp <- L_imp %*% final_use_impisTRUE(all.equal(TotalUse_imp, TotalUseCheck_imp, f_tol = 1e-3))
 
 
 ##########################################
@@ -299,48 +307,49 @@ for (i in 2:nYears){
   for (iterations in 1:100){
     
     # Final expenditure by industry (domestic / imports)
-     D_dom[i, ] <- beta_C_dom[i, ] * C_dom[i] + beta_G_dom[i, ] * G_dom[i]
-     D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
-
+    D_dom[i, ] <- beta_C_dom[i, ] * C_dom[i] + beta_G_dom[i, ] * G_dom[i]
+    D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
+    
     # Total final use f = D + GCF + EX (split)
-     f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
-     f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
-
+    f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
+    f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
+    
     # Domestic production from domestic final demand (Leontief)
-     X_dom[i, ] <- L_dom %*% f_dom[i, ]
-     X_imp[i, ] <- L_imp %*% f_imp[i, ]
-
+    X_dom[i, ] <- L_dom %*% f_dom[i, ]
+    X_imp[i, ] <- L_imp %*% f_imp[i, ]
+    
     #Exports ## couple exports to total use
     #EX_i[i, ] <- EX_i[i-1,] 
     
     #Rest of the World
     #RoW[i,] = EX_i[i,] - IM_i[i,]
-
+    
     #Optional totals
     f_total <- f_dom[i, ] + f_imp[i, ]
     X_total <- X_dom_ts[i, ] + X_imp_ts[i, ]
-
+    
     #Household Consumption
     #C
-
+    
     #Government Consumption
     #G
     
     #Wages ?
     #
-
+    
     #Employment
-
+    
     # Energy
     #EN
     
     # Emissions
     #EM
-
+    
     #Land Use
-           
+    
     #Deforestation
     #Water Impact
-
     
-} 
+    
+  } 
+}

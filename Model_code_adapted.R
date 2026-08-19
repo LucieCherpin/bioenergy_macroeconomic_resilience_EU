@@ -22,8 +22,7 @@ options(scipen = 999)
 ###Import Data
 ##########################################
 
-#Source Scenarios Script
-#source("Scenarios_biofuels")
+
 
 #Input-Output Table EU27 (Eurostat)
 
@@ -73,7 +72,7 @@ t_f_e_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries+1), nIndustries+3]))
 
 ### D21X31 - Taxes less subsidies on products as part of final expenditure
 #expenditure_tax_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 8, nIndustries + 3]))    ### column nIndustries + 3 is "final consumotion expenditure"
-          
+
 
 #D_tax_dom = matrix(rep(expenditure_tax_dom, times = nYears), nrow = nYears, byrow = TRUE)   #D21X31 - Taxes less subsidies on products as part of final expenditure by industry matrix
 
@@ -251,7 +250,7 @@ Z_imp <- matrix(
 
 # Technical coefficients matrices Domestic
 A_dom <- as.matrix(sweep(Z_dom, 2, q_s_dom, FUN = '/'))  # Domestic technical coefficients    
-                             
+
 na_pos <- which(is.na(A_dom), arr.ind = TRUE)
 if (nrow(na_pos) > 0) {
   message("Replacing ", nrow(na_pos), " NA(s) in A_dom with 0.")
@@ -325,32 +324,490 @@ M_total[1, ]        <- M_intermediate[1, ] + M_final[1, ]
 # ===================================================================
 #  SCENARIOS: SPECIFIC Z, X, AND Y MATRIX EXTRACTION
 # ===================================================================
+
+#Initialise Variables
+
+#Scenario 1
+A_dom_S1_2030 <- A_dom
+A_imp_S1_2030 <- A_imp
+Z_dom_S1_2030 <- Z_dom
+Z_imp_S1_2030 <- Z_imp
+L_dom_S1_2030 <- L_dom
+X_S1_2030     <- X_dom
+
+
+#Scenario 2
+A_dom_S2_2030 <- A_dom
+A_imp_S2_2030 <- A_imp
+Z_dom_S2_2030 <- Z_dom
+Z_imp_S2_2030 <- Z_imp
+L_dom_S2_2030 <- L_dom
+X_S2_2030     <- X_dom
+
+
+#Scenario 3
+A_dom_S3_2030 <- A_dom
+A_imp_S3_2030 <- A_imp
+Z_dom_S3_2030 <- Z_dom
+Z_imp_S3_2030 <- Z_imp
+L_dom_S3_2030 <- L_dom
+X_S3_2030     <- X_dom
+
+
+
+
+#Source Scenarios Script
+#source("Scenarios_biofuels")
+#Initialise Value Chains
+
+#2030 Scenario Parameters
+#Integrate Here Variable-Specific Changes per Scenario per Time Step
+# 1. BASIC SETTINGS
+############################################################
+
+nIndustries <- 73
+
+BIOFUEL_SECTORS <- c(
+  conv_biodiesel    = 23,
+  adv_biodiesel     = 24,
+  conv_biogasoline  = 25,
+  adv_biogasoline   = 26,
+  conv_bio_kerosene = 27,
+  adv_bio_kerosene  = 28,
+  adv_bio_hfo       = 29,
+  RFNBOs            = 30,
+  adv_biogas        = 44
+)
+
+INPUT_SECTORS <- c(
+  agriculture      = 1,
+  forestry         = 2,
+  food_bev         = 15,
+  paper            = 18,
+  chemicals        = 21,
+  adv_biodiesel    = 23,
+  adv_biogasoline  = 26,
+  fab_metal        = 34,
+  computer_el      = 35,
+  elec_equip       = 36,
+  machinery        = 37,
+  repair_inst      = 41,
+  electricity      = 42,
+  adv_biogas       = 44,
+  sewerage         = 45,
+  construction     = 46,
+  land_transp      = 50,
+  legal_acc        = 64,
+  architecture     = 65
+)
+
+TAX_RATES <- c(
+  default    = 0.0091481,
+  adv_biogas = 0.0017690
+)
+
+############################################################
+# 2. TECHNOLOGY LIBRARY
+############################################################
+
+IVC_TECH_LIBRARY <- list(
+  IVC1 = list(
+    market_value = 1450,
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.15, land_transp = 0.05)
+  ),
+  
+  IVC2_HVO = list(
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.15, land_transp = 0.05)
+  ),
+  
+  IVC2_HEFA = list(
+    market_value = 2380,
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.15, land_transp = 0.05)
+  ),
+  
+  IVC5 = list(
+    market_value = 1000,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.50,
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.50, legal_acc = 0.15,
+                     repair_inst = 0.10, land_transp = 0.05)
+  ),
+  
+  IVC8a = list(
+    market_value = 935,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
+                     construction = 0.10, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
+                     repair_inst = 0.30, land_transp = 0.00)
+  ),
+  
+  IVC8b = list(
+    market_value = 935,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
+                     construction = 0.10, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
+                     repair_inst = 0.30, land_transp = 0.00)
+  ),
+  
+  IVC8c = list(
+    market_value = 935,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.60,
+                     construction = 0.10, architecture = 0.25, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.65, chemicals = 0.10, legal_acc = 0.15,
+                     repair_inst = 0.10, land_transp = 0.00)
+  ),
+  
+  IVC9b = list(
+    market_value = 1275,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.60,
+                     construction = 0.10, architecture = 0.25, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.65, chemicals = 0.10, legal_acc = 0.15,
+                     repair_inst = 0.10, land_transp = 0.00)
+  ),
+  
+  IVC11a_SAF = list(
+    market_value = 2380,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
+                     construction = 0.10, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
+                     repair_inst = 0.30, land_transp = 0.00)
+  ),
+  
+  IVC12 = list(
+    market_value = 1000,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.50,
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.50, legal_acc = 0.15,
+                     repair_inst = 0.10, land_transp = 0.05)
+  ),
+  
+  IVC13a = list(
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.10, architecture = 0.25, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.30, land_transp = 0.10)
+  ),
+  
+  IVC13b_road = list(
+    market_value = 1150,
+    dist_capex   = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.10, architecture = 0.25, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.30, land_transp = 0.10)
+  ),
+  
+  IVC13b_mar = list(
+    market_value = 1150,
+    dist_capex   = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.10, architecture = 0.25, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.30, land_transp = 0.10)
+  )
+)
+
+############################################################
+# 3. HELPER FUNCTIONS
+############################################################
+
+get_v <- function(vec, k) {
+  if (k %in% names(vec)) unname(vec[k]) else 0
+}
+
+build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
+                             dist_feed, dist_capex, dist_opex) {
+  
+  r_k     <- prod_cost / market_value
+  s_feed  <- r_k * alpha_cost["feed"]
+  s_capex <- r_k * alpha_cost["capex"]
+  s_opex  <- r_k * alpha_cost["opex"]
+  
+  a_feed  <- s_feed  * dist_feed
+  a_capex <- s_capex * dist_capex
+  a_opex  <- s_opex  * dist_opex
+  
+  a_dom <- c(
+    agriculture    = get_v(a_feed, "agriculture"),
+    forestry       = get_v(a_feed, "forestry"),
+    paper          = get_v(a_feed, "paper"),
+    food_bev       = get_v(a_feed, "food_bev"),
+    sewerage       = get_v(a_feed, "sewerage") + get_v(a_opex, "sewerage"),
+    adv_biodiesel  = get_v(a_feed, "adv_biodiesel"),
+    adv_biogas     = get_v(a_feed, "adv_biogas"),
+    fab_metal      = get_v(a_capex, "fab_metal"),
+    elec_equip     = get_v(a_capex, "elec_equip"),
+    machinery      = get_v(a_capex, "machinery"),
+    construction   = get_v(a_capex, "construction"),
+    architecture   = get_v(a_capex, "architecture"),
+    computer_el    = get_v(a_capex, "computer_el"),
+    electricity    = get_v(a_opex, "electricity"),
+    chemicals      = get_v(a_feed, "chemicals") + get_v(a_opex, "chemicals"),
+    legal_acc      = get_v(a_opex, "legal_acc"),
+    repair_inst    = get_v(a_opex, "repair_inst"),
+    land_transp    = get_v(a_opex, "land_transp")
+  )
+  
+  a_imp <- c(
+    agriculture_imp = get_v(a_feed, "agriculture_imp"),
+    food_bev_imp    = get_v(a_feed, "food_bev_imp")
+  )
+  
+  list(a_dom = a_dom, a_imp = a_imp)
+}
+
+build_fuel_column <- function(fuel_cfg) {
+  
+  weights <- fuel_cfg$weights
+  ivc_ids <- names(weights)
+  
+  sample_ivc <- ivc_ids[1]
+  sample_res <- build_ivc_vector(
+    prod_cost    = fuel_cfg$prod_cost[[sample_ivc]],
+    market_value = IVC_TECH_LIBRARY[[sample_ivc]]$market_value,
+    alpha_cost   = fuel_cfg$alpha[[sample_ivc]],
+    dist_feed    = fuel_cfg$dist_feed[[sample_ivc]],
+    dist_capex   = IVC_TECH_LIBRARY[[sample_ivc]]$dist_capex,
+    dist_opex    = IVC_TECH_LIBRARY[[sample_ivc]]$dist_opex
+  )
+  
+  a_dom_agg <- setNames(numeric(length(sample_res$a_dom)), names(sample_res$a_dom))
+  a_imp_agg <- setNames(numeric(length(sample_res$a_imp)), names(sample_res$a_imp))
+  
+  for (ivc_id in ivc_ids) {
+    w <- weights[[ivc_id]]
     
+    ivc_res <- build_ivc_vector(
+      prod_cost    = fuel_cfg$prod_cost[[ivc_id]],
+      market_value = IVC_TECH_LIBRARY[[ivc_id]]$market_value,
+      alpha_cost   = fuel_cfg$alpha[[ivc_id]],
+      dist_feed    = fuel_cfg$dist_feed[[ivc_id]],
+      dist_capex   = IVC_TECH_LIBRARY[[ivc_id]]$dist_capex,
+      dist_opex    = IVC_TECH_LIBRARY[[ivc_id]]$dist_opex
+    )
     
-    #Scenario 1: 2030 Initialisation
-    A_dom_S1_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    A_imp_S1_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    Z_dom_S1_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    Z_imp_S1_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    X_S1_2030     <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    L_dom_S1_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    
-    #Scenario 2: 2030 Initialisation
-    A_dom_S2_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    A_imp_S2_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    Z_dom_S2_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    Z_imp_S2_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    X_S2_2030     <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    L_dom_S2_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    
-    #Scenario 3: 2030 Initialisation
-    A_dom_S3_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    A_imp_S3_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    Z_dom_S3_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    Z_imp_S3_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    X_S3_2030     <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    L_dom_S3_2030 <- matrix(0, nrow = nIndustries, ncol = nIndustries)
-    
+    a_dom_agg <- a_dom_agg + w * ivc_res$a_dom
+    a_imp_agg <- a_imp_agg + w * ivc_res$a_imp
+  }
+  
+  list(a_dom = a_dom_agg, a_imp = a_imp_agg)
+}
+
+############################################################
+# 4. CLEANED PARTIAL SCENARIO 1 FOR 2030
+############################################################
+
+scenario_S1_2030 <- list(
+  
+  adv_biodiesel = list(
+    abs_production_eur = 3108.28,
+    weights = c(IVC1 = 0.79304, IVC2_HVO = 0.15764, IVC13a = 0.03429, IVC13b_mar = 0.01502),
+    prod_cost = list(
+      IVC1 = 870,
+      IVC2_HVO = 1287.68,
+      IVC13a = 1598.13,
+      IVC13b_mar = 2160.57
+    ),
+    alpha = list(
+      IVC1 = c(feed = 0.5977011, capex = 0.0954023, opex = 0.3068966),
+      IVC2_HVO = c(feed = 0.476579435, capex = 0.208902273, opex = 0.314518292),
+      IVC13a = c(feed = 0.132113077, capex = 0.50371231, opex = 0.364174614),
+      IVC13b_mar = c(feed = 0.292548351, capex = 0.317045718, opex = 0.390405932)
+    ),
+    dist_feed = list(
+      IVC1 = c(agriculture_imp = 1.0),
+      IVC2_HVO = c(agriculture = 0.14497, adv_biodiesel = 0.72677, chemicals = 0.12825),
+      IVC13a = c(agriculture = 0.55703, forestry = 0.22890, paper = 0.20022, food_bev = 0.01387),
+      IVC13b_mar = c(agriculture = 0.590480, forestry = 0.210894, paper = 0.184505, food_bev = 0.014121)
+    )
+  ),
+  
+  adv_biogasoline = list(
+    abs_production_eur = 615.78,
+    weights = c(IVC5 = 0.3663, IVC12 = 0.3663, IVC13a = 0.2234, IVC13b_road = 0.0440),
+    prod_cost = list(
+      IVC5 = 1385.43,
+      IVC12 = 988.04,
+      IVC13a = 1598.13,
+      IVC13b_road = 1740.45
+    ),
+    alpha = list(
+      IVC5 = c(feed = 0.2270, capex = 0.4006, opex = 0.3724),
+      IVC12 = c(feed = 0.6200, capex = 0.1000, opex = 0.2800),
+      IVC13a = c(feed = 0.5500, capex = 0.1500, opex = 0.3000),
+      IVC13b_road = c(feed = 0.5800, capex = 0.1200, opex = 0.3000)
+    ),
+    dist_feed = list(
+      IVC5 = c(agriculture = 0.0, paper = 1.0),
+      IVC12 = c(adv_biogas = 1.0),
+      IVC13a = c(agriculture = 0.515152, forestry = 0.262022, paper = 0.208388, food_bev = 0.014438, sewerage = 0.0),
+      IVC13b_road = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, sewerage = 0.0)
+    )
+  ),
+  
+  adv_bio_kerosene = list(
+    abs_production_eur = 2094.40,
+    weights = c(IVC2_HEFA = 0.9418605, IVC11a_SAF = 0.0581395),
+    prod_cost = list(
+      IVC2_HEFA = 1811.29,
+      IVC11a_SAF = 2967.02
+    ),
+    alpha = list(
+      IVC2_HEFA = c(feed = 0.48000000, capex = 0.20800000, opex = 0.31200000),
+      IVC11a_SAF = c(feed = 0.19110682, capex = 0.48702100, opex = 0.32187200)
+    ),
+    dist_feed = list(
+      IVC2_HEFA = c(agriculture = 0.569930, adv_biodiesel = 0.365560, chemicals = 0.064511),
+      IVC11a_SAF = c(agriculture = 0.572754, forestry = 0.219387, paper = 0.191936, food_bev = 0.014264, adv_biodiesel = 0.001660)
+    )
+  ),
+  
+  adv_bio_hfo = list(
+    abs_production_eur = 841.50,
+    weights = c(IVC8a = 0.5, IVC8b = 0.5),
+    prod_cost = list(
+      IVC8a = 586.20,
+      IVC8b = 936.00
+    ),
+    alpha = list(
+      IVC8a = c(feed = 0.20333994, capex = 0.47936076, opex = 0.31729929),
+      IVC8b = c(feed = 0.75641026, capex = 0.14529915, opex = 0.09829060)
+    ),
+    dist_feed = list(
+      IVC8a = c(agriculture = 0.555604, forestry = 0.212818, paper = 0.186189, adv_biodiesel = 0.031552, food_bev = 0.013837),
+      IVC8b = c(adv_biogas = 1.0)
+    )
+  ),
+  
+  RFNBOs = list(
+    abs_production_eur = 201.19,
+    weights = c(IVC8c = 0.8019559, IVC9b = 0.1980441),
+    prod_cost = list(
+      IVC8c = 132.07,
+      IVC9b = 394.26
+    ),
+    alpha = list(
+      IVC8c = c(feed = 0.35000000, capex = 0.43160000, opex = 0.21960000),
+      IVC9b = c(feed = 0.29000000, capex = 0.32470000, opex = 0.38300000)
+    ),
+    dist_feed = list(
+      IVC8c = c(chemicals = 1.0),
+      IVC9b = c(chemicals = 1.0)
+    )
+  )
+)
+
+for (fuel_name in names(scenario_S1_2030)) {
+  
+  target_col <- BIOFUEL_SECTORS[[fuel_name]]
+  fuel_cfg   <- scenario_S1_2030[[fuel_name]]
+  
+  X_S1_2030[target_col] <- fuel_cfg$abs_production_eur
+  res_fuel <- build_fuel_column(fuel_cfg)
+  
+  for (sec_name in names(res_fuel$a_dom)) {
+    if (sec_name %in% names(INPUT_SECTORS)) {
+      row_idx <- INPUT_SECTORS[[sec_name]]
+      A_dom_S1_2030[row_idx, target_col] <- res_fuel$a_dom[[sec_name]]
+    }
+  }
+  
+  for (imp_sec in names(res_fuel$a_imp)) {
+    clean_sec <- gsub("_imp$", "", imp_sec)
+    if (clean_sec %in% names(INPUT_SECTORS)) {
+      row_idx <- INPUT_SECTORS[[clean_sec]]
+      A_imp_S1_2030[row_idx, target_col] <- res_fuel$a_imp[[imp_sec]]
+    }
+  }
+}
+
+# ==========================================================
+# TO RE-INTEGRATE LATER
+# ==========================================================
+
+# adv_biogas = list(
+#   abs_production_eur = 1550.80,
+#   weights = c(IVC7 = 1.0, IVC9a = 0.0),
+#   prod_cost = list(
+#     IVC7 = 1024.42,
+#     IVC9a = 1369.48
+#   ),
+#   alpha = list(
+#     IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000),
+#     IVC9a = c(feed = 0.154612, capex = 0.583026, opex = 0.262362)
+#   ),
+#   dist_feed = list(
+#     IVC7 = c(agriculture = ?, food_bev = ?, sewerage = ?, chemicals = ?),
+#     IVC9a = c(agriculture = ?, food_bev = ?, sewerage = ?, forestry = ?, paper = ?, adv_biodiesel = ?)
+#   )
+# ),
+
+# conv_biodiesel = list(
+#   abs_production_eur = 19194.17,
+#   weights = c(
+#     IVC_T_FF = 0.2644,
+#     IVC_HT_FF = 0.2279,
+#     IVC_T_CC = 0.1943,
+#     IVC_HT_CC = 0.0978,
+#     IVC_T_lipids = 0.1518,
+#     IVC_HT_lipids_road = 0.0638
+#   ),
+#   alpha = list(
+#     IVC_T_FF = c(feed = 0.74, capex = 0.07, opex = 0.19),
+#     IVC_HT_FF = c(feed = 0.72, capex = 0.10, opex = 0.18),
+#     IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
+#     IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
+#     IVC_T_lipids = c(feed = 0.74, capex = 0.04, opex = 0.22),
+#     IVC_HT_lipids_road = c(feed = 0.67, capex = 0.13, opex = 0.20)
+#   ),
+#   dist_feed = list(
+#     IVC_T_FF = c(food_bev = 1.0),
+#     IVC_HT_FF = c(food_bev = 1.0),
+#     IVC_T_CC = c(agriculture = 1.0),
+#     IVC_HT_CC = c(agriculture = 1.0),
+#     IVC_T_lipids = c(food_bev = 1.0),
+#     IVC_HT_lipids_road = c(food_bev = 1.0)
+#   )
+# ),
+
+# conv_biogasoline = list(
+#   abs_production_eur = 4436.26,
+#   weights = c(IVC_EF_FF = 1.0),
+#   alpha = list(
+#     IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20)
+#   ),
+#   dist_feed = list(
+#     IVC_EF_FF = c(agriculture = 1.0)
+#   )
+# ),
+
+# conv_bio_kerosene = list(
+#   abs_production_eur = 966.98,
+#   weights = c(IVC_HT_lipids_SAF = 1.0),
+#   alpha = list(
+#     IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19)
+#   ),
+#   dist_feed = list(
+#     IVC_HT_lipids_SAF = c(food_bev = 1.0)
+#   )
+# )
+
+Z_dom_S1_2030 <- A_dom_S1_2030 %*% diag(x_dom)
+
+#2035 Scenario Parameters
+
+
+#2040 Scenario Parameters
+
 
 
 #Define time loop

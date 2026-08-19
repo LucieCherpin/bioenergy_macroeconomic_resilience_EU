@@ -6,18 +6,22 @@
 # 1. SECTOR MAPPING
 # ===================================================================
 
+nIndustries <- 73
+
 # Mapping biofuel sectors to  IO table indices
 
+## not sure what to do with that, maybe I should better locate them within the 73x73 matrix and not just taking the excel file as a whole
+
 BIOFUEL_SECTORS <- list(
-  conv_biodiesel = 22,           # Row/col index for conventional biodiesel
-  adv_biodiesel = 23,            # Row/col  index for advanced biodiesel
-  conv_biogasoline = 24,         # Row/col  index for conventional biogasoline
-  adv_biogasoline = 25,          # Row/col  index for advanced biogasoline
-  conv_bio_kerosene = 26,        # Row/col  index for conventional bio-kerosene
-  adv_bio_kerosene = 27,         # Row/col  index for advanced bio-kerosene
-  adv_bio_hfo = 28,              # Row/col  index for advanced bio-HFO
-  RFNBOs = 29,                   # Row/col  index for RFNBOs             
-  adv_biogas = 43                # Row/col  index for advanced biogas    
+  conv_biodiesel = 23,           # Row/col index for conventional biodiesel
+  adv_biodiesel = 24,            # Row/col  index for advanced biodiesel
+  conv_biogasoline = 25,         # Row/col  index for conventional biogasoline
+  adv_biogasoline = 26,          # Row/col  index for advanced biogasoline
+  conv_bio_kerosene = 27,        # Row/col  index for conventional bio-kerosene
+  adv_bio_kerosene = 28,         # Row/col  index for advanced bio-kerosene
+  adv_bio_hfo = 29,              # Row/col  index for advanced bio-HFO
+  RFNBOs = 30,                   # Row/col  index for RFNBOs             
+  adv_biogas = 44                # Row/col  index for advanced biogas    
 ) 
 
 # Intermediate Input Supply sectors 
@@ -55,8 +59,8 @@ TAX_RATES <- list(
 nIndustries <- 73
 
 
-ROW_GVA                  <- nIndutsries + 1    ## don't know if this is needed here of whether it is done in the main code already
-ROW_TAXES_LESS_SUBSIDIES <- nIndutries + 7
+ROW_GVA                  <- nIndustries + 1    ## don't know if this is needed here of whether it is done in the main code already
+ROW_TAXES_LESS_SUBSIDIES <- nIndustries + 7
 ROW_TOTAL_OUTPUT         <- nIndustries + 9
 COL_FINAL_CONSUMPTION    <- nIndustries + 1
 
@@ -151,7 +155,7 @@ IVC7 = list(
 
  # --- IVC 9a (Advanced biogas) ---
   IVC9a = list(
-    market_value = 1275.
+    market_value = 1275,
     dist_capex   = c(elec_equip = 0.020, machinery = 0.550, 
                      construction = 0.100, architecture = 0.300, computer_el = 0.030),
     dist_opex    = c(electricity = 0.250, chemicals = 0.150, legal_acc = 0.300, 
@@ -232,7 +236,7 @@ IVC7 = list(
     dist_capex   = c(fab_metal = 0.07, machinery = 0.450, 
                      construction = 0.150, architecture = 0.300, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
-                     repair_inst = 0.150, land_transp = 0.100; seweareh = 0.0)
+                     repair_inst = 0.150, land_transp = 0.100, sewerage = 0.0)
   ),
 
 IVC_HT_FF = list(
@@ -330,7 +334,7 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
     forestry     = get_v(a_feed, "forestry"),
     paper        = get_v(a_feed, "paper"),
     food_bev     = get_v(a_feed, "food_bev"),
-    sewerage     = get_v(a_feed, "sewerage"),
+    sewerage     = get_v(a_feed, "sewerage") + get_v(a_opex, "sewerage")
     adv_biodiesel = get_v(a_feed, "adv_biodiesel"), 
     adv_biogas    = get_v(a_feed, "adv_biogas"),    
     fab_metal    = get_v(a_capex, "fab_metal"),

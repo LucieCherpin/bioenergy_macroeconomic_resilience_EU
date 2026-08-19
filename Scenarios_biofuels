@@ -59,13 +59,13 @@ TAX_RATES <- list(
 nIndustries <- 73
 
 
-ROW_GVA                  <- nIndustries + 1    ## don't know if this is needed here of whether it is done in the main code already
+ROW_GVA                  <- nIndustries + 1    ## don't know if this is needed here or whether it is done in the main code already
 ROW_TAXES_LESS_SUBSIDIES <- nIndustries + 7
 ROW_TOTAL_OUTPUT         <- nIndustries + 9
 COL_FINAL_CONSUMPTION    <- nIndustries + 1
 
 # ===================================================================
-# 2. FIXED/ STATIC TECHNOLOGY BLUEPRINTS (IVC-speciifc) 
+# 2. FIXED/ STATIC TECHNOLOGY BLUEPRINTS (IVC-specific) 
 # ===================================================================
 
 
@@ -227,7 +227,7 @@ IVC7 = list(
   ),
 
  ########## Conventional biofuels #########
-## for convnetional biofuels, the production costs are also scenario-independent and constant, therefore already listed here
+## for conventional biofuels, the production costs are also scenario-independent and constant, therefore already listed here
 
 
   IVC_T_FF = list(
@@ -306,7 +306,7 @@ IVC_EF_FF = list(
 
 
 # ===================================================================
-# 2. CORE COEFFICIENT CALCULATOR (PURE FUNCTION)
+# 3. CORE COEFFICIENT CALCULATOR (PURE FUNCTION)
 # ===================================================================
 
 ### vector at the IVC-level!
@@ -362,7 +362,7 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
 
 
 # ==================================================================
-# 3. SCENARIO-SPECIFIC PARAMETER CONFIGURATION 
+# 4. SCENARIO-SPECIFIC PARAMETER CONFIGURATION 
 # ==================================================================
 
   # -----------------------------------------------------------------
@@ -928,7 +928,7 @@ weights = c(IVC_EF_FF = 1),
 
 
 # ===================================================================
-# 4. UPDATED UNIVERSAL COLUMN ASSEMBLY ENGINE
+# 5. UPDATED UNIVERSAL COLUMN ASSEMBLY ENGINE
 # ===================================================================
 
 ## technical input coefficient vector
@@ -1009,7 +1009,7 @@ tax_rate <- if (fuel_name %in% names(TAX_RATES)) TAX_RATES[[fuel_name]] else TAX
 ############################################################################################################################################################################################################
 
 # ===================================================================
-# 5. SCENARIO-SPECIFIC Z, X, AND Y MATRIX EXTRACTION
+# 6. SCENARIO-SPECIFIC Z, X, AND Y MATRIX EXTRACTION
 # ===================================================================
 
 N_interm <- 73  # Number of industries 

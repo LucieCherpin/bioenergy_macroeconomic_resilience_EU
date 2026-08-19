@@ -249,10 +249,9 @@ Z_imp <- matrix(
 
 
 
-# Technical coefficients matrices
-A_dom <- as.matrix(sweep(Z_dom, 2, q_s_dom, FUN = '/'))  # Domestic technical coefficients              #Divide each entry of the IOT by total output - Jan: Needs to be put into the loop and get updated via some change. Aditya: The shares should be changed,
-#A_imp <- as.matrix(sweep(Z_imp, 2, q_s_imp, FUN = '/'))  # Import technical coefficients
-#A_tot <- A_dom + A_imp                                 # Total technological coefficients
+# Technical coefficients matrices Domestic
+A_dom <- as.matrix(sweep(Z_dom, 2, q_s_dom, FUN = '/'))  # Domestic technical coefficients    
+                             
 na_pos <- which(is.na(A_dom), arr.ind = TRUE)
 if (nrow(na_pos) > 0) {
   message("Replacing ", nrow(na_pos), " NA(s) in A_dom with 0.")
@@ -260,9 +259,30 @@ if (nrow(na_pos) > 0) {
 }
 A_dom[is.na(A_dom)] <- 0
 
+A_imp <- as.matrix(sweep(Z_imp, 2, q_s_dom, FUN = '/'))  # Import technical coefficients
+na_pos <- which(is.na(A_imp), arr.ind = TRUE)
+if (nrow(na_pos) > 0) {
+  message("Replacing ", nrow(na_pos), " NA(s) in A_imp with 0.")
+  print(head(na_pos, 20))
+}
+A_imp[is.na(A_imp)] <- 0
+
+
 diag <- diag(1, nrow = nIndustries, ncol = nIndustries)                        #Create diagonal matrix
 L_dom <- solve(diag-A_dom)                                                  #Leontief inverse         
-L_imp <- solve(diag-A_imp)
+I_n <- diag(nrow(A_imp))
+#L_imp <- solve(I_n - A_imp)
+
+#Imports Relevant stuff
+M_intermediate <- matrix(0, nrow = nYears, ncol = nIndustries)
+M_final        <- matrix(0, nrow = nYears, ncol = nIndustries)
+M_total        <- matrix(0, nrow = nYears, ncol = nIndustries)
+
+M_intermediate[1, ] <- as.numeric(A_imp %*% X_dom[1, ])
+M_final[1, ]        <- f_imp[1, ]
+M_total[1, ]        <- M_intermediate[1, ] + M_final[1, ]
+
+#L_imp <- solve(diag-A_imp)
 
 # ---- Consistency checks separated by domestic / imports ----
 #TotalFinalUse_dom  <- total_use_dom - (A_dom %*% x_dom)
@@ -314,12 +334,12 @@ for (i in 2:nYears){
     D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
     
     # Total final use f = D + GCF + EX (split)
-    f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
-    f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
+    #f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
+    #f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
     
     # Domestic production from domestic final demand (Leontief)
     X_dom[i, ] <- L_dom %*% f_dom[i, ]
-    X_imp[i, ] <- L_imp %*% f_imp[i, ]
+    #X_imp[i, ] <- L_imp %*% f_imp[i, ]
     
     #Exports ## couple exports to total use
     #EX_i[i, ] <- EX_i[i-1,] 

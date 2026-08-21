@@ -584,7 +584,7 @@ weights = c(IVC_HT_lipids_SAF = 1),
     abs_production_eur = 13022464700
  weights = c(
   IVC2_HVO   = 0.0491581459,
-  IVC11aroad = 0.6442550491,
+  IVC11a_road = 0.6442550491,
   IVC13a     = 0.2099909623,
   IVC13b_mar = 0.0965958427
 ),
@@ -598,7 +598,7 @@ weights = c(IVC_HT_lipids_SAF = 1),
     ### now using LCoP 2030 high  
       alpha = list(
       IVC2_HVO        = c(feed = 0.4742, capex = 0.2098, opex = 0.3159),
-      IVC11aroad     = c(feed = 0.1099, capex = 0.5359, opex = 0.3542),
+      IVC11a_road     = c(feed = 0.1099, capex = 0.5359, opex = 0.3542),
       IVC13a         = c(feed = 0.1317, capex = 0.5039, opex = 0.3646),
       IVC13b_mar = c(feed = 0.2934, capex = 0.3167, opex = 0.3899)
     ),
@@ -606,7 +606,7 @@ weights = c(IVC_HT_lipids_SAF = 1),
     # Scenario-specific feedstock input distribution vectors per IVC
     dist_feed = list(
       IVC2_HVO = c(agriculture = 0.210755, adv_biodiesel = 0.670858, chemicals = 0.118387),
-      IVC11aroad = c(agriculture = 0.6220, forestry = 0.1487, paper = 0.1823, food_bev = 0.0145, adv_biodiesel = 0.0326),
+      IVC11a_road = c(agriculture = 0.6220, forestry = 0.1487, paper = 0.1823, food_bev = 0.0145, adv_biodiesel = 0.0326),
       IVC13a = c(agriculture   = 0.6273, forestry = 0.1609, paper = 0.1972, food_bev = 0.0146),
       IVC13b_mar = c(agriculture = 0.6591, forestry = 0.1466, paper = 0.1796, food_bev = 0.0147)
     )

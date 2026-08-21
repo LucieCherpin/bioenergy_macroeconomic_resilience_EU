@@ -272,7 +272,7 @@ A_imp[is.na(A_imp)] <- 0
 
 
 diag <- diag(1, nrow = nIndustries, ncol = nIndustries)                        #Create diagonal matrix
-L_dom <- solve(diag-A_dom_S1_2030)                                                  #Leontief inverse         
+L_dom <- solve(diag-A_dom)                                                  #Leontief inverse         
 I_n <- diag(nrow(A_imp_S1_2030))
 #L_imp <- solve(I_n - A_imp)
 

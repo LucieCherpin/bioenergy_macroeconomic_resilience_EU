@@ -524,6 +524,8 @@ get_v <- function(vec, k) {
   if (k %in% names(vec)) unname(vec[k]) else 0
 }
 
+## this  is like the technical coefficient vector for each IVC (not full biofuel product yet!)
+
 build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
                              dist_feed, dist_capex, dist_opex) {
   
@@ -565,6 +567,8 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
   list(a_dom = a_dom, a_imp = a_imp)
 }
 
+
+## now technical coefficient vector for teh final bioofuel product
 build_fuel_column <- function(fuel_cfg) {
   
   weights <- fuel_cfg$weights

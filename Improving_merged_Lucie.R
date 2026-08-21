@@ -332,30 +332,30 @@ M_total[1, ]        <- M_intermediate[1, ] + M_final[1, ]
 #Initialise Variables
 
 #Scenario 1
-A_dom_S1_2030 <- A_dom
-A_imp_S1_2030 <- A_imp
-Z_dom_S1_2030 <- Z_dom
-Z_imp_S1_2030 <- Z_imp
-L_dom_S1_2030 <- L_dom
-X_S1_2030     <- q_s_dom
+#A_dom_S1_2030 <- A_dom
+#A_imp_S1_2030 <- A_imp
+#Z_dom_S1_2030 <- Z_dom
+#Z_imp_S1_2030 <- Z_imp
+#L_dom_S1_2030 <- L_dom
+#X_S1_2030     <- q_s_dom
 
 
 #Scenario 2
-A_dom_S2_2030 <- A_dom
-A_imp_S2_2030 <- A_imp
-Z_dom_S2_2030 <- Z_dom
-Z_imp_S2_2030 <- Z_imp
-L_dom_S2_2030 <- L_dom
-X_S2_2030     <- X_dom
+#A_dom_S2_2030 <- A_dom
+#A_imp_S2_2030 <- A_imp
+#Z_dom_S2_2030 <- Z_dom
+#Z_imp_S2_2030 <- Z_imp
+#L_dom_S2_2030 <- L_dom
+#X_S2_2030     <- X_dom
 
 
 #Scenario 3
-A_dom_S3_2030 <- A_dom
-A_imp_S3_2030 <- A_imp
-Z_dom_S3_2030 <- Z_dom
-Z_imp_S3_2030 <- Z_imp
-L_dom_S3_2030 <- L_dom
-X_S3_2030     <- X_dom
+#A_dom_S3_2030 <- A_dom
+#A_imp_S3_2030 <- A_imp
+#Z_dom_S3_2030 <- Z_dom
+#Z_imp_S3_2030 <- Z_imp
+#L_dom_S3_2030 <- L_dom
+#X_S3_2030     <- X_dom
 
 
 
@@ -571,6 +571,10 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
 }
 
 
+scenario_config <- (
+S1_2030 = scenario_S1_2030)
+
+
 ## now technical coefficient vector for teh final bioofuel product
 build_fuel_column <- function(fuel_cfg) {
   
@@ -613,7 +617,8 @@ build_fuel_column <- function(fuel_cfg) {
 # 4. CLEANED PARTIAL SCENARIO 1 FOR 2030
 ############################################################
 
-scenario_S1_2030 <- list(
+  
+S1_2030 <- list(
   
   adv_biodiesel = list(
     abs_production_eur = 3108280000,

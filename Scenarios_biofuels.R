@@ -5,7 +5,6 @@
 # ===================================================================
 # 1. SECTOR MAPPING
 # ===================================================================
-
 nIndustries <- 73
 
 # Mapping biofuel sectors to  IO table indices
@@ -378,13 +377,13 @@ scenario_config <- list(
     "S1_2030" = list(
   ### advanced biodiesel
   adv_biodiesel = list(
-    abs_production_eur = 3108.28
+    abs_production_eur = 3108280000,
     weights = c(IVC1 = 0.79304, IVC2_HVO = 0.15764, IVC13a = 0.03429, IVC13bshipping = 0.01502),  ## these weights will change in each scenario
 
 
     prod_cost = list(
       IVC1           = 870
-      IVC2_HVO        = 1287.68
+      IVC2_HVO        = 1287.86
       IVC13a         = 1598.13
       IVC13b_mar = 2160.57
     ),
@@ -407,7 +406,7 @@ scenario_config <- list(
   
   ### advanced biogasoline
   adv_biogasoline = list(
-    abs_production_eur = 615.78
+    abs_production_eur = 615780000,
     weights = c(IVC5 = 0.3663, IVC12 = 0.3663, IVC13a = 0.2234, IVC13b_road = 0.0440),
     
   prod_cost = list(
@@ -433,7 +432,7 @@ scenario_config <- list(
 
 ### advanced bio-kerosene
   adv_biokerosene = list(
-    abs_production_eur = 2094.40, 
+    abs_production_eur = 2094400000,
     weights = c(IVC2_HEFA = 0.9418605, IVC11a_SAF = 0.0581395),
 
     prod_cost = list(
@@ -453,7 +452,7 @@ scenario_config <- list(
 
 ### advanced bio-HFO
   adv_bio_hfo = list(
-    abs_production_eur = 841.50, 
+    abs_production_eur = 841500000, 
     weights = c(IVC8a = 0.5000000, IVC8b = 0.5000000),
 
      prod_cost = list(
@@ -473,7 +472,7 @@ scenario_config <- list(
 
 ### RFNBOs (Renewable Fuels of Non-Biological Origin)
   rfnbos = list(
-    abs_production_eur = 201.19
+    abs_production_eur = 201190000,
     weights = c(IVC8c = 0.8019559, IVC9b = 0.1980441),
     
     prod_cost = list(
@@ -496,7 +495,7 @@ scenario_config <- list(
 
 ### advanced biogas
 adv_biogas = list(
- abs_production_eur = 1550.80
+ abs_production_eur = 1550800000,
     weights = c(IVC7 = 1.0, IVC9a = 0.0),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
@@ -523,7 +522,7 @@ adv_biogas = list(
 ### conv_biodiesel
 
 conv_biodiesel = list(
-    abs_production_eur = 19194.17,
+    abs_production_eur = 19194170000,
     weights = c(IVC_T_FF = 0.2644 IVC_HT_FF = 0.2279, IVC_T_CC = 0.1943, IVC_HT_CC = 0.0978, IVC_T_lipids = 0.1518, IVC_HT_lipids_road = 0.0638), 
     alpha = list(
       IVC_T_FF = c(feed = 0.74, capex = 0.07, opex = 0.19),            #
@@ -546,7 +545,7 @@ conv_biodiesel = list(
 
 ### conv_biogasoline
 conv_biogasoline = list(
-abs_production_eur = 4436.26,
+abs_production_eur = 4436260000,
 weights = c(IVC_EF_FF = 1), 
 # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
@@ -560,7 +559,7 @@ weights = c(IVC_EF_FF = 1),
 
 ### conv_bio_kerosene
 conv_bio_kerosene = list(
-abs_production_eur = 966.98,
+abs_production_eur = 966980000,
 weights = c(IVC_HT_lipids_SAF = 1), 
 # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
@@ -582,8 +581,13 @@ weights = c(IVC_HT_lipids_SAF = 1),
 
 "S2_2030" = list(
   adv_biodiesel = list(
-    abs_production_eur = 13022.4647
-    weights = c(IVC2_HVO = 0.0399, IVC11aroad = 0.7112, IVC13a = 0.1705, IVC13b_mar = 0.0784),
+    abs_production_eur = 13022464700
+ weights = c(
+  IVC2_HVO   = 0.0491581459,
+  IVC11aroad = 0.6442550491,
+  IVC13a     = 0.2099909623,
+  IVC13b_mar = 0.0965958427
+),
 
    prod_cost = list(
       IVC2_HVO = 
@@ -609,7 +613,7 @@ weights = c(IVC_HT_lipids_SAF = 1),
   ), 
   ### advanced biogasoline
   adv_biogasoline = list(
-    abs_production_eur = 9934.42
+    abs_production_eur = 9934420000,
     weights = c(IVC5 = 0.7930434, IVC12 = 0.1576435, IVC13a = 0.0342907, IVC13b_road = 0.0150226),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
@@ -632,7 +636,7 @@ weights = c(IVC_HT_lipids_SAF = 1),
 
 ### advanced bio-kerosene
   adv_biokerosene = list(
-    abs_production_eur = 4612.43,  # 2,094,400,000 EUR
+    abs_production_eur = 4612430000,
     weights = c(IVC2_HEFA = 0.9418605, IVC11a_SAF = 0.0581395),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
@@ -650,7 +654,7 @@ weights = c(IVC_HT_lipids_SAF = 1),
 
 ### advanced bio-HFO
   adv_bio_hfo = list(
-    abs_production_eur = 3125.93
+    abs_production_eur = 3125930000,
     weights = c(IVC8a = 0.5000000, IVC8b = 0.5000000),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
@@ -668,7 +672,7 @@ weights = c(IVC_HT_lipids_SAF = 1),
 
 ### RFNBOs (Renewable Fuels of Non-Biological Origin)
   rfnbos = list(
-    abs_production_eur = 679.81
+    abs_production_eur = 679810000,
     weights = c(IVC8c = 0.8019559, IVC9b = 0.1980441),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
@@ -686,7 +690,7 @@ weights = c(IVC_HT_lipids_SAF = 1),
 
 ### advanced biogas
 adv_biogas = list(
- abs_production_eur = 1550.80
+ abs_production_eur = 1550800000,
     weights = c(IVC7 = 1.0, IVC9a = 0.0), ### adapt, 9a now contributes
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
@@ -710,7 +714,7 @@ adv_biogas = list(
 ### conv_biodiesel
 
 conv_biodiesel = list(
-abs_production_eur = 15867.82,
+abs_production_eur = 15867820000,
 weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_lipids = ??, IVC_H_lipids = ), 
 
 # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
@@ -736,7 +740,7 @@ weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_
 
 ### conv_biogasoline
 conv_biogasoline = list(
-abs_production_eur = 814.44
+abs_production_eur = 814440000,
 weights = c(IVC_EF_FF = 1), 
 # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
@@ -750,7 +754,7 @@ weights = c(IVC_EF_FF = 1),
 
 ### conv_bio_kerosene
 conv_bio_kerosene = list(
-abs_production_eur = 408.94
+abs_production_eur = 408940000,
 weights = c(IVC_EF_FF = 1), 
 # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
     alpha = list(
@@ -770,7 +774,7 @@ weights = c(IVC_EF_FF = 1),
 
 "S3_2030" = list(
   adv_biodiesel = list(
-    abs_production_eur = 14820290077,  # 14,820,290,077 EUR total production valu
+    abs_production_eur = 14820290077,  
   
     weights = c(IVC2_HVO = 0.0467996, IVC11a_road = 0.6133438, IVC13a = 0.1999156, IVC13b_mar = 0.1399410),
     
@@ -793,7 +797,7 @@ weights = c(IVC_EF_FF = 1),
 
  ### advanced biogasoline
   adv_biogasoline = list(
-    abs_production_eur = ???,  ## find right values
+    abs_production_eur = ???,
     weights = c(IVC1 = 0.7930434, IVC2_HVO = 0.1576435, IVC13a = 0.0342907, IVC13bshipping = 0.0150226),
     
     # Scenario-specific cost breakdown shares (feedstock, CAPEX, OPEX) per IVC
@@ -872,7 +876,6 @@ weights = c(IVC_EF_FF = 1),
 #############################
 
 ### conv_biodiesel
-
 conv_biodiesel = list(
 abs_production_eur = ???,
 weights = c(IVC_T_FF = ??, IVC_HT_FF = ??, IVC_T_CC = ??, IVC_HT_CC = ??, IVC_T_lipids = ??, IVC_H_lipids = ), 

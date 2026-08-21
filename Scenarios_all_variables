@@ -332,6 +332,8 @@ M_total[1, ]        <- M_intermediate[1, ] + M_final[1, ]
 
 #Initialise Variables
 
+## will be done later instead, from one common calculation
+
 #Scenario 1
 #A_dom_S1_2030 <- A_dom
 #A_imp_S1_2030 <- A_imp
@@ -655,6 +657,7 @@ build_fuel_column <- function(fuel_cfg) {
 ## Only biofuel sectors covered by that workbook are replaced here.
 ## All other sectors (including biofuel sectors not covered by the workbook)
 ## remain at their original 2023 IO-table coefficients.
+
 BASE_2023 <- list(
   
   adv_biodiesel = list(

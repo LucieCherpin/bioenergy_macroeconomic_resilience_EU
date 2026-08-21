@@ -52,9 +52,6 @@ national_accounts <- read_xlsx("nama_10_gdp__EU27.xlsx", sheet = "Sheet 1", rang
 nYears = 20             #Number of years
 nIndustries = 73        #Industries of Eurostat input-output table
 
-##################################################################################################################################################
-### from here on, I still need to adaot and then add to MERGED code ###
-##################################################################################################################################################
 
 #Initialisation
 
@@ -251,9 +248,8 @@ Z_imp <- matrix(
 )
 
 
-
 # Technical coefficients matrices Domestic
-## use the q_s_dom_safe vectir here
+## use the q_s_dom_safe vector here
 A_dom <- as.matrix(sweep(Z_dom, 2, q_s_dom_safe, FUN = '/'))  # Domestic technical coefficients    
 
 na_pos <- which(is.na(A_dom), arr.ind = TRUE)

@@ -609,7 +609,7 @@ build_fuel_column <- function(fuel_cfg) {
 scenario_S1_2030 <- list(
   
   adv_biodiesel = list(
-    abs_production_eur = 3108.28,
+    abs_production_eur = 3108280000,
     weights = c(IVC1 = 0.79304, IVC2_HVO = 0.15764, IVC13a = 0.03429, IVC13b_mar = 0.01502),
     prod_cost = list(
       IVC1 = 870,
@@ -632,7 +632,7 @@ scenario_S1_2030 <- list(
   ),
   
   adv_biogasoline = list(
-    abs_production_eur = 615.78,
+    abs_production_eur = 615780000,
     weights = c(IVC5 = 0.3663, IVC12 = 0.3663, IVC13a = 0.2234, IVC13b_road = 0.0440),
     prod_cost = list(
       IVC5 = 1385.43,
@@ -655,7 +655,7 @@ scenario_S1_2030 <- list(
   ),
   
   adv_bio_kerosene = list(
-    abs_production_eur = 2094.40,
+    abs_production_eur = 2094400000,
     weights = c(IVC2_HEFA = 0.9418605, IVC11a_SAF = 0.0581395),
     prod_cost = list(
       IVC2_HEFA = 1811.29,
@@ -672,7 +672,7 @@ scenario_S1_2030 <- list(
   ),
   
   adv_bio_hfo = list(
-    abs_production_eur = 841.50,
+    abs_production_eur = 841500000,
     weights = c(IVC8a = 0.5, IVC8b = 0.5),
     prod_cost = list(
       IVC8a = 586.20,
@@ -689,7 +689,7 @@ scenario_S1_2030 <- list(
   ),
   
   RFNBOs = list(
-    abs_production_eur = 201.19,
+    abs_production_eur = 201190000,
     weights = c(IVC8c = 0.8019559, IVC9b = 0.1980441),
     prod_cost = list(
       IVC8c = 132.07,

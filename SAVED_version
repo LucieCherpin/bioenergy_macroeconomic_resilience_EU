@@ -383,7 +383,7 @@ scenario_config <- list(
 
     prod_cost = list(
       IVC1           = 870
-      IVC2_HVO        = 1287680000
+      IVC2_HVO        = 1287.86
       IVC13a         = 1598.13
       IVC13b_mar = 2160.57
     ),

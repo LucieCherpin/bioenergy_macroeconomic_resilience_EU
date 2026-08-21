@@ -99,7 +99,10 @@ f_imp = matrix(rep(final_use_imp, times = nYears), nrow = nYears, byrow = TRUE)
 
 q_s_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 19, 3:(nIndustries + 2)]))  #TS_BP - Total supply by industry
 #q_s_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 19, 3:(nIndustries + 2)]))
-q_s_dom[q_s_dom == 0] <- 1e-6                                                                #Necessary for calculations
+
+## changed: because 1e-6 is only needed to avoid division by zero when calculating A;  should not become part of the actual output vector.
+q_s_dom_safe <- q_s_dom
+q_s_dom_safe[q_s_dom_safe == 0] <- 1e-6                                                             #Necessary for calculations
 #q_s_imp[q_s_imp == 0] <- 1e-6                                                                
 Q_s_dom_i = matrix(rep(q_s_dom, times = nYears), nrow = nYears, byrow = TRUE)   #TS_BP - Total supply by industry matrix
 #Q_s_imp_i = matrix(rep(q_s_imp, times = nYears), nrow = nYears, byrow = TRUE)
@@ -249,7 +252,8 @@ Z_imp <- matrix(
 
 
 # Technical coefficients matrices Domestic
-A_dom <- as.matrix(sweep(Z_dom, 2, q_s_dom, FUN = '/'))  # Domestic technical coefficients    
+## use the q_s_dom_safe vectir here
+A_dom <- as.matrix(sweep(Z_dom, 2, q_s_dom_safe, FUN = '/'))  # Domestic technical coefficients    
 
 na_pos <- which(is.na(A_dom), arr.ind = TRUE)
 if (nrow(na_pos) > 0) {
@@ -258,7 +262,7 @@ if (nrow(na_pos) > 0) {
 }
 A_dom[is.na(A_dom)] <- 0
 
-A_imp <- as.matrix(sweep(Z_imp, 2, q_s_dom, FUN = '/'))  # Import technical coefficients
+A_imp <- as.matrix(sweep(Z_imp, 2, q_s_dom_safe, FUN = '/'))  # Import technical coefficients
 na_pos <- which(is.na(A_imp), arr.ind = TRUE)
 if (nrow(na_pos) > 0) {
   message("Replacing ", nrow(na_pos), " NA(s) in A_imp with 0.")
@@ -268,8 +272,8 @@ A_imp[is.na(A_imp)] <- 0
 
 
 diag <- diag(1, nrow = nIndustries, ncol = nIndustries)                        #Create diagonal matrix
-L_dom <- solve(diag-A_dom)                                                  #Leontief inverse         
-I_n <- diag(nrow(A_imp))
+L_dom <- solve(diag-A_dom_S1_2030)                                                  #Leontief inverse         
+I_n <- diag(nrow(A_imp_S1_2030))
 #L_imp <- solve(I_n - A_imp)
 
 #Imports Relevant stuff
@@ -333,7 +337,7 @@ A_imp_S1_2030 <- A_imp
 Z_dom_S1_2030 <- Z_dom
 Z_imp_S1_2030 <- Z_imp
 L_dom_S1_2030 <- L_dom
-X_S1_2030     <- X_dom
+X_S1_2030     <- q_s_dom
 
 
 #Scenario 2
@@ -384,7 +388,7 @@ INPUT_SECTORS <- c(
   food_bev         = 15,
   paper            = 18,
   chemicals        = 21,
-  adv_biodiesel    = 23,
+  adv_biodiesel    = 24,
   adv_biogasoline  = 26,
   fab_metal        = 34,
   computer_el      = 35,
@@ -716,6 +720,11 @@ for (fuel_name in names(scenario_S1_2030)) {
   
   X_S1_2030[target_col] <- fuel_cfg$abs_production_eur
   res_fuel <- build_fuel_column(fuel_cfg)
+
+  ##  to make the scenario 1 A matrix replace, not supplememtm the old IO strcuture
+  A_dom_S1_2030[, target_col] <- 0
+  A_imp_S1_2030[, target_col] <- 0
+
   
   for (sec_name in names(res_fuel$a_dom)) {
     if (sec_name %in% names(INPUT_SECTORS)) {
@@ -804,7 +813,11 @@ for (fuel_name in names(scenario_S1_2030)) {
 #   )
 # )
 
-Z_dom_S1_2030 <- A_dom_S1_2030 %*% diag(x_dom)
+
+## changed: X_S1_2030 instead of X_dom;
+## added Z_imp
+Z_dom_S1_2030 <- A_dom_S1_2030 %*% diag(X_S1_2030)
+Z_imp_S1_2030 <- A_imp_S1_2030 %*% diag(X_S1_2030)
 
 #2035 Scenario Parameters
 

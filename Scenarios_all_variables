@@ -238,12 +238,13 @@ Z_dom <- matrix(
   as.numeric(as.character(unlist(IO_EU_domestic[2:(nIndustries + 1), 3:(nIndustries + 2)]))),
   nrow = nIndustries, ncol = nIndustries
 )
-
+Z_dom[is.na(Z_dom)] <- 0
 # Goods x goods matrix Z (Imports)
 Z_imp <- matrix(
   as.numeric(as.character(unlist(IO_EU_imports[2:(nIndustries + 1), 3:(nIndustries + 2)]))),
   nrow = nIndustries, ncol = nIndustries
 )
+Z_imp[is.na(Z_imp)] <- 0
 
 
 # Technical coefficients matrices Domestic
@@ -444,16 +445,16 @@ IVC_TECH_LIBRARY <- list(
                      repair_inst = 0.10, land_transp = 0.05)
   ),
   IVC6 = list(
-  market_value = 2380,
-  dist_capex   = c(fab_metal    = 0.00, elec_equip   = 0.02, machinery    = 0.50, construction = 0.15, architecture = 0.30, computer_el  = 0.03),
-  dist_opex    = c(electricity = 0.20, chemicals   = 0.50, legal_acc   = 0.15, repair_inst = 0.10, land_transp = 0.05)
-),
-
+    market_value = 2380,
+    dist_capex   = c(fab_metal    = 0.00, elec_equip   = 0.02, machinery    = 0.50, construction = 0.15, architecture = 0.30, computer_el  = 0.03),
+    dist_opex    = c(electricity = 0.20, chemicals   = 0.50, legal_acc   = 0.15, repair_inst = 0.10, land_transp = 0.05)
+  ),
+  
   IVC7 = list(
     market_value = 1275,
-   dist_capex   = c( fab_metal    = 0.05, elec_equip   = 0.02, machinery    = 0.40, construction = 0.30, architecture = 0.20, computer_el  = 0.03),
-  dist_opex    = c(electricity = 0.20, chemicals   = 0.50, legal_acc   = 0.15, repair_inst = 0.10, land_transp = 0.05)
-),
+    dist_capex   = c( fab_metal    = 0.05, elec_equip   = 0.02, machinery    = 0.40, construction = 0.30, architecture = 0.20, computer_el  = 0.03),
+    dist_opex    = c(electricity = 0.20, chemicals   = 0.50, legal_acc   = 0.15, repair_inst = 0.10, land_transp = 0.05)
+  ),
   
   IVC8a = list(
     market_value = 935,
@@ -478,16 +479,16 @@ IVC_TECH_LIBRARY <- list(
     dist_opex    = c(electricity = 0.65, chemicals = 0.10, legal_acc = 0.15,
                      repair_inst = 0.10, land_transp = 0.00)
   ),
-
-
-IVC9a = list(
+  
+  
+  IVC9a = list(
     market_value = 1275,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
                      construction = 0.10, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
                      repair_inst = 0.30, land_transp = 0.00)
   ),
-
+  
   IVC9b = list(
     market_value = 1275,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.60,
@@ -495,15 +496,15 @@ IVC9a = list(
     dist_opex    = c(electricity = 0.65, chemicals = 0.10, legal_acc = 0.15,
                      repair_inst = 0.10, land_transp = 0.00)
   ),
-
- IVC11a_road = list(
+  
+  IVC11a_road = list(
     market_value = 1750,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
                      construction = 0.10, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
                      repair_inst = 0.30, land_transp = 0.00)
   ),
-
+  
   IVC11a_SAF = list(
     market_value = 2380,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
@@ -542,8 +543,7 @@ IVC9a = list(
                      construction = 0.10, architecture = 0.25, computer_el = 0.03),
     dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
                      repair_inst = 0.30, land_transp = 0.10)
-  )
-), 
+  ),
 
 
 
@@ -552,76 +552,76 @@ IVC9a = list(
 # ==========================================================
 
 IVC_T_FF = list(
-    prod_cost    = 1598.13,
-    market_value = 1750,
-    dist_capex   = c(fab_metal = 0.07, machinery = 0.450, 
-                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
-                     repair_inst = 0.150, land_transp = 0.100, sewerage = 0.0)
-  ),
+  prod_cost    = 1598.13,
+  market_value = 1750,
+  dist_capex   = c(fab_metal = 0.07, machinery = 0.450, 
+                   construction = 0.150, architecture = 0.300, computer_el = 0.030),
+  dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                   repair_inst = 0.150, land_transp = 0.100, sewerage = 0.0)
+),
 
 IVC_HT_FF = list(
-    prod_cost    = 1598.13,
-    market_value = 1750,
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.020, machinery = 0.550, 
-                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                     repair_inst = 0.150, land_transp = 0.05)
-  ),
+  prod_cost    = 1598.13,
+  market_value = 1750,
+  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.020, machinery = 0.550, 
+                   construction = 0.100, architecture = 0.250, computer_el = 0.030),
+  dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                   repair_inst = 0.150, land_transp = 0.05)
+),
 
 IVC_T_CC =list(
-    prod_cost    = 1598.13,
-    market_value = 1750,
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
-                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
-                     repair_inst = 0.150, land_transp = 0.100)
-  ),
+  prod_cost    = 1598.13,
+  market_value = 1750,
+  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
+                   construction = 0.150, architecture = 0.30, computer_el = 0.030),
+  dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                   repair_inst = 0.150, land_transp = 0.100)
+),
 
 IVC_HT_CC =list(
-    prod_cost    = 1598.13,
-    market_value = 1750,
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
-                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                     repair_inst = 0.150, land_transp = 0.050)
-  ),
+  prod_cost    = 1598.13,
+  market_value = 1750,
+  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                   construction = 0.100, architecture = 0.250, computer_el = 0.030),
+  dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                   repair_inst = 0.150, land_transp = 0.050)
+),
 
 IVC_T_lipids =list(
-    prod_cost    = 1598.13,
-    market_value = 1750,
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
-                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
-                     repair_inst = 0.150, land_transp = 0.100)
-  ),
+  prod_cost    = 1598.13,
+  market_value = 1750,
+  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
+                   construction = 0.150, architecture = 0.30, computer_el = 0.030),
+  dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                   repair_inst = 0.150, land_transp = 0.100)
+),
 
 IVC_HT_lipids_road =list(
-    prod_cost    = 1598.13,
-    market_value = 1750,
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
-                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                     repair_inst = 0.150, land_transp = 0.05)
-  ),
+  prod_cost    = 1598.13,
+  market_value = 1750,
+  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                   construction = 0.100, architecture = 0.250, computer_el = 0.030),
+  dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                   repair_inst = 0.150, land_transp = 0.05)
+),
 
 IVC_HT_lipids_SAF =list(
-    prod_cost    = 1598.13,
-    market_value = 1750,
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
-                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                     repair_inst = 0.150, land_transp = 0.05)
-  ),
+  prod_cost    = 1598.13,
+  market_value = 1750,
+  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                   construction = 0.100, architecture = 0.250, computer_el = 0.030),
+  dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                   repair_inst = 0.150, land_transp = 0.05)
+),
 
 IVC_EF_FF = list(
- prod_cost    = 1598.13,
-    market_value = 1750,
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, 
-                     construction = 0.150, architecture = 0.250, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.200, 
-                     repair_inst = 0.150, land_transp = 0.10)
-  )
+  prod_cost    = 1598.13,
+  market_value = 1750,
+  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, 
+                   construction = 0.150, architecture = 0.250, computer_el = 0.030),
+  dist_opex    = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.200, 
+                   repair_inst = 0.150, land_transp = 0.10)
+)
 
 )
 
@@ -860,8 +860,8 @@ S1_2030 <- list(
       IVC9b = c(chemicals = 1.0)
     )
   ),
-
- adv_biogas = list(
+  
+  adv_biogas = list(
     abs_production_eur = 1550800000,
     weights = c(IVC7 = 1.0),
     prod_cost = list(
@@ -869,63 +869,63 @@ S1_2030 <- list(
     
     alpha = list(
       IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000)),
-     
-       dist_feed = list(
-        IVC7 = c(agriculture = 0.33, food_bev = 0.33, chemicals = 0.33)## correct later, seweareg belongs here
+    
+    dist_feed = list(
+      IVC7 = c(agriculture = 0.33, food_bev = 0.33, chemicals = 0.33)## correct later, seweareg belongs here
     )
   ),
-
- conv_biodiesel = list(
-   abs_production_eur = 19194170000,
-   weights = c(
-     IVC_T_FF = 0.2644,
-     IVC_HT_FF = 0.2279,
-     IVC_T_CC = 0.1943,
-     IVC_HT_CC = 0.0978,
-     IVC_T_lipids = 0.1518,
-     IVC_HT_lipids_road = 0.0638
-   ),
-   alpha = list(
-     IVC_T_FF = c(feed = 0.74, capex = 0.07, opex = 0.19),
-     IVC_HT_FF = c(feed = 0.72, capex = 0.10, opex = 0.18),
-     IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
-     IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
-     IVC_T_lipids = c(feed = 0.74, capex = 0.04, opex = 0.22),
-     IVC_HT_lipids_road = c(feed = 0.67, capex = 0.13, opex = 0.20)
-   ),
-   dist_feed = list(
-     IVC_T_FF = c(food_bev = 1.0),
-     IVC_HT_FF = c(food_bev = 1.0),
-     IVC_T_CC = c(agriculture = 1.0),
-     IVC_HT_CC = c(agriculture = 1.0),
-     IVC_T_lipids = c(food_bev = 1.0),
-     IVC_HT_lipids_road = c(food_bev = 1.0)
-   )
- ), 
-
-
-conv_biogasoline = list(
-   abs_production_eur = 4436260000,
-   weights = c(IVC_EF_FF = 1.0),
-   alpha = list(
-     IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20)
-   ),
-   dist_feed = list(
-     IVC_EF_FF = c(agriculture = 1.0)
-   )
- ),
-
- conv_bio_kerosene = list(
-   abs_production_eur = 966980000,
-   weights = c(IVC_HT_lipids_SAF = 1.0),
-   alpha = list(
-     IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19)
-   ),
-   dist_feed = list(
-     IVC_HT_lipids_SAF = c(food_bev = 1.0)
-   )
+  
+  conv_biodiesel = list(
+    abs_production_eur = 19194170000,
+    weights = c(
+      IVC_T_FF = 0.2644,
+      IVC_HT_FF = 0.2279,
+      IVC_T_CC = 0.1943,
+      IVC_HT_CC = 0.0978,
+      IVC_T_lipids = 0.1518,
+      IVC_HT_lipids_road = 0.0638
+    ),
+    alpha = list(
+      IVC_T_FF = c(feed = 0.74, capex = 0.07, opex = 0.19),
+      IVC_HT_FF = c(feed = 0.72, capex = 0.10, opex = 0.18),
+      IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
+      IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
+      IVC_T_lipids = c(feed = 0.74, capex = 0.04, opex = 0.22),
+      IVC_HT_lipids_road = c(feed = 0.67, capex = 0.13, opex = 0.20)
+    ),
+    dist_feed = list(
+      IVC_T_FF = c(food_bev = 1.0),
+      IVC_HT_FF = c(food_bev = 1.0),
+      IVC_T_CC = c(agriculture = 1.0),
+      IVC_HT_CC = c(agriculture = 1.0),
+      IVC_T_lipids = c(food_bev = 1.0),
+      IVC_HT_lipids_road = c(food_bev = 1.0)
+    )
+  ), 
+  
+  
+  conv_biogasoline = list(
+    abs_production_eur = 4436260000,
+    weights = c(IVC_EF_FF = 1.0),
+    alpha = list(
+      IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20)
+    ),
+    dist_feed = list(
+      IVC_EF_FF = c(agriculture = 1.0)
+    )
+  ),
+  
+  conv_bio_kerosene = list(
+    abs_production_eur = 966980000,
+    weights = c(IVC_HT_lipids_SAF = 1.0),
+    alpha = list(
+      IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19)
+    ),
+    dist_feed = list(
+      IVC_HT_lipids_SAF = c(food_bev = 1.0)
+    )
+  )
 )
- )
 
 
 # ==========================================================
@@ -933,7 +933,7 @@ conv_biogasoline = list(
 # ==========================================================
 
 S2_2030 <- list(
-   
+  
   adv_biodiesel = list(
     
     abs_production_eur = 11494612742.822803,
@@ -1152,66 +1152,66 @@ S2_2030 <- list(
   ),
   
   adv_bio_kerosene = list(
-  
-  abs_production_eur = 5039024672.710369,
-  
-  weights = c(
-    IVC2_HEFA  = 0.18804032399597803,
-    IVC6       = 0.27172687907523124,
-    IVC11a_SAF = 0.5402327969287909
-  ),
-  
-  prod_cost = list(
-    IVC2_HEFA  = 1896.9094630842587,
-    IVC6       = 2366.191489361702,
-    IVC11a_SAF = 2974.2587443951556
-  ),
-  
-  alpha = list(
     
-    IVC2_HEFA = c(
-      feed  = 0.5034027620546709,
-      capex = 0.19821715654718017,
-      opex  = 0.29838008139814887
+    abs_production_eur = 5039024672.710369,
+    
+    weights = c(
+      IVC2_HEFA  = 0.18804032399597803,
+      IVC6       = 0.27172687907523124,
+      IVC11a_SAF = 0.5402327969287909
     ),
     
-    IVC6 = c(
-      feed  = 0.08671804048160704,
-      capex = 0.5312334211543822,
-      opex  = 0.38204853836401076
+    prod_cost = list(
+      IVC2_HEFA  = 1896.9094630842587,
+      IVC6       = 2366.191489361702,
+      IVC11a_SAF = 2974.2587443951556
     ),
     
-    IVC11a_SAF = c(
-      feed  = 0.19307625655545874,
-      capex = 0.4858353371989009,
-      opex  = 0.3210884062456404
+    alpha = list(
+      
+      IVC2_HEFA = c(
+        feed  = 0.5034027620546709,
+        capex = 0.19821715654718017,
+        opex  = 0.29838008139814887
+      ),
+      
+      IVC6 = c(
+        feed  = 0.08671804048160704,
+        capex = 0.5312334211543822,
+        opex  = 0.38204853836401076
+      ),
+      
+      IVC11a_SAF = c(
+        feed  = 0.19307625655545874,
+        capex = 0.4858353371989009,
+        opex  = 0.3210884062456404
+      )
+    ),
+    
+    dist_feed = list(
+      
+      IVC2_HEFA = c(
+        agriculture   = 0.7019731534619383,
+        adv_biodiesel = 0.1490134232690309,
+        chemicals     = 0.1490134232690309
+      ),
+      
+      IVC6 = c(
+        adv_bio_hfo = 1.0
+      ),
+      
+      IVC11a_SAF = c(
+        agriculture     = 0.6418264237746482,
+        forestry        = 0.15345231313550278,
+        paper           = 0.18809782860488178,
+        food_bev        = 0.01496553729132589,
+        sewerage        = 0,
+        adv_biodiesel   = 0.0008289485968207271,
+        adv_biogasoline = 0.0008289485968207271
+      )
     )
   ),
   
-  dist_feed = list(
-    
-    IVC2_HEFA = c(
-      agriculture   = 0.7019731534619383,
-      adv_biodiesel = 0.1490134232690309,
-      chemicals     = 0.1490134232690309
-    ),
-    
-    IVC6 = c(
-      adv_bio_hfo = 1.0
-    ),
-    
-    IVC11a_SAF = c(
-      agriculture     = 0.6418264237746482,
-      forestry        = 0.15345231313550278,
-      paper           = 0.18809782860488178,
-      food_bev        = 0.01496553729132589,
-      sewerage        = 0,
-      adv_biodiesel   = 0.0008289485968207271,
-      adv_biogasoline = 0.0008289485968207271
-    )
-  )
-),
-
   
   adv_bio_hfo = list(
     
@@ -1328,18 +1328,18 @@ build_endpoint <- function(scenario_cfg) {
     fuel_cfg   <- scenario_cfg[[fuel_name]]
     
     ##############################  ##############################  ##############################
-
+    
     X_target[target_col] <- fuel_cfg$abs_production_eur / SCENARIO_EUR_TO_IO_UNIT
     
     # Scenario-specific technical coefficient column
-   
+    
     res_fuel <- build_fuel_column(fuel_cfg)
     
     # Replace, rather than supplement, the old IO technology column.
     A_dom_target[, target_col] <- 0
     A_imp_target[, target_col] <- 0
     
-   for (sec_name in names(res_fuel$a_dom)) {
+    for (sec_name in names(res_fuel$a_dom)) {
       
       if (sec_name %in% names(INPUT_SECTORS)) {
         
@@ -1438,24 +1438,24 @@ S2_endpoint_2030 <- build_endpoint(
 )
 
 #S2_2035 <- build_endpoint(
- #S2_2030
+#S2_2030
 #)
 
 #S2_2040 <- build_endpoint(
- # scenario_S2_2040
+# scenario_S2_2040
 #)
 
 #S3_2030 <- build_endpoint(
- # scenario_S2_2030
- #)
+# scenario_S2_2030
+#)
 
- #S3_2035 <- build_endpoint(
- # scenario_S2_2035
+#S3_2035 <- build_endpoint(
+# scenario_S2_2035
 #)
 
 #S3_2040 <- build_endpoint(
- # scenario_S2_2040
- #)
+# scenario_S2_2040
+#)
 
 
 S1_endpoint_2030$Z_dom
@@ -1494,6 +1494,9 @@ L_dom_S1_2030 <- S1_endpoint_2030$L_dom
 # ===================================================================
 # 9. BASIC CONSISTENCY CHECKS
 # ===================================================================
+sum(is.na(Z_dom_BASE_2023))
+sum(is.na(X_BASE_2023))
+sum(is.na(Y_dom_BASE_2023))
 
 stopifnot(
   length(X_BASE_2023) == nIndustries,
@@ -1540,8 +1543,8 @@ build_linear_segment <- function(
   
   years <- start_year:end_year
   n_years <- length(years)
-
- # ---------------------------------------------------------------
+  
+  # ---------------------------------------------------------------
   # Storage
   # ---------------------------------------------------------------
   
@@ -1593,8 +1596,8 @@ build_linear_segment <- function(
       output_sector = NULL
     )
   )
-
- Y_dom_path <- matrix(
+  
+  Y_dom_path <- matrix(
     NA_real_,
     nrow = n_years,
     ncol = nIndustries,
@@ -1612,12 +1615,12 @@ build_linear_segment <- function(
       input_sector = NULL,
       output_sector = NULL
     )
-)
-
- # ---------------------------------------------------------------
+  )
+  
+  # ---------------------------------------------------------------
   # Annual interpolation
   # ---------------------------------------------------------------
-
+  
   
   for (i in seq_along(years)) {
     
@@ -1633,14 +1636,14 @@ build_linear_segment <- function(
       start_endpoint$A_dom +
       lambda * (
         end_endpoint$A_dom -
-        start_endpoint$A_dom
+          start_endpoint$A_dom
       )
     
     A_imp_current <-
       start_endpoint$A_imp +
       lambda * (
         end_endpoint$A_imp -
-        start_endpoint$A_imp
+          start_endpoint$A_imp
       )
     
     
@@ -1649,10 +1652,10 @@ build_linear_segment <- function(
       start_endpoint$X +
       lambda * (
         end_endpoint$X -
-        start_endpoint$X
+          start_endpoint$X
       )
-
-  # Z follows from that year's A and X
+    
+    # Z follows from that year's A and X
     Z_dom_current <-
       A_dom_current %*% base::diag(X_current)
     
@@ -1731,52 +1734,52 @@ for (i in 2:nYears){
   
   cat("Starting iteration:", i, "\n")
   
-#  for (iterations in 1:100){
-   
+  #  for (iterations in 1:100){
+  
   # Final expenditure by industry (domestic / imports)
-#    D_dom[i, ] <- beta_C_dom[i, ] * C_dom[i] + beta_G_dom[i, ] * G_dom[i]
- #   D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
-    
+  #    D_dom[i, ] <- beta_C_dom[i, ] * C_dom[i] + beta_G_dom[i, ] * G_dom[i]
+  #   D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
+  
   #  # Total final use f = D + GCF + EX (split)
-   # #f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
-    ##f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
-    
-    ## Domestic production from domestic final demand (Leontief)
-    #X_dom[i, ] <- L_dom %*% f_dom[i, ]
-    #X_imp[i, ] <- L_imp %*% f_imp[i, ]
-    
-    #Exports ## couple exports to total use
-    #EX_i[i, ] <- EX_i[i-1,] 
-    
-    #Rest of the World
-    #RoW[i,] = EX_i[i,] - IM_i[i,]
-    
-    #Optional totals
-    f_total <- f_dom[i, ] + f_imp[i, ]
-    #X_total <- X_dom[i, ] + X_imp[i, ]
-    
-    #Household Consumption
-    #C
-    
-    #Government Consumption
-    #G
-    
-    #Wages ?
-    #
-    
-    #Employment
-    
-    # Energy
-    #EN
-    
-    # Emissions
-    #EM
-    
-    #Land Use
-    
-    #Deforestation
-    #Water Impact
-    
-    
-  } 
+  # #f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
+  ##f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
+  
+  ## Domestic production from domestic final demand (Leontief)
+  #X_dom[i, ] <- L_dom %*% f_dom[i, ]
+  #X_imp[i, ] <- L_imp %*% f_imp[i, ]
+  
+  #Exports ## couple exports to total use
+  #EX_i[i, ] <- EX_i[i-1,] 
+  
+  #Rest of the World
+  #RoW[i,] = EX_i[i,] - IM_i[i,]
+  
+  #Optional totals
+  f_total <- f_dom[i, ] + f_imp[i, ]
+  #X_total <- X_dom[i, ] + X_imp[i, ]
+  
+  #Household Consumption
+  #C
+  
+  #Government Consumption
+  #G
+  
+  #Wages ?
+  #
+  
+  #Employment
+  
+  # Energy
+  #EN
+  
+  # Emissions
+  #EM
+  
+  #Land Use
+  
+  #Deforestation
+  #Water Impact
+  
+  
+} 
 }

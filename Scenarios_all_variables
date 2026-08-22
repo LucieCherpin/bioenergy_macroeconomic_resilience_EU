@@ -545,191 +545,84 @@ IVC9a = list(
   )
 ), 
 
+
+
 # ==========================================================
 # CONVENTIONAL BIOFUEL TECHNOLOGIES
 # ==========================================================
 
 IVC_T_FF = list(
-  
-  market_value = 1165.63,
-  
-  dist_capex = c(
-    fab_metal    = 0.07,
-    machinery    = 0.45,
-    construction = 0.15,
-    architecture = 0.3,
-    computer_el  = 0.03
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100, sewerage = 0.0)
   ),
-  
-  dist_opex = c(
-    electricity = 0.2,
-    chemicals   = 0.3,
-    legal_acc   = 0.25,
-    repair_inst = 0.15,
-    land_transp = 0.1,
-    sewerage    = 0.0
-  )
-),
-
 
 IVC_HT_FF = list(
-  
-  market_value = 1165.63,
-  
-  dist_capex = c(
-    fab_metal    = 0.07,
-    machinery    = 0.45,
-    construction = 0.15,
-    architecture = 0.3,
-    computer_el  = 0.03
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.020, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
   ),
-  
-  dist_opex = c(
-    electricity = 0.2,
-    chemicals   = 0.3,
-    legal_acc   = 0.25,
-    repair_inst = 0.15,
-    land_transp = 0.1,
-    sewerage    = 0.0
-  )
-),
 
-
-IVC_T_CC = list(
-  
-  market_value = 1165.63,
-  
-  dist_capex = c(
-    fab_metal    = 0.07,
-    machinery    = 0.45,
-    construction = 0.15,
-    architecture = 0.3,
-    computer_el  = 0.03
+IVC_T_CC =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100)
   ),
-  
-   dist_opex = c(
-    electricity = 0.2,
-    chemicals   = 0.3,
-    legal_acc   = 0.25,
-    repair_inst = 0.15,
-    land_transp = 0.1,
-    sewerage    = 0.0
-  )
-),
 
-
-IVC_HT_CC = list(
-  
-  market_value = 1165.63,
-  
-  dist_capex = c(
-    fab_metal    = 0.07,
-    machinery    = 0.45,
-    construction = 0.15,
-    architecture = 0.3,
-    computer_el  = 0.03
+IVC_HT_CC =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.050)
   ),
-  
-  dist_opex = c(
-    electricity = 0.2,
-    chemicals   = 0.3,
-    legal_acc   = 0.25,
-    repair_inst = 0.15,
-    land_transp = 0.1,
-    sewerage    = 0.0
-  )
-),
 
-
-IVC_T_lipids = list(
-  
-  market_value = 1165.63,
-  
-  dist_capex = c(
-    fab_metal    = 0.07,
-    machinery    = 0.45,
-    construction = 0.15,
-    architecture = 0.3,
-    computer_el  = 0.03
+IVC_T_lipids =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100)
   ),
-  
-  dist_opex = c(
-    electricity = 0.2,
-    chemicals   = 0.3,
-    legal_acc   = 0.25,
-    repair_inst = 0.15,
-    land_transp = 0.1,
-    sewerage    = 0.0
-  )
-),
 
-
-IVC_HT_lipids_road = list(
-  
-  market_value = 1165.63,
-  
-  dist_capex = c(
-    fab_metal    = 0.07,
-    machinery    = 0.45,
-    construction = 0.15,
-    architecture = 0.3,
-    computer_el  = 0.03
+IVC_HT_lipids_road =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
   ),
-  
-  dist_opex = c(
-    electricity = 0.2,
-    chemicals   = 0.3,
-    legal_acc   = 0.25,
-    repair_inst = 0.15,
-    land_transp = 0.1,
-    sewerage    = 0.0
-  )
-),
 
+IVC_HT_lipids_SAF =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
+  ),
 
 IVC_EF_FF = list(
-  
-  market_value = 1018.97,
-  
-  dist_capex = c(
-    fab_metal    = 0.07,
-    machinery    = 0.45,
-    construction = 0.15,
-    architecture = 0.3,
-    computer_el  = 0.03
-  ),
-  
-   dist_opex = c(
-    electricity = 0.2,
-    chemicals   = 0.3,
-    legal_acc   = 0.25,
-    repair_inst = 0.15,
-    land_transp = 0.1,
-    sewerage    = 0.0
+ prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, 
+                     construction = 0.150, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.10)
   )
-),
 
-
-IVC_HT_lipids_SAF = list(
-  
-  market_value = 2100,
-
-  dist_capex = c(
-    fab_metal    = 0.07,
-    machinery    = 0.45,
-    construction = 0.15,
-    architecture = 0.3,
-    computer_el  = 0.03
-  ),
-  
-  dist_opex = c(
-    electricity = 0.2,
-    chemicals   = 0.3,
-    legal_acc   = 0.25,
-    repair_inst = 0.15,
-    land_transp = 0.1,
-    sewerage    = 0.0
-  )
 )
 
 

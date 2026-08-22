@@ -778,23 +778,22 @@ S1_2030 <- list(
       IVC8c = c(chemicals = 1.0),
       IVC9b = c(chemicals = 1.0)
     )
-  )
-)
-
+  ),
 
  adv_biogas = list(
    abs_production_eur = 1550800000,
    weights = c(IVC7 = 1.0),
    prod_cost = list(
-     IVC7 = 1024.42,
-   ),
+     IVC7 = 1024.42
+   )
+
    alpha = list(
      IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000),
-   ),
    dist_feed = list(
      IVC7 = c(agriculture = 0.18588, food_bev = 0.78770, sewerage = -2.00721, chemicals = 0.03363),
    )
- ),
+ )
+),
 
  conv_biodiesel = list(
    abs_production_eur = 19194170000,
@@ -822,7 +821,9 @@ S1_2030 <- list(
      IVC_T_lipids = c(food_bev = 1.0),
      IVC_HT_lipids_road = c(food_bev = 1.0)
    )
- ), conv_biogasoline = list(
+ ), 
+
+conv_biogasoline = list(
    abs_production_eur = 4436260000,
    weights = c(IVC_EF_FF = 1.0),
    alpha = list(
@@ -842,6 +843,7 @@ S1_2030 <- list(
    dist_feed = list(
      IVC_HT_lipids_SAF = c(food_bev = 1.0)
    )
+)
  )
 
 

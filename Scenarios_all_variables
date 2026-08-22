@@ -23,8 +23,6 @@ options(scipen = 999)
 ###Import Data
 ##########################################
 
-
-
 #Input-Output Table EU27 (Eurostat)
 
 IO_EU_domestic <- read_xlsx("domestic_iot.xlsx", sheet= "Sheet_1", range = "A2:CP104", col_names = T)
@@ -753,76 +751,77 @@ S1_2030 <- list(
 )
 
 
-# ==========================================================
-# TO RE-INTEGRATE LATER
-# ==========================================================
+ adv_biogas = list(
+   abs_production_eur = 1550800000,
+   weights = c(IVC7 = 1.0, IVC9a = 0.0),
+   prod_cost = list(
+     IVC7 = 1024.42,
+     IVC9a = 1369.48
+   ),
+   alpha = list(
+     IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000),
+     IVC9a = c(feed = 0.154612, capex = 0.583026, opex = 0.262362)
+   ),
+   dist_feed = list(
+     IVC7 = c(agriculture = ?, food_bev = ?, sewerage = ?, chemicals = ?),
+     IVC9a = c(agriculture = ?, food_bev = ?, sewerage = ?, forestry = ?, paper = ?, adv_biodiesel = ?)
+   )
+ ),
 
-# adv_biogas = list(
-#   abs_production_eur = 1550.80,
-#   weights = c(IVC7 = 1.0, IVC9a = 0.0),
-#   prod_cost = list(
-#     IVC7 = 1024.42,
-#     IVC9a = 1369.48
-#   ),
-#   alpha = list(
-#     IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000),
-#     IVC9a = c(feed = 0.154612, capex = 0.583026, opex = 0.262362)
-#   ),
-#   dist_feed = list(
-#     IVC7 = c(agriculture = ?, food_bev = ?, sewerage = ?, chemicals = ?),
-#     IVC9a = c(agriculture = ?, food_bev = ?, sewerage = ?, forestry = ?, paper = ?, adv_biodiesel = ?)
-#   )
-# ),
+ conv_biodiesel = list(
+   abs_production_eur = 19194170000,
+   weights = c(
+     IVC_T_FF = 0.2644,
+     IVC_HT_FF = 0.2279,
+     IVC_T_CC = 0.1943,
+     IVC_HT_CC = 0.0978,
+     IVC_T_lipids = 0.1518,
+     IVC_HT_lipids_road = 0.0638
+   ),
+   alpha = list(
+     IVC_T_FF = c(feed = 0.74, capex = 0.07, opex = 0.19),
+     IVC_HT_FF = c(feed = 0.72, capex = 0.10, opex = 0.18),
+     IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
+     IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
+     IVC_T_lipids = c(feed = 0.74, capex = 0.04, opex = 0.22),
+     IVC_HT_lipids_road = c(feed = 0.67, capex = 0.13, opex = 0.20)
+   ),
+   dist_feed = list(
+     IVC_T_FF = c(food_bev = 1.0),
+     IVC_HT_FF = c(food_bev = 1.0),
+     IVC_T_CC = c(agriculture = 1.0),
+     IVC_HT_CC = c(agriculture = 1.0),
+     IVC_T_lipids = c(food_bev = 1.0),
+     IVC_HT_lipids_road = c(food_bev = 1.0)
+   )
+ ), conv_biogasoline = list(
+   abs_production_eur = 4436260000,
+   weights = c(IVC_EF_FF = 1.0),
+   alpha = list(
+     IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20)
+   ),
+   dist_feed = list(
+     IVC_EF_FF = c(agriculture = 1.0)
+   )
+ ),
 
-# conv_biodiesel = list(
-#   abs_production_eur = 19194.17,
-#   weights = c(
-#     IVC_T_FF = 0.2644,
-#     IVC_HT_FF = 0.2279,
-#     IVC_T_CC = 0.1943,
-#     IVC_HT_CC = 0.0978,
-#     IVC_T_lipids = 0.1518,
-#     IVC_HT_lipids_road = 0.0638
-#   ),
-#   alpha = list(
-#     IVC_T_FF = c(feed = 0.74, capex = 0.07, opex = 0.19),
-#     IVC_HT_FF = c(feed = 0.72, capex = 0.10, opex = 0.18),
-#     IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
-#     IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
-#     IVC_T_lipids = c(feed = 0.74, capex = 0.04, opex = 0.22),
-#     IVC_HT_lipids_road = c(feed = 0.67, capex = 0.13, opex = 0.20)
-#   ),
-#   dist_feed = list(
-#     IVC_T_FF = c(food_bev = 1.0),
-#     IVC_HT_FF = c(food_bev = 1.0),
-#     IVC_T_CC = c(agriculture = 1.0),
-#     IVC_HT_CC = c(agriculture = 1.0),
-#     IVC_T_lipids = c(food_bev = 1.0),
-#     IVC_HT_lipids_road = c(food_bev = 1.0)
-#   )
-# ),
+ conv_bio_kerosene = list(
+   abs_production_eur = 966980000,
+   weights = c(IVC_HT_lipids_SAF = 1.0),
+   alpha = list(
+     IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19)
+   ),
+   dist_feed = list(
+     IVC_HT_lipids_SAF = c(food_bev = 1.0)
+   )
+ )
 
-# conv_biogasoline = list(
-#   abs_production_eur = 4436.26,
-#   weights = c(IVC_EF_FF = 1.0),
-#   alpha = list(
-#     IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20)
-#   ),
-#   dist_feed = list(
-#     IVC_EF_FF = c(agriculture = 1.0)
-#   )
-# ),
 
-# conv_bio_kerosene = list(
-#   abs_production_eur = 966.98,
-#   weights = c(IVC_HT_lipids_SAF = 1.0),
-#   alpha = list(
-#     IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19)
-#   ),
-#   dist_feed = list(
-#     IVC_HT_lipids_SAF = c(food_bev = 1.0)
-#   )
-# )
+S2_2030 <- list(
+
+
+
+
 
 
 # ===================================================================
@@ -831,6 +830,7 @@ S1_2030 <- list(
 
 ## Add S2_2030, S3_2030, etc. here later. The calculation code below
 ## does not need to change when further scenario parameter lists are added.
+
 scenario_config <- list(
   S1_2030   = S1_2030
 )

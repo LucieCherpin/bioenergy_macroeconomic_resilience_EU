@@ -1373,8 +1373,6 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
   A_imp_target <- A_imp
   X_target    <- q_s_dom
 
-## temporarily set them at zero, so that biofuels sectors NOT contained in a scenario, are set to zero and not just continue the 2023 value - but check whether that is the case at all
-  X_target[BIO] <- 0
 
 ## new: added the imported finished biofuels going to final consumption expenditure
   Y_imp_FCE_target <-

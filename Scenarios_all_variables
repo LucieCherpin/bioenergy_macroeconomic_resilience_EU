@@ -565,7 +565,7 @@ IVC_T_FF = list(
     electricity = 0.2,
     chemicals   = 0.3,
     legal_acc   = 0.25,
-    repair_inst = 0-15,
+    repair_inst = 0.15,
     land_transp = 0.1,
     sewerage    = 0.0
   )
@@ -588,7 +588,7 @@ IVC_HT_FF = list(
     electricity = 0.2,
     chemicals   = 0.3,
     legal_acc   = 0.25,
-    repair_inst = 0-15,
+    repair_inst = 0.15,
     land_transp = 0.1,
     sewerage    = 0.0
   )
@@ -607,11 +607,11 @@ IVC_T_CC = list(
     computer_el  = 0.03
   ),
   
-  dist_opex = c(
+   dist_opex = c(
     electricity = 0.2,
     chemicals   = 0.3,
     legal_acc   = 0.25,
-    repair_inst = 0-15,
+    repair_inst = 0.15,
     land_transp = 0.1,
     sewerage    = 0.0
   )
@@ -634,7 +634,7 @@ IVC_HT_CC = list(
     electricity = 0.2,
     chemicals   = 0.3,
     legal_acc   = 0.25,
-    repair_inst = 0-15,
+    repair_inst = 0.15,
     land_transp = 0.1,
     sewerage    = 0.0
   )
@@ -657,7 +657,7 @@ IVC_T_lipids = list(
     electricity = 0.2,
     chemicals   = 0.3,
     legal_acc   = 0.25,
-    repair_inst = 0-15,
+    repair_inst = 0.15,
     land_transp = 0.1,
     sewerage    = 0.0
   )
@@ -680,7 +680,7 @@ IVC_HT_lipids_road = list(
     electricity = 0.2,
     chemicals   = 0.3,
     legal_acc   = 0.25,
-    repair_inst = 0-15,
+    repair_inst = 0.15,
     land_transp = 0.1,
     sewerage    = 0.0
   )
@@ -699,11 +699,11 @@ IVC_EF_FF = list(
     computer_el  = 0.03
   ),
   
-  dist_opex = c(
+   dist_opex = c(
     electricity = 0.2,
     chemicals   = 0.3,
     legal_acc   = 0.25,
-    repair_inst = 0-15,
+    repair_inst = 0.15,
     land_transp = 0.1,
     sewerage    = 0.0
   )
@@ -726,7 +726,7 @@ IVC_HT_lipids_SAF = list(
     electricity = 0.2,
     chemicals   = 0.3,
     legal_acc   = 0.25,
-    repair_inst = 0-15,
+    repair_inst = 0.15,
     land_transp = 0.1,
     sewerage    = 0.0
   )
@@ -969,19 +969,18 @@ S1_2030 <- list(
   ),
 
  adv_biogas = list(
-   abs_production_eur = 1550800000,
-   weights = c(IVC7 = 1.0),
-   prod_cost = list(
-     IVC7 = 1024.42
-   )
-
-   alpha = list(
-     IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000),
-   dist_feed = list(
-     IVC7 = c(agriculture = 0.18588, food_bev = 0.78770, sewerage = -2.00721, chemicals = 0.03363),
-   )
- )
-),
+    abs_production_eur = 1550800000,
+    weights = c(IVC7 = 1.0),
+    prod_cost = list(
+      IVC7 = 1024.42),
+    
+    alpha = list(
+      IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000)),
+     
+       dist_feed = list(
+        IVC7 = c(agriculture = 0.33, food_bev = 0.33, chemicals = 0.33)## correct later, seweareg belongs here
+    )
+  ),
 
  conv_biodiesel = list(
    abs_production_eur = 19194170000,

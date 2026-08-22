@@ -543,7 +543,195 @@ IVC9a = list(
     dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
                      repair_inst = 0.30, land_transp = 0.10)
   )
+), 
+
+# ==========================================================
+# CONVENTIONAL BIOFUEL TECHNOLOGIES
+# ==========================================================
+
+IVC_T_FF = list(
+  
+  market_value = 1165.63,
+  
+  dist_capex = c(
+    fab_metal    = 0.07,
+    machinery    = 0.45,
+    construction = 0.15,
+    architecture = 0.3,
+    computer_el  = 0.03
+  ),
+  
+  dist_opex = c(
+    electricity = 0.2,
+    chemicals   = 0.3,
+    legal_acc   = 0.25,
+    repair_inst = 0-15,
+    land_transp = 0.1,
+    sewerage    = 0.0
+  )
+),
+
+
+IVC_HT_FF = list(
+  
+  market_value = 1165.63,
+  
+  dist_capex = c(
+    fab_metal    = 0.07,
+    machinery    = 0.45,
+    construction = 0.15,
+    architecture = 0.3,
+    computer_el  = 0.03
+  ),
+  
+  dist_opex = c(
+    electricity = 0.2,
+    chemicals   = 0.3,
+    legal_acc   = 0.25,
+    repair_inst = 0-15,
+    land_transp = 0.1,
+    sewerage    = 0.0
+  )
+),
+
+
+IVC_T_CC = list(
+  
+  market_value = 1165.63,
+  
+  dist_capex = c(
+    fab_metal    = 0.07,
+    machinery    = 0.45,
+    construction = 0.15,
+    architecture = 0.3,
+    computer_el  = 0.03
+  ),
+  
+  dist_opex = c(
+    electricity = 0.2,
+    chemicals   = 0.3,
+    legal_acc   = 0.25,
+    repair_inst = 0-15,
+    land_transp = 0.1,
+    sewerage    = 0.0
+  )
+),
+
+
+IVC_HT_CC = list(
+  
+  market_value = 1165.63,
+  
+  dist_capex = c(
+    fab_metal    = 0.07,
+    machinery    = 0.45,
+    construction = 0.15,
+    architecture = 0.3,
+    computer_el  = 0.03
+  ),
+  
+  dist_opex = c(
+    electricity = 0.2,
+    chemicals   = 0.3,
+    legal_acc   = 0.25,
+    repair_inst = 0-15,
+    land_transp = 0.1,
+    sewerage    = 0.0
+  )
+),
+
+
+IVC_T_lipids = list(
+  
+  market_value = 1165.63,
+  
+  dist_capex = c(
+    fab_metal    = 0.07,
+    machinery    = 0.45,
+    construction = 0.15,
+    architecture = 0.3,
+    computer_el  = 0.03
+  ),
+  
+  dist_opex = c(
+    electricity = 0.2,
+    chemicals   = 0.3,
+    legal_acc   = 0.25,
+    repair_inst = 0-15,
+    land_transp = 0.1,
+    sewerage    = 0.0
+  )
+),
+
+
+IVC_HT_lipids_road = list(
+  
+  market_value = 1165.63,
+  
+  dist_capex = c(
+    fab_metal    = 0.07,
+    machinery    = 0.45,
+    construction = 0.15,
+    architecture = 0.3,
+    computer_el  = 0.03
+  ),
+  
+  dist_opex = c(
+    electricity = 0.2,
+    chemicals   = 0.3,
+    legal_acc   = 0.25,
+    repair_inst = 0-15,
+    land_transp = 0.1,
+    sewerage    = 0.0
+  )
+),
+
+
+IVC_EF_FF = list(
+  
+  market_value = 1018.97,
+  
+  dist_capex = c(
+    fab_metal    = 0.07,
+    machinery    = 0.45,
+    construction = 0.15,
+    architecture = 0.3,
+    computer_el  = 0.03
+  ),
+  
+  dist_opex = c(
+    electricity = 0.2,
+    chemicals   = 0.3,
+    legal_acc   = 0.25,
+    repair_inst = 0-15,
+    land_transp = 0.1,
+    sewerage    = 0.0
+  )
+),
+
+
+IVC_HT_lipids_SAF = list(
+  
+  market_value = 2100,
+
+  dist_capex = c(
+    fab_metal    = 0.07,
+    machinery    = 0.45,
+    construction = 0.15,
+    architecture = 0.3,
+    computer_el  = 0.03
+  ),
+  
+  dist_opex = c(
+    electricity = 0.2,
+    chemicals   = 0.3,
+    legal_acc   = 0.25,
+    repair_inst = 0-15,
+    land_transp = 0.1,
+    sewerage    = 0.0
+  )
 )
+
 
 ############################################################
 # 3. HELPER FUNCTIONS
@@ -1353,7 +1541,7 @@ S1_endpoint_2030 <- build_endpoint(
 #)
 
 S2_endpoint_2030 <- build_endpoint(
-  scenario_S2_2030
+  S2_2030
 )
 
 #S2_2035 <- build_endpoint(
@@ -1390,32 +1578,6 @@ S1_endpoint_2030$Y_dom
 S2_endpoint_2030$Y_dom
 
 
-# ===================================================================
-# 8. Storing the endpoints by year
-# ===================================================================
-scenario_endpoints <- list(
-
-  S1 = list(
-    `2023` = baseline_endpoint,
-    `2030` = build_endpoint(scenario_S1_2030),
-    `2035` = build_endpoint(scenario_S1_2035),
-    `2040` = build_endpoint(scenario_S1_2040)
-  ),
-
-  S2 = list(
-    `2023` = baseline_endpoint,
-    `2030` = build_endpoint(scenario_S2_2030),
-    `2035` = build_endpoint(scenario_S2_2035),
-    `2040` = build_endpoint(scenario_S2_2040)
-  ),
-
-  S3 = list(
-    `2023` = baseline_endpoint,
-    `2030` = build_endpoint(scenario_S3_2030),
-    `2035` = build_endpoint(scenario_S3_2035),
-    `2040` = build_endpoint(scenario_S3_2040)
-  )
-)
 
 # ===================================================================
 # 9. (OPTIONAL) EXTRACT INDIVIDUAL RESULTS
@@ -1538,6 +1700,7 @@ build_linear_segment <- function(
       output_sector = NULL
     )
   )
+
  Y_dom_path <- matrix(
     NA_real_,
     nrow = n_years,
@@ -1556,6 +1719,7 @@ build_linear_segment <- function(
       input_sector = NULL,
       output_sector = NULL
     )
+)
 
  # ---------------------------------------------------------------
   # Annual interpolation
@@ -1610,7 +1774,7 @@ build_linear_segment <- function(
     
     # Annual Leontief inverse
     L_dom_current <-
-      solve(diag - A_dom_current
+      solve(diag - A_dom_current)
     # -------------------------------------------------------------
     # Store
     # -------------------------------------------------------------
@@ -1633,7 +1797,9 @@ build_linear_segment <- function(
     A_imp    = A_imp_path,
     X  = X_path,
     Y_dom = Y_dom_path,
-    L_dom = L_dom_path
+    L_dom = L_dom_path,
+    Z_dom = Z_dom_path,
+    Z_imp = Z_imp_path
   )
 }
 
@@ -1654,10 +1820,10 @@ S1_path_2023_2030 <-
 
 S2_path_2023_2030 <-
   build_linear_segment(
-    start_endpoint = S2_endpoint_2030,
+    start_endpoint = BASE_2023,
     end_endpoint   = S2_endpoint_2030,
     start_year     = 2023,
-    end_year       = 2020
+    end_year       = 2030
   )
 
 ############################################################################################################################################################
@@ -1672,18 +1838,18 @@ for (i in 2:nYears){
   
   cat("Starting iteration:", i, "\n")
   
-  for (iterations in 1:100){
+#  for (iterations in 1:100){
+   
+  # Final expenditure by industry (domestic / imports)
+#    D_dom[i, ] <- beta_C_dom[i, ] * C_dom[i] + beta_G_dom[i, ] * G_dom[i]
+ #   D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
     
-    # Final expenditure by industry (domestic / imports)
-    D_dom[i, ] <- beta_C_dom[i, ] * C_dom[i] + beta_G_dom[i, ] * G_dom[i]
-    D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
+  #  # Total final use f = D + GCF + EX (split)
+   # #f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
+    ##f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
     
-    # Total final use f = D + GCF + EX (split)
-    #f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
-    #f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
-    
-    # Domestic production from domestic final demand (Leontief)
-    X_dom[i, ] <- L_dom %*% f_dom[i, ]
+    ## Domestic production from domestic final demand (Leontief)
+    #X_dom[i, ] <- L_dom %*% f_dom[i, ]
     #X_imp[i, ] <- L_imp %*% f_imp[i, ]
     
     #Exports ## couple exports to total use

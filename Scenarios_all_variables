@@ -894,12 +894,12 @@ S1_2030 <- list(
       IVC_HT_lipids_road = c(feed = 0.67, capex = 0.13, opex = 0.20)
     ),
     dist_feed = list(
-      IVC_T_FF = c(food_bev = 1.0),
+      IVC_T_FF = c(food_bev = 0.80055, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 1.0),
       IVC_T_CC = c(agriculture = 1.0),
       IVC_HT_CC = c(agriculture = 1.0),
-      IVC_T_lipids = c(food_bev = 1.0),
-      IVC_HT_lipids_road = c(food_bev = 1.0)
+      IVC_T_lipids = c(food_bev = 0.72, food_bev_imp = 0.28),
+      IVC_HT_lipids_road = c(food_bev = 0.72, food_bev_imp = 0.28)
     )
   ), 
   
@@ -922,7 +922,7 @@ S1_2030 <- list(
       IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19)
     ),
     dist_feed = list(
-      IVC_HT_lipids_SAF = c(food_bev = 1.0)
+      IVC_HT_lipids_SAF = c(food_bev = 0.61, food_bev_imp = 0.29)
     )
   )
 )

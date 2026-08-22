@@ -387,6 +387,7 @@ INPUT_SECTORS <- c(
   chemicals        = 21,
   adv_biodiesel    = 24,
   adv_biogasoline  = 26,
+  adv_bio_hfo      = 29,
   fab_metal        = 34,
   computer_el      = 35,
   elec_equip       = 36,
@@ -574,6 +575,7 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
     sewerage       = get_v(a_feed, "sewerage") + get_v(a_opex, "sewerage"),
     adv_biodiesel  = get_v(a_feed, "adv_biodiesel"),
     adv_biogasoline = get_v(a_feed, "adv_biogasoline"),
+    adv_bio_hfo    = get_v(a_feed, "adv_bio_hfo"),
     adv_biogas     = get_v(a_feed, "adv_biogas"),
     fab_metal      = get_v(a_capex, "fab_metal"),
     elec_equip     = get_v(a_capex, "elec_equip"),
@@ -782,18 +784,15 @@ S1_2030 <- list(
 
  adv_biogas = list(
    abs_production_eur = 1550800000,
-   weights = c(IVC7 = 1.0, IVC9a = 0.0),
+   weights = c(IVC7 = 1.0),
    prod_cost = list(
      IVC7 = 1024.42,
-     IVC9a = 1369.48
    ),
    alpha = list(
      IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000),
-     IVC9a = c(feed = 0.154612, capex = 0.583026, opex = 0.262362)
    ),
    dist_feed = list(
-     IVC7 = c(agriculture = ?, food_bev = ?, sewerage = ?, chemicals = ?),
-     IVC9a = c(agriculture = ?, food_bev = ?, sewerage = ?, forestry = ?, paper = ?, adv_biodiesel = ?)
+     IVC7 = c(agriculture = 0.18588, food_bev = 0.78770, sewerage = -2.00721, chemicals = 0.03363),
    )
  ),
 
@@ -1214,9 +1213,8 @@ S2_2030 <- list(
 ## does not need to change when further scenario parameter lists are added.
 
 scenario_config <- list(
-  S1_2030   = S1_2030
+  S1_2030   = S1_2030,
   S2_2030 = S2_2030
-  S3_2030 = S3_2030
 )
 
 ## Conversion from scenario values (stored in EUR) into the monetary unit
@@ -1255,7 +1253,7 @@ build_endpoint <- function(scenario_cfg) {
     res_fuel <- build_fuel_column(fuel_cfg)
     
     # Replace, rather than supplement, the old IO technology column.
-    AA_dom_target[, target_col] <- 0
+    A_dom_target[, target_col] <- 0
     A_imp_target[, target_col] <- 0
     
    for (sec_name in names(res_fuel$a_dom)) {
@@ -1308,44 +1306,6 @@ build_endpoint <- function(scenario_cfg) {
 
 ##### #--this part 6 created the variables of how the economy looks like in a specific Scenario and target year
 # ===================================================================
-# 7. Build end points
-# ===================================================================
-
-S1_2030 <- build_endpoint(
-  scenario_S1_2030
-)
-
-S1_2035 <- build_endpoint(
-  scenario_S1_2035
-)
-
-S1_2040 <- build_endpoint(
-  scenario_S1_2040
-)
-S2_2030 <- build_endpoint(
-  scenario_S2_2030
-)
-
-S2_2035 <- build_endpoint(
-  scenario_S2_2035
-)
-
-S2_2040 <- build_endpoint(
-  scenario_S2_2040
-)
-
-S3_2030 <- build_endpoint(
-  scenario_S2_2030
-)
-
-S3_2035 <- build_endpoint(
-  scenario_S2_2035
-)
-
-S3_2040 <- build_endpoint(
-  scenario_S2_2040
-)
-# ===================================================================
 # 7. Common 2023 starting point derived from IOT
 # ===================================================================
 
@@ -1371,6 +1331,61 @@ BASE_2023 <- list(
   Y_dom = Y_dom_BASE_2023,
   L_dom = L_dom_BASE_2023
 )
+
+
+
+# ===================================================================
+# 8. Build end points
+# ===================================================================
+
+S1_endpoint_2030 <- build_endpoint(
+  S1_2030
+)
+
+#S1_2035 <- build_endpoint(
+#  scenario_S1_2035
+#)
+
+#S1_2040 <- build_endpoint(
+#  scenario_S1_2040
+#)
+
+S2_endpoint_2030 <- build_endpoint(
+  scenario_S2_2030
+)
+
+#S2_2035 <- build_endpoint(
+ #S2_2030
+#)
+
+#S2_2040 <- build_endpoint(
+ # scenario_S2_2040
+#)
+
+#S3_2030 <- build_endpoint(
+ # scenario_S2_2030
+ #)
+
+ #S3_2035 <- build_endpoint(
+ # scenario_S2_2035
+#)
+
+#S3_2040 <- build_endpoint(
+ # scenario_S2_2040
+ #)
+
+
+S1_endpoint_2030$Z_dom
+S2_endpoint_2030$Z_dom
+
+S1_endpoint_2030$Z_imp
+S2_endpoint_2030$Z_imp
+
+S1_endpoint_2030$X
+S2_endpoint_2030$X
+
+S1_endpoint_2030$Y_dom
+S2_endpoint_2030$Y_dom
 
 
 # ===================================================================
@@ -1468,7 +1483,10 @@ build_linear_segment <- function(
   
   years <- start_year:end_year
   n_years <- length(years)
-  
+
+ # ---------------------------------------------------------------
+  # Storage
+  # ---------------------------------------------------------------
   
   A_dom_path <- array(
     NA_real_,
@@ -1490,7 +1508,35 @@ build_linear_segment <- function(
     )
   )
   
-  X_target_path <- matrix(
+  X_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+  Z_dom_path <- array(
+    NA_real_,
+    dim = c(n_years, nIndustries, nIndustries),
+    dimnames = list(
+      year = as.character(years),
+      input_sector = NULL,
+      output_sector = NULL
+    )
+  )
+  
+  Z_imp_path <- array(
+    NA_real_,
+    dim = c(n_years, nIndustries, nIndustries),
+    dimnames = list(
+      year = as.character(years),
+      input_sector = NULL,
+      output_sector = NULL
+    )
+  )
+ Y_dom_path <- matrix(
     NA_real_,
     nrow = n_years,
     ncol = nIndustries,
@@ -1500,6 +1546,19 @@ build_linear_segment <- function(
     )
   )
   
+  L_dom_path <- array(
+    NA_real_,
+    dim = c(n_years, nIndustries, nIndustries),
+    dimnames = list(
+      year = as.character(years),
+      input_sector = NULL,
+      output_sector = NULL
+    )
+
+ # ---------------------------------------------------------------
+  # Annual interpolation
+  # ---------------------------------------------------------------
+
   
   for (i in seq_along(years)) {
     
@@ -1533,11 +1592,36 @@ build_linear_segment <- function(
         end_endpoint$X -
         start_endpoint$X
       )
+
+  # Z follows from that year's A and X
+    Z_dom_current <-
+      A_dom_current %*% base::diag(X_current)
     
+    Z_imp_current <-
+      A_imp_current %*% base::diag(X_current)
+    
+    
+    # Y as accounting residual
+    Y_dom_current <-
+      X_current - rowSums(Z_dom_current)
+    
+    
+    # Annual Leontief inverse
+    L_dom_current <-
+      solve(diag - A_dom_current
+    # -------------------------------------------------------------
+    # Store
+    # -------------------------------------------------------------
     
     A_dom_path[i, , ] <- A_dom_current
     A_imp_path[i, , ] <- A_imp_current
-    X_target_path[i, ] <- X_current
+    X_path[i, ] <- X_current
+    Z_dom_path[i, , ] <- Z_dom_current
+    Z_imp_path[i, , ] <- Z_imp_current
+    
+    Y_dom_path[i, ] <- Y_dom_current
+    
+    L_dom_path[i, , ] <- L_dom_current
   }
   
   
@@ -1545,7 +1629,9 @@ build_linear_segment <- function(
     years    = years,
     A_dom    = A_dom_path,
     A_imp    = A_imp_path,
-    X_target = X_target_path
+    X  = X_path,
+    Y_dom = Y_dom_path,
+    L_dom = L_dom_path
   )
 }
 
@@ -1558,25 +1644,18 @@ build_linear_segment <- function(
 S1_path_2023_2030 <-
   build_linear_segment(
     start_endpoint = BASE_2023,
-    end_endpoint   = S1_2030,
+    end_endpoint   = S1_endpoint_2030,
     start_year     = 2023,
     end_year       = 2030
   )
 
-S1_path_2030_2035 <-
-  build_linear_segment(
-    start_endpoint = S1_2030,
-    end_endpoint   = S1_2035,
-    start_year     = 2030,
-    end_year       = 2035
-  )
 
-S1_path_2035_2040 <-
+S2_path_2023_2030 <-
   build_linear_segment(
-    start_endpoint = S1_2035,
-    end_endpoint   = S1_2040,
-    start_year     = 2035,
-    end_year       = 2040
+    start_endpoint = S2_endpoint_2030,
+    end_endpoint   = S2_endpoint_2030,
+    start_year     = 2023,
+    end_year       = 2020
   )
 
 ############################################################################################################################################################

@@ -757,9 +757,9 @@ build_fuel_column <- function(fuel_cfg) {
 
 
 
-############################################################
-# 4. CLEANED PARTIAL SCENARIO 1 FOR 2030
-############################################################
+#####################################################################################
+# 4. Scenarios 1 and 2 for 2030 - still some values (conventional and RFNBOs) misisng
+#####################################################################################
 
 
 S1_2030 <- list(
@@ -1016,11 +1016,6 @@ S2_2030 <- list(
     )
   ),
   
-  
-  # --------------------------------------------------------
-  # ADVANCED BIOGASOLINE
-  # --------------------------------------------------------
-  
   adv_biogasoline = list(
     
     abs_production_eur = 10469280187.844357,
@@ -1095,10 +1090,6 @@ S2_2030 <- list(
     )
   ),
   
-  
-  # --------------------------------------------------------
-  # ADVANCED BIOGAS
-  # --------------------------------------------------------
   
   adv_biogas = list(
     
@@ -1215,20 +1206,15 @@ S2_2030 <- list(
   adv_bio_hfo = list(
     
     abs_production_eur = 1553519526.3020425,
-    
     weights = c(IVC8a = 0.5, IVC8b = 0.5),
-    
     prod_cost = list(IVC8a = 587.7154729470917, IVC8b = 936),
     
     alpha = list(
-      
       IVC8a = c(feed  = 0.20539781323395415, capex = 0.4781225149491626, opex  = 0.3164796718168834),
-      
       IVC8b = c(feed  = 0.7564102564102564, capex = 0.1452991452991453, opex  = 0.09829059829059829)
     ),
     
     dist_feed = list(
-      
       IVC8a = c(
         food_bev        = 0.014517943198727606,
         agriculture     = 0.6226304730939115,
@@ -1238,10 +1224,7 @@ S2_2030 <- list(
         adv_biodiesel   = 0.01575831661447534,
         adv_biogasoline = 0.01575831661447534
       ),
-      
-      IVC8b = c(
-        adv_biogas = 1.0
-      )
+      IVC8b = c(adv_biogas = 1.0)
     )
   ),
   
@@ -1287,6 +1270,36 @@ S2_2030 <- list(
 
 
 
+# ==========================================================
+# FINISHED BIOFUEL IMPORTS - S1 / 2030
+# Monetary value in EUR, at market value
+# All imported finished fuels go to final consumption expenditure
+# ==========================================================
+
+S1_imports_2030 <- c(
+  conv_biodiesel    = 687626520.93,
+  adv_biodiesel     = 14428717943.19,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 4661504967.96,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 1865379175.15,
+  adv_bio_hfo       = 1741730959.95,
+  RFNBOs            = 0,
+  adv_biogas        = 0
+)
+
+S2_imports_2030 <- c(
+  conv_biodiesel    =  7885863786.04,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 0,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 0,
+  adv_bio_hfo       = 0,
+  RFNBOs            = 0,
+  adv_biogas        = 0
+)
+
 # ===================================================================
 # 5. COLLECT SCENARIOS
 # ===================================================================
@@ -1307,16 +1320,54 @@ SCENARIO_EUR_TO_IO_UNIT <- 1e6
 
 
 # ===================================================================
+# BUILD IMPORTED FINAL CONSUMPTION EXPENDITURE VECTOR
+# ===================================================================
+
+build_Y_imp_FCE <- function(import_cfg_eur) {
+  
+  # Start from observed 2023 imported final consumption expenditure
+  Y_imp_FCE_target <- t_f_e_imp
+  
+  # Replace biofuel rows with scenario-specific finished-fuel imports
+  for (fuel_name in names(import_cfg_eur)) {
+    
+    if (!fuel_name %in% names(BIOFUEL_SECTORS)) {
+      stop(
+        paste(
+          "Unknown biofuel in import configuration:",
+          fuel_name
+        )
+      )
+    }
+    
+    sector_idx <- BIOFUEL_SECTORS[[fuel_name]]
+    
+    Y_imp_FCE_target[sector_idx] <-
+      import_cfg_eur[[fuel_name]] /
+      SCENARIO_EUR_TO_IO_UNIT
+  }
+  
+  Y_imp_FCE_target
+}
+
+
+
+# ===================================================================
 # 6. BUILD A, X, Z, Y AND L FOR ONE SCENARIO
 # ===================================================================
 
-build_endpoint <- function(scenario_cfg) {
+build_endpoint <- function(scenario_cfg, import_cfg_eur) {
   
   # Start every scenario from the complete 2023 Eurostat IO economy.
   # Non-biofuel sectors therefore remain unchanged unless explicitly modified.
   A_dom_target <- A_dom
   A_imp_target <- A_imp
   X_target    <- q_s_dom
+
+## new: added the imported finished biofuels going to final consumption expenditure
+Y_imp_FCE_target <-
+  build_Y_imp_FCE(import_cfg_eur)
+
   
   # Replace only the biofuel sectors included in the respective scenario list.
   for (fuel_name in names(scenario_cfg)) {
@@ -1382,7 +1433,8 @@ build_endpoint <- function(scenario_cfg) {
     Z_dom = Z_dom_target,
     Z_imp = Z_imp_target,
     Y_dom = Y_dom_target,
-    L_dom = L_dom_target
+    Y_imp_FCE = Y_imp_FCE_target,
+    L_dom = L_dom_target 
   )
 }
 
@@ -1411,7 +1463,8 @@ BASE_2023 <- list(
   Z_dom = Z_dom_BASE_2023,
   Z_imp = Z_imp_BASE_2023,
   Y_dom = Y_dom_BASE_2023,
-  L_dom = L_dom_BASE_2023
+  L_dom = L_dom_BASE_2023,
+  Y_imp_FCE = t_f_e_imp          ## added this: to capture imported fuels
 )
 
 
@@ -1421,7 +1474,13 @@ BASE_2023 <- list(
 # ===================================================================
 
 S1_endpoint_2030 <- build_endpoint(
-  S1_2030
+  scenario_cfg   = S1_2030,
+  import_cfg_eur = S1_imports_2030
+)
+
+S2_endpoint_2030 <- build_endpoint(
+  scenario_cfg   = S2_2030,
+  import_cfg_eur = S2_imports_2030
 )
 
 #S1_2035 <- build_endpoint(
@@ -1431,10 +1490,6 @@ S1_endpoint_2030 <- build_endpoint(
 #S1_2040 <- build_endpoint(
 #  scenario_S1_2040
 #)
-
-S2_endpoint_2030 <- build_endpoint(
-  S2_2030
-)
 
 #S2_2035 <- build_endpoint(
 #S2_2030
@@ -1489,6 +1544,12 @@ Y_dom_S1_2030 <- S1_endpoint_2030$Y_dom
 
 L_dom_S1_2030 <- S1_endpoint_2030$L_dom
 
+##added 
+Y_imp_FCE_S1_2030 <-
+  S1_endpoint_2030$Y_imp_FCE
+
+Y_imp_FCE_S2_2030 <-
+  S2_endpoint_2030$Y_imp_FCE
 
 # ===================================================================
 # 9. BASIC CONSISTENCY CHECKS

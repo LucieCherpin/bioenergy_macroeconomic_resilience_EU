@@ -1676,6 +1676,16 @@ build_linear_segment <- function(
       output_sector = NULL
     )
   )
+
+Y_imp_FCE_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
   
   # ---------------------------------------------------------------
   # Annual interpolation
@@ -1714,6 +1724,15 @@ build_linear_segment <- function(
         end_endpoint$X -
           start_endpoint$X
       )
+
+# Linear development of imported finished fuels
+# going directly to final consumption expenditure
+Y_imp_FCE_current <-
+  start_endpoint$Y_imp_FCE +
+  lambda * (
+    end_endpoint$Y_imp_FCE -
+    start_endpoint$Y_imp_FCE
+  )
     
     # Z follows from that year's A and X
     Z_dom_current <-
@@ -1728,7 +1747,7 @@ build_linear_segment <- function(
       X_current - rowSums(Z_dom_current)
     
     
-    # Annual Leontief inverse
+    #  Leontief inverse
     L_dom_current <-
       solve(diag - A_dom_current)
     # -------------------------------------------------------------
@@ -1742,8 +1761,9 @@ build_linear_segment <- function(
     Z_imp_path[i, , ] <- Z_imp_current
     
     Y_dom_path[i, ] <- Y_dom_current
-    
+    Y_imp_FCE_path[i, ] <- Y_imp_FCE_current
     L_dom_path[i, , ] <- L_dom_current
+
   }
   
   
@@ -1753,6 +1773,7 @@ build_linear_segment <- function(
     A_imp    = A_imp_path,
     X  = X_path,
     Y_dom = Y_dom_path,
+    Y_imp_FCE = Y_imp_FCE_path,
     L_dom = L_dom_path,
     Z_dom = Z_dom_path,
     Z_imp = Z_imp_path

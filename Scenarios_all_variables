@@ -403,15 +403,6 @@ INPUT_SECTORS <- c(
   architecture     = 65
 )
 
-##added: differentiate between bioefuels and non-boiofuels sectors in order to exogenously set X(bio) but not X(non-bio)
-
-BIO <- unname(BIOFUEL_SECTORS)
-
-NONBIO <- setdiff(
-  seq_len(nIndustries),
-  BIO
-)
-
 TAX_RATES <- c(
   default    = 0.0091481,
   adv_biogas = 0.0017690
@@ -553,85 +544,85 @@ IVC_TECH_LIBRARY <- list(
     dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
                      repair_inst = 0.30, land_transp = 0.10)
   ),
-
-
-
-# ==========================================================
-# CONVENTIONAL BIOFUEL TECHNOLOGIES
-# ==========================================================
-
-IVC_T_FF = list(
-  prod_cost    = 1598.13,
-  market_value = 1750,
-  dist_capex   = c(fab_metal = 0.07, machinery = 0.450, 
-                   construction = 0.150, architecture = 0.300, computer_el = 0.030),
-  dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
-                   repair_inst = 0.150, land_transp = 0.100, sewerage = 0.0)
-),
-
-IVC_HT_FF = list(
-  prod_cost    = 1598.13,
-  market_value = 1750,
-  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.020, machinery = 0.550, 
-                   construction = 0.100, architecture = 0.250, computer_el = 0.030),
-  dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                   repair_inst = 0.150, land_transp = 0.05)
-),
-
-IVC_T_CC =list(
-  prod_cost    = 1598.13,
-  market_value = 1750,
-  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
-                   construction = 0.150, architecture = 0.30, computer_el = 0.030),
-  dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
-                   repair_inst = 0.150, land_transp = 0.100)
-),
-
-IVC_HT_CC =list(
-  prod_cost    = 1598.13,
-  market_value = 1750,
-  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
-                   construction = 0.100, architecture = 0.250, computer_el = 0.030),
-  dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                   repair_inst = 0.150, land_transp = 0.050)
-),
-
-IVC_T_lipids =list(
-  prod_cost    = 1598.13,
-  market_value = 1750,
-  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
-                   construction = 0.150, architecture = 0.30, computer_el = 0.030),
-  dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
-                   repair_inst = 0.150, land_transp = 0.100)
-),
-
-IVC_HT_lipids_road =list(
-  prod_cost    = 1598.13,
-  market_value = 1750,
-  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
-                   construction = 0.100, architecture = 0.250, computer_el = 0.030),
-  dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                   repair_inst = 0.150, land_transp = 0.05)
-),
-
-IVC_HT_lipids_SAF =list(
-  prod_cost    = 1598.13,
-  market_value = 1750,
-  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
-                   construction = 0.100, architecture = 0.250, computer_el = 0.030),
-  dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                   repair_inst = 0.150, land_transp = 0.05)
-),
-
-IVC_EF_FF = list(
-  prod_cost    = 1598.13,
-  market_value = 1750,
-  dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, 
-                   construction = 0.150, architecture = 0.250, computer_el = 0.030),
-  dist_opex    = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.200, 
-                   repair_inst = 0.150, land_transp = 0.10)
-)
-
+  
+  
+  
+  # ==========================================================
+  # CONVENTIONAL BIOFUEL TECHNOLOGIES
+  # ==========================================================
+  
+  IVC_T_FF = list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100, sewerage = 0.0)
+  ),
+  
+  IVC_HT_FF = list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.020, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
+  ),
+  
+  IVC_T_CC =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100)
+  ),
+  
+  IVC_HT_CC =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.050)
+  ),
+  
+  IVC_T_lipids =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
+                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
+                     repair_inst = 0.150, land_transp = 0.100)
+  ),
+  
+  IVC_HT_lipids_road =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
+  ),
+  
+  IVC_HT_lipids_SAF =list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
+                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.05)
+  ),
+  
+  IVC_EF_FF = list(
+    prod_cost    = 1598.13,
+    market_value = 1750,
+    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, 
+                     construction = 0.150, architecture = 0.250, computer_el = 0.030),
+    dist_opex    = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.200, 
+                     repair_inst = 0.150, land_transp = 0.10)
+  )
+  
 )
 
 
@@ -1366,18 +1357,28 @@ build_Y_imp_FCE <- function(import_cfg_eur) {
 # ===================================================================
 
 build_endpoint <- function(scenario_cfg, import_cfg_eur) {
+
+
+## biofuel-related sectors vs non-biofule reated sectors
+  BIO <- unname(BIOFUEL_SECTORS)
+  
+  NONBIO <- setdiff(
+    seq_len(nIndustries),
+    BIO
+  )
   
   # Start every scenario from the complete 2023 Eurostat IO economy.
   # Non-biofuel sectors therefore remain unchanged unless explicitly modified.
   A_dom_target <- A_dom
   A_imp_target <- A_imp
   X_target    <- q_s_dom
-
-
-## new: added the imported finished biofuels going to final consumption expenditure
+  
+  
+  X_target[BIO] <- 0
+  ## new: added the imported finished biofuels going to final consumption expenditure
   Y_imp_FCE_target <-
-  build_Y_imp_FCE(import_cfg_eur)
-
+    build_Y_imp_FCE(import_cfg_eur)
+  
   
   # Replace only the biofuel sectors included in the respective scenario list.
   for (fuel_name in names(scenario_cfg)) {
@@ -1424,52 +1425,45 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
     }
   }
 
-
-# ==========================================================
-  # NEW: ENDOGENOUS OUTPUT RESPONSE OF NON-BIOFUEL SECTORS
-
-  # simpl yextracts the nine biofuel entries from X_target
-  X_bio_target <- X_target[BIO]
-
-  # Final demand for non-biofuel products remains at its
-  # observed 2023 level
+  # ==========================================================
+  # ENDOGENOUS OUTPUT RESPONSE OF NON-BIOFUEL SECTORS
+  # ==========================================================
+  
+  # Scenario-specific biofuel production is exogenous
+  X_bio_target <-
+    X_target[BIO]
+  
+  # Keep final demand for non-biofuel products at 2023 level
   Y_nonbio_reference <-
     BASE_2023$Y_dom[NONBIO]
-
-  # Technical coefficients describing inputs from non-biofuel
-  # sectors into non-biofuel sectors
+  
+  # Input coefficients among non-biofuel sectors
   A_NN <-
     A_dom_target[
       NONBIO,
       NONBIO,
       drop = FALSE
     ]
-
-  # Technical coefficients describing inputs supplied by
-  # non-biofuel sectors to biofuel industries
+  
+  # Inputs supplied by non-biofuel sectors to biofuel sectors
   A_NB <-
     A_dom_target[
       NONBIO,
       BIO,
       drop = FALSE
     ]
-
-  # Let non-biofuel sectors expand production in response to
-  # the intermediate demand generated by biofuel production
+  
+  # Endogenous output of the non-biofuel economy
   X_nonbio_target <-
     solve(
       base::diag(length(NONBIO)) - A_NN,
       Y_nonbio_reference +
         A_NB %*% X_bio_target
     )
-
-  # Replace the initial 2023 output values of non-biofuel
-  # sectors with their endogenous scenario-specific output
+  
+  # Insert endogenous non-biofuel output into complete X vector
   X_target[NONBIO] <-
     as.numeric(X_nonbio_target)
-
-# ==========================================================
-
   
   Z_dom_target <-
     A_dom_target %*% base::diag(X_target)
@@ -1733,16 +1727,6 @@ build_linear_segment <- function(
       output_sector = NULL
     )
   )
-
-Y_imp_FCE_path <- matrix(
-  NA_real_,
-  nrow = n_years,
-  ncol = nIndustries,
-  dimnames = list(
-    year = as.character(years),
-    sector = NULL
-  )
-)
   
   # ---------------------------------------------------------------
   # Annual interpolation
@@ -1774,62 +1758,13 @@ Y_imp_FCE_path <- matrix(
       )
     
     
-    # Linear production development only of the biofuels output
-
-X_current <- numeric(nIndustries)
-
-X_current[BIO] <-
-  start_endpoint$X[BIO] +
-  lambda * (
-    end_endpoint$X[BIO] -
-      start_endpoint$X[BIO]
-  )
-
-
-## endogenous output response of non-biofuel sectors 
-
-# Technical coefficients among non-biofuel sectors
-A_NN_current <-
-  A_dom_current[
-    NONBIO,
-    NONBIO,
-    drop = FALSE
-  ]
-
-# Inputs supplied by non-biofuel sectors to biofuel sectors
-A_NB_current <-
-  A_dom_current[
-    NONBIO,
-    BIO,
-    drop = FALSE
-  ]
-
-# Non-biofuel final demand
-Y_nonbio_current <-
-  start_endpoint$Y_dom[NONBIO] +
-  lambda * (
-    end_endpoint$Y_dom[NONBIO] -
-      start_endpoint$Y_dom[NONBIO]
-  )
-
-# Endogenous production required from non-biofuel sectors
-X_current[NONBIO] <-
-  as.numeric(
-    solve(
-      base::diag(length(NONBIO)) - A_NN_current,
-      Y_nonbio_current +
-        A_NB_current %*% X_current[BIO]
-    )
-  )
-
-# Linear development of imported finished fuels
-# going directly to final consumption expenditure
-Y_imp_FCE_current <-
-  start_endpoint$Y_imp_FCE +
-  lambda * (
-    end_endpoint$Y_imp_FCE -
-    start_endpoint$Y_imp_FCE
-  )
+    # Linear production development
+    X_current <-
+      start_endpoint$X +
+      lambda * (
+        end_endpoint$X -
+          start_endpoint$X
+      )
     
     # Z follows from that year's A and X
     Z_dom_current <-
@@ -1844,7 +1779,7 @@ Y_imp_FCE_current <-
       X_current - rowSums(Z_dom_current)
     
     
-    #  Leontief inverse
+    # Annual Leontief inverse
     L_dom_current <-
       solve(diag - A_dom_current)
     # -------------------------------------------------------------
@@ -1858,9 +1793,8 @@ Y_imp_FCE_current <-
     Z_imp_path[i, , ] <- Z_imp_current
     
     Y_dom_path[i, ] <- Y_dom_current
-    Y_imp_FCE_path[i, ] <- Y_imp_FCE_current
+    
     L_dom_path[i, , ] <- L_dom_current
-
   }
   
   
@@ -1870,7 +1804,6 @@ Y_imp_FCE_current <-
     A_imp    = A_imp_path,
     X  = X_path,
     Y_dom = Y_dom_path,
-    Y_imp_FCE = Y_imp_FCE_path,
     L_dom = L_dom_path,
     Z_dom = Z_dom_path,
     Z_imp = Z_imp_path

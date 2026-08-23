@@ -1566,7 +1566,6 @@ stopifnot(
   )
 )
 
-
 # ===================================================================
 # b) BUILD REFERENCE PATH
 # ===================================================================
@@ -1576,47 +1575,28 @@ build_reference_path <- function(
     start_year = 2023,
     end_year = 2030
 ) {
-
+  
+  years <- start_year:end_year
+  n_years <- length(years)
   
   
   # ---------------------------------------------------------------
   # Reference assumptions
   # ---------------------------------------------------------------
   
-  # Keep 2023 production technologies
+  # Keep observed 2023 production technologies
   A_dom_ref <- start_endpoint$A_dom
   A_imp_ref <- start_endpoint$A_imp
   
-  # Keep 2023 domestic biofuel production
-  X_bio_ref <- start_endpoint$X[BIO]
-  
-  # Keep 2023 finished-fuel imports
+  # Keep observed 2023 finished-fuel imports for now
   Y_imp_FCE_ref <- start_endpoint$Y_imp_FCE
   
   # For now: no autonomous change in domestic final demand
+  # Later this will be replaced by SFC behavioral equations
   Y_dom_ref <-
     C_dom_BASE_2023 +
     G_dom_BASE_2023 +
     OTHER_dom_BASE_2023
-  
-  
-  # ---------------------------------------------------------------
-  # IO partitions
-  # ---------------------------------------------------------------
-  
-  A_NN_ref <-
-    A_dom_ref[
-      NONBIO,
-      NONBIO,
-      drop = FALSE
-    ]
-  
-  A_NB_ref <-
-    A_dom_ref[
-      NONBIO,
-      BIO,
-      drop = FALSE
-    ]
   
   
   # ---------------------------------------------------------------
@@ -1698,25 +1678,17 @@ build_reference_path <- function(
   
   for (i in seq_along(years)) {
     
-    # Complete 73-sector output vector
-    X_current <- numeric(nIndustries)
+    # All 73 sectors, including biofuels, are endogenous in REF
+    X_current <-
+      as.numeric(
+        solve(
+          base::diag(nIndustries) - A_dom_ref,
+          Y_dom_ref
+        )
+      )
     
     
-    # -------------------------------------------------------------
-    # here, no separation between BIO and NONBIO sectors, everything evolves endogenously 
-    # -------------------------------------------------------------
-   X_current <-
-  as.numeric(
-    solve(
-      base::diag(nIndustries) - A_dom_ref,
-      Y_dom_ref
-    )
-  )
-    
-    # -------------------------------------------------------------
     # Intermediate transactions
-    # -------------------------------------------------------------
-    
     Z_dom_current <-
       A_dom_ref %*%
       base::diag(X_current)
@@ -1726,47 +1698,30 @@ build_reference_path <- function(
       base::diag(X_current)
     
     
-    # -------------------------------------------------------------
     # Domestic final demand as accounting residual
-    # -------------------------------------------------------------
-    
     Y_dom_current <-
       X_current -
       rowSums(Z_dom_current)
     
     
-    # -------------------------------------------------------------
     # GVA
-    # provisional until GVA accounting has been validated
-    # -------------------------------------------------------------
-    
+    # provisional until accounting validation
     GVA_current <-
       X_current -
       colSums(Z_dom_current) -
       colSums(Z_imp_current)
     
     
-    # -------------------------------------------------------------
     # Store annual results
-    # -------------------------------------------------------------
+    X_path[i, ] <- X_current
+    Y_dom_path[i, ] <- Y_dom_current
     
-    X_path[i, ] <-
-      X_current
+    Z_dom_path[i, , ] <- Z_dom_current
+    Z_imp_path[i, , ] <- Z_imp_current
     
-    Y_dom_path[i, ] <-
-      Y_dom_current
+    GVA_path[i, ] <- GVA_current
     
-    Z_dom_path[i, , ] <-
-      Z_dom_current
-    
-    Z_imp_path[i, , ] <-
-      Z_imp_current
-    
-    GVA_path[i, ] <-
-      GVA_current
-    
-    Y_imp_FCE_path[i, ] <-
-      Y_imp_FCE_ref
+    Y_imp_FCE_path[i, ] <- Y_imp_FCE_ref
   }
   
   

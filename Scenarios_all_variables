@@ -2,7 +2,6 @@
 ###STEP 1: Prepare Working Space and Data
 #####################################################################
 
-
 #Clear working environment
 rm(list=ls()) 
 
@@ -2266,12 +2265,12 @@ RFNBO <- unname(
 # ==========================================================
 
 delta_X_S1_2030 <-
-  S1_2030$X -
-  REF_2030$X
+  S1_endpoint_2030$X -
+  REF_endpoint_2030$X
 
 delta_X_S2_2030 <-
-  S2_2030$X -
-  REF_2030$X
+  S2_endpoint_2030$X -
+  REF_endpoint_2030$X
 
 
 output_summary_2030 <- data.frame(

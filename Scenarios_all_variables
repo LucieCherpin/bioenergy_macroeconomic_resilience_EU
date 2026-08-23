@@ -406,38 +406,43 @@ M_total[1, ]        <- M_intermediate[1, ] + M_final[1, ]
 nIndustries <- 73
 
 BIOFUEL_SECTORS <- c(
-  conv_biodiesel    = 23,
-  adv_biodiesel     = 24,
-  conv_biogasoline  = 25,
-  adv_biogasoline   = 26,
-  conv_bio_kerosene = 27,
-  adv_bio_kerosene  = 28,
-  adv_bio_hfo       = 29,
-  RFNBOs            = 30,
-  adv_biogas        = 44
+  conv_biodiesel    = 12,
+  adv_biodiesel     = 13,
+  conv_biogasoline  = 14,
+  adv_biogasoline   = 15,
+  conv_bio_kerosene = 16,
+  adv_bio_kerosene  = 17,
+  adv_bio_hfo       = 18,
+  RFNBOs            = 19,
+  adv_biogas        = 33
 )
+
 
 INPUT_SECTORS <- c(
   agriculture      = 1,
   forestry         = 2,
-  food_bev         = 15,
-  paper            = 18,
-  chemicals        = 21,
-  adv_biodiesel    = 24,
-  adv_biogasoline  = 26,
-  adv_bio_hfo      = 29,
-  fab_metal        = 34,
-  computer_el      = 35,
-  elec_equip       = 36,
-  machinery        = 37,
-  repair_inst      = 41,
-  electricity      = 42,
-  adv_biogas       = 44,
-  sewerage         = 45,
-  construction     = 46,
-  land_transp      = 50,
-  legal_acc        = 64,
-  architecture     = 65
+  food_bev         = 5,
+  paper            = 8,
+  chemicals        = 11,
+
+  adv_biodiesel    = 13,
+  adv_biogasoline  = 15,
+  adv_bio_hfo      = 18,
+  adv_biogas       = 33,
+
+  fab_metal        = 24,
+  computer_el      = 25,
+  elec_equip       = 26,
+  machinery        = 27,
+  repair_inst      = 31,
+
+  electricity      = 32,
+  sewerage         = 35,
+  construction     = 36,
+  land_transp      = 40,
+
+  legal_acc        = 54,
+  architecture     = 55
 )
 
 TAX_RATES <- c(

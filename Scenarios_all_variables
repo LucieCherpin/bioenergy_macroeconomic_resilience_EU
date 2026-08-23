@@ -1537,6 +1537,282 @@ OTHER_dom_BASE_2023 <-
   C_dom_BASE_2023 -
   G_dom_BASE_2023
 
+# ===================================================================
+# BUILD 2023-2030 REFERENCE PATH
+# ===================================================================
+
+build_reference_path <- function(
+    start_endpoint = BASE_2023,
+    start_year = 2023,
+    end_year = 2030
+) {
+  
+  BIO <- unname(BIOFUEL_SECTORS)
+  
+  NONBIO <- setdiff(
+    seq_len(nIndustries),
+    BIO
+  )
+  
+  years <- start_year:end_year
+  n_years <- length(years)
+  
+  
+  # ==========================================================
+  # REFERENCE-SCENARIO ASSUMPTIONS
+  # ==========================================================
+  
+  # No technological biofuel shock
+  A_dom_ref <- start_endpoint$A_dom
+  A_imp_ref <- start_endpoint$A_imp
+  
+  # No biofuel production shock:
+  # retain observed 2023 domestic biofuel production
+  X_bio_ref <- start_endpoint$X[BIO]
+  
+  # No change in finished biofuel imports
+  Y_imp_FCE_ref <- start_endpoint$Y_imp_FCE
+  
+  
+  # ==========================================================
+  # INITIAL SFC FINAL-DEMAND COMPONENTS
+  # ==========================================================
+  
+  C_dom_current <-
+    C_dom_BASE_2023
+  
+  G_dom_current <-
+    G_dom_BASE_2023
+  
+  OTHER_dom_current <-
+    OTHER_dom_BASE_2023
+  
+  
+  # ==========================================================
+  # STORAGE
+  # ==========================================================
+  
+  X_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+  
+  Y_dom_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+  
+  Z_dom_path <- array(
+    NA_real_,
+    dim = c(
+      n_years,
+      nIndustries,
+      nIndustries
+    )
+  )
+  
+  Z_imp_path <- array(
+    NA_real_,
+    dim = c(
+      n_years,
+      nIndustries,
+      nIndustries
+    )
+  )
+  
+  GVA_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+  
+  C_dom_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries
+  )
+  
+  G_dom_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries
+  )
+  
+  Y_imp_FCE_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries
+  )
+  
+  
+  # ==========================================================
+  # CONSTANT IO PARTITIONS FOR REFERENCE ECONOMY
+  # ==========================================================
+  
+  A_NN_ref <-
+    A_dom_ref[
+      NONBIO,
+      NONBIO,
+      drop = FALSE
+    ]
+  
+  A_NB_ref <-
+    A_dom_ref[
+      NONBIO,
+      BIO,
+      drop = FALSE
+    ]
+  
+  
+  # ==========================================================
+  # ANNUAL REFERENCE SIMULATION
+  # ==========================================================
+  
+  for (i in seq_along(years)) {
+    
+    current_year <- years[i]
+    
+    
+    # --------------------------------------------------------
+    # SFC FINAL DEMAND
+    # --------------------------------------------------------
+    
+    # For the moment:
+    # zero autonomous growth.
+    #
+    # These will later be replaced by behavioral equations
+    # for consumption/income/wealth.
+    
+    Y_dom_exogenous_current <-
+      C_dom_current +
+      G_dom_current +
+      OTHER_dom_current
+    
+    
+    # --------------------------------------------------------
+    # OUTPUT
+    # --------------------------------------------------------
+    
+    X_current <- numeric(nIndustries)
+    
+    # Biofuel production remains at 2023 reference level
+    X_current[BIO] <-
+      X_bio_ref
+    
+    # Rest of economy responds endogenously to final demand
+    # and to the production requirements of biofuel sectors
+    X_current[NONBIO] <-
+      as.numeric(
+        solve(
+          base::diag(length(NONBIO)) -
+            A_NN_ref,
+          
+          Y_dom_exogenous_current[NONBIO] +
+            A_NB_ref %*% X_current[BIO]
+        )
+      )
+    
+    
+    # --------------------------------------------------------
+    # INTERMEDIATE TRANSACTIONS
+    # --------------------------------------------------------
+    
+    Z_dom_current <-
+      A_dom_ref %*%
+      base::diag(X_current)
+    
+    Z_imp_current <-
+      A_imp_ref %*%
+      base::diag(X_current)
+    
+    
+    # Actual final-demand residual after solving production
+    Y_dom_current <-
+      X_current -
+      rowSums(Z_dom_current)
+    
+    
+    # --------------------------------------------------------
+    # GVA
+    # provisional until GVA accounting has been validated
+    # --------------------------------------------------------
+    
+    GVA_current <-
+      X_current -
+      colSums(Z_dom_current) -
+      colSums(Z_imp_current)
+    
+    
+    # --------------------------------------------------------
+    # STORE
+    # --------------------------------------------------------
+    
+    X_path[i, ] <-
+      X_current
+    
+    Y_dom_path[i, ] <-
+      Y_dom_current
+    
+    Z_dom_path[i, , ] <-
+      Z_dom_current
+    
+    Z_imp_path[i, , ] <-
+      Z_imp_current
+    
+    GVA_path[i, ] <-
+      GVA_current
+    
+    C_dom_path[i, ] <-
+      C_dom_current
+    
+    G_dom_path[i, ] <-
+      G_dom_current
+    
+    Y_imp_FCE_path[i, ] <-
+      Y_imp_FCE_ref
+
+    
+  }
+  
+  
+  list(
+    years = years,
+    A_dom = A_dom_ref,
+    A_imp = A_imp_ref,
+    X = X_path,
+    Y_dom = Y_dom_path,
+    Z_dom = Z_dom_path,
+    Z_imp = Z_imp_path,
+    GVA = GVA_path,
+    C_dom = C_dom_path,
+    G_dom = G_dom_path,
+    Y_imp_FCE = Y_imp_FCE_path
+  )
+}
+
+
+REF_path_2023_2030 <-
+  build_reference_path()
+
+X_REF_2030 <-
+  REF_path_2023_2030$X["2030", ]
+
+GVA_REF_2030 <-
+  REF_path_2023_2030$GVA["2030", ]
 
 
 

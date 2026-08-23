@@ -246,43 +246,6 @@ Z_imp <- matrix(
 Z_imp[is.na(Z_imp)] <- 0
 
 
-# ===================================================================
-# NEW: PRODUCT TAXES / SUBSIDIES ON INTERMEDIATE CONSUMPTION (as of 2023=
-# ===================================================================
-
-# D21X31: taxes less subsidies on products by producing industry
-tax_products_2023 <-
-  as.numeric(
-    unlist(
-      IO_EU_domestic[
-        nIndustries + 8,
-        3:(nIndustries + 2)
-      ]
-    )
-  )
-
-# Intermediate inputs at basic prices by producing industry
-P2_basic_2023 <-
-  colSums(Z_dom) +
-  colSums(Z_imp)
-
-
-# Sector-specific effective tax/subsidy rate
-# Rate is calibrated to 2023 and later kept constant over time
-tax_rate_2023 <- numeric(nIndustries)
-
-tax_rate_2023[P2_basic_2023 != 0] <-
-  tax_products_2023[P2_basic_2023 != 0] /
-  P2_basic_2023[P2_basic_2023 != 0]
-
-
-# Basic checks
-stopifnot(
-  length(tax_products_2023) == nIndustries,
-  length(P2_basic_2023) == nIndustries,
-  length(tax_rate_2023) == nIndustries
-)
-
 
 # Technical coefficients matrices Domestic
 ## use the q_s_dom_safe vector here

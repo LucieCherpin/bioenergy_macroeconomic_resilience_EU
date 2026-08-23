@@ -1671,34 +1671,29 @@ build_reference_path <- function(
     start_year = 2023,
     end_year = 2030
 ) {
-  
+
   years <- start_year:end_year
   n_years <- length(years)
-  
-  
+
   # ---------------------------------------------------------------
   # Reference assumptions
   # ---------------------------------------------------------------
-  
-  # Keep observed 2023 production technologies
+
   A_dom_ref <- start_endpoint$A_dom
   A_imp_ref <- start_endpoint$A_imp
-  
-  # Keep observed 2023 finished-fuel imports for now
+
   Y_imp_FCE_ref <- start_endpoint$Y_imp_FCE
-  
-  # For now: no autonomous change in domestic final demand
-  # Later this will be replaced by SFC behavioral equations
+
   Y_dom_ref <-
     C_dom_BASE_2023 +
     G_dom_BASE_2023 +
     OTHER_dom_BASE_2023
-  
-  
+
+
   # ---------------------------------------------------------------
   # Storage
   # ---------------------------------------------------------------
-  
+
   X_path <- matrix(
     NA_real_,
     nrow = n_years,
@@ -1708,7 +1703,7 @@ build_reference_path <- function(
       sector = NULL
     )
   )
-  
+
   Y_dom_path <- matrix(
     NA_real_,
     nrow = n_years,
@@ -1718,7 +1713,7 @@ build_reference_path <- function(
       sector = NULL
     )
   )
-  
+
   GVA_path <- matrix(
     NA_real_,
     nrow = n_years,
@@ -1728,7 +1723,27 @@ build_reference_path <- function(
       sector = NULL
     )
   )
-  
+
+  tax_products_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  P2_ADJ_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
   Y_imp_FCE_path <- matrix(
     NA_real_,
     nrow = n_years,
@@ -1738,7 +1753,7 @@ build_reference_path <- function(
       sector = NULL
     )
   )
-  
+
   Z_dom_path <- array(
     NA_real_,
     dim = c(
@@ -1752,7 +1767,7 @@ build_reference_path <- function(
       output_sector = NULL
     )
   )
-  
+
   Z_imp_path <- array(
     NA_real_,
     dim = c(
@@ -1766,15 +1781,14 @@ build_reference_path <- function(
       output_sector = NULL
     )
   )
-  
-  
+
+
   # ---------------------------------------------------------------
   # Annual reference simulation
   # ---------------------------------------------------------------
-  
+
   for (i in seq_along(years)) {
-    
-    # All 73 sectors, including biofuels, are endogenous in REF
+
     X_current <-
       as.numeric(
         solve(
@@ -1782,98 +1796,79 @@ build_reference_path <- function(
           Y_dom_ref
         )
       )
-    
-    
-    # Intermediate transactions
+
     Z_dom_current <-
       A_dom_ref %*%
       base::diag(X_current)
-    
+
     Z_imp_current <-
       A_imp_ref %*%
       base::diag(X_current)
-    
-    
-    # Domestic final demand as accounting residual
+
     Y_dom_current <-
       X_current -
       rowSums(Z_dom_current)
-    
-    
-################## GVA ############################
-# Domestic + imported intermediate inputs
-intermediate_inputs_current <-
-  colSums(Z_dom_current) +
-  colSums(Z_imp_current)
 
 
-# Taxes less subsidies on products
-tax_products_current <-
-  p2_tax_rate_2023 *
-  intermediate_inputs_current
+    # -------------------------------------------------------------
+    # P2_ADJ AND GVA
+    # -------------------------------------------------------------
+
+    intermediate_inputs_current <-
+      colSums(Z_dom_current) +
+      colSums(Z_imp_current)
+
+    tax_products_current <-
+      p2_tax_rate_2023 *
+      intermediate_inputs_current
+
+    P2_ADJ_current <-
+      intermediate_inputs_current +
+      tax_products_current
+
+    GVA_current <-
+      X_current -
+      P2_ADJ_current
 
 
-# Total intermediate consumption / final use
-P2_ADJ_current <-
-  intermediate_inputs_current +
-  tax_products_current
+    # -------------------------------------------------------------
+    # Store
+    # -------------------------------------------------------------
 
-
-# Gross value added
-GVA_current <-
-  X_current -
-  P2_ADJ_current
-    
-    
-    # Store annual results
     X_path[i, ] <- X_current
     Y_dom_path[i, ] <- Y_dom_current
-    
+
     Z_dom_path[i, , ] <- Z_dom_current
     Z_imp_path[i, , ] <- Z_imp_current
-    
-    GVA_path[i, ] <- GVA_current
-    
-    Y_imp_FCE_path[i, ] <- Y_imp_FCE_ref
-tax_products_path <- matrix(
-  NA_real_,
-  nrow = n_years,
-  ncol = nIndustries,
-  dimnames = list(
-    year = as.character(years),
-    sector = NULL
-  )
-)
 
-P2_ADJ_path <- matrix(
-  NA_real_,
-  nrow = n_years,
-  ncol = nIndustries,
-  dimnames = list(
-    year = as.character(years),
-    sector = NULL
-  )
+    tax_products_path[i, ] <- tax_products_current
+    P2_ADJ_path[i, ] <- P2_ADJ_current
+    GVA_path[i, ] <- GVA_current
+
+    Y_imp_FCE_path[i, ] <- Y_imp_FCE_ref
   }
-  
-  
+
+
   # ---------------------------------------------------------------
-  # Return complete reference path
+  # Return
   # ---------------------------------------------------------------
-  
+
   list(
     years = years,
-    
+
     A_dom = A_dom_ref,
     A_imp = A_imp_ref,
-    
+
     X = X_path,
     Y_dom = Y_dom_path,
-    
+
     Z_dom = Z_dom_path,
     Z_imp = Z_imp_path,
-    
+
+    tax_products = tax_products_path,
+    P2_ADJ = P2_ADJ_path,
     GVA = GVA_path,
-    
+
     Y_imp_FCE = Y_imp_FCE_path
   )
 }
@@ -1885,14 +1880,7 @@ P2_ADJ_path <- matrix(
 
 REF_path_2023_2030 <-
   build_reference_path()
-tax_products_path[i, ] <-
-  tax_products_current
 
-P2_ADJ_path[i, ] <-
-  P2_ADJ_current
-
-GVA_path[i, ] <-
-  GVA_current
 
 # ===================================================================
 # 4. EXTRACT REFERENCE ENDPOINT 2030

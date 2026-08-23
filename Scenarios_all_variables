@@ -452,10 +452,6 @@ INPUT_SECTORS <- c(
   architecture     = 55
 )
 
-TAX_RATES <- c(
-  default    = 0.0091481,
-  adv_biogas = 0.0017690
-)
 
 ############################################################
 # 2. TECHNOLOGY LIBRARY

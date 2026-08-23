@@ -967,7 +967,7 @@ S1_2030 <- list(
       IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19)
     ),
     dist_feed = list(
-      IVC_HT_lipids_SAF = c(food_bev = 0.61, food_bev_imp = 0.29)
+      IVC_HT_lipids_SAF = c(food_bev = 0.61, food_bev_imp = 0.39)
     )
   )
 )
@@ -1608,7 +1608,7 @@ BASE_2023 <- list(
   Z_imp = Z_imp_BASE_2023,
 
   tax_products = tax_products_BASE_2023,
-  P2_ADJ = P2_ADJ_BASE_2023,        ## sector-sepcific tax rate (keeping ir constant from 2023)
+  P2_ADJ = P2_ADJ_BASE_2023,        ## total intermediate consumption
   GVA = GVA_BASE_2023,
 
   Y_dom = Y_dom_BASE_2023,

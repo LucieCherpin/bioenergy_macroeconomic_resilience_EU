@@ -1652,9 +1652,17 @@ build_linear_segment <- function(
     end_year
 ) {
   
-  years <- start_year:end_year
-  n_years <- length(years)
+  # Define biofuel and non-biofuel sectors locally
+  BIO <- unname(BIOFUEL_SECTORS)
   
+  NONBIO <- setdiff(
+    seq_len(nIndustries),
+    BIO
+  )
+  
+  years <- start_year:end_year
+
+
   # ---------------------------------------------------------------
   # Storage
   # ---------------------------------------------------------------
@@ -1756,15 +1764,61 @@ build_linear_segment <- function(
         end_endpoint$A_imp -
           start_endpoint$A_imp
       )
-    
-    
-    # Linear production development
-    X_current <-
-      start_endpoint$X +
-      lambda * (
-        end_endpoint$X -
-          start_endpoint$X
-      )
+##################################################
+###### Neu: also for the transition between 2023 and 2030, the BIO and NONBIO sectors evolve differently: X(BIO) evolves linearly  between fixed 2023 starting point and 2030 ending point; but X NONBIO evolves endogensouly  dependent on changed demand of biofuels
+
+# ==========================================================
+# BIOFUEL OUTPUT: LINEAR EXOGENOUS DEVELOPMENT
+# ==========================================================
+
+X_current <- numeric(nIndustries)
+
+X_current[BIO] <-
+  start_endpoint$X[BIO] +
+  lambda * (
+    end_endpoint$X[BIO] -
+      start_endpoint$X[BIO]
+  )
+
+
+# ==========================================================
+# NON-BIOFUEL OUTPUT: ENDOGENOUS RESPONSE
+# ==========================================================
+
+A_NN_current <-
+  A_dom_current[
+    NONBIO,
+    NONBIO,
+    drop = FALSE
+  ]
+
+A_NB_current <-
+  A_dom_current[
+    NONBIO,
+    BIO,
+    drop = FALSE
+  ]
+
+Y_nonbio_current <-
+  start_endpoint$Y_dom[NONBIO] +
+  lambda * (
+    end_endpoint$Y_dom[NONBIO] -
+      start_endpoint$Y_dom[NONBIO]
+  )
+
+X_current[NONBIO] <-
+  as.numeric(
+    solve(
+      base::diag(length(NONBIO)) - A_NN_current,
+      Y_nonbio_current +
+        A_NB_current %*% X_current[BIO]
+    )
+  )
+
+#############################################################
+##### Z resuls fro A and X ##################################
+###### note:  X_Currrent is still teh full 73-sector outputp vector containing both X_BIO and X_NONBIO
+#############################################################
     
     # Z follows from that year's A and X
     Z_dom_current <-

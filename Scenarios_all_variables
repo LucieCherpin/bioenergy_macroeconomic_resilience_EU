@@ -12,6 +12,7 @@ library(dplyr)
 #Clear plots
 if(!is.null(dev.list())) dev.off()
 
+
 #Clear console
 cat("\014")
 
@@ -245,7 +246,50 @@ Z_imp <- matrix(
 )
 Z_imp[is.na(Z_imp)] <- 0
 
+# ===================================================================
+# sector-specific taxes less subsidies on product
+# ===================================================================
 
+# D21X31 - Taxes less subsidies on products by industry
+tax_products_2023 <- as.numeric(
+  unlist(
+    IO_EU_domestic[
+      nIndustries + 8,
+      3:(nIndustries + 2)
+    ]
+  )
+)
+
+# Intermediate inputs represented by the domestic + imported Z matrices
+intermediate_inputs_2023 <-
+  colSums(Z_dom) +
+  colSums(Z_imp)
+
+
+# Sector-specific effective tax/subsidy rate in 2023
+# This rate will be kept constant over time.
+p2_tax_rate_2023 <- numeric(nIndustries)
+
+nonzero_intermediate <-
+  abs(intermediate_inputs_2023) > 1e-12
+
+p2_tax_rate_2023[nonzero_intermediate] <-
+  tax_products_2023[nonzero_intermediate] /
+  intermediate_inputs_2023[nonzero_intermediate]
+
+
+# Check for sectors in which intermediate inputs are zero
+# but D21X31 is not zero
+if (
+  any(
+    !nonzero_intermediate &
+      abs(tax_products_2023) > 1e-8
+  )
+) {
+  warning(
+    "At least one sector has zero intermediate inputs but non-zero D21X31."
+  )
+}
 
 # Technical coefficients matrices Domestic
 ## use the q_s_dom_safe vector here
@@ -1477,6 +1521,30 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
   
   Z_imp_target <-
     A_imp_target %*% base::diag(X_target)
+
+# Domestic + imported intermediate inputs
+intermediate_inputs_target <-
+  colSums(Z_dom_target) +
+  colSums(Z_imp_target)
+
+
+# Keep the sector-specific 2023 tax/subsidy rate constant
+tax_products_target <-
+  p2_tax_rate_2023 *
+  intermediate_inputs_target
+
+
+# Total intermediate consumption / final use
+P2_ADJ_target <-
+  intermediate_inputs_target +
+  tax_products_target
+
+
+# Gross value added
+GVA_target <-
+  X_target -
+  P2_ADJ_target
+
   
   Y_dom_target <-
     X_target - rowSums(Z_dom_target)
@@ -1484,16 +1552,24 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
   L_dom_target <-
     solve(diag - A_dom_target)
   
-  list(
-    A_dom = A_dom_target,
-    A_imp = A_imp_target,
-    X     = X_target,
-    Z_dom = Z_dom_target,
-    Z_imp = Z_imp_target,
-    Y_dom = Y_dom_target,
-    Y_imp_FCE = Y_imp_FCE_target,
-    L_dom = L_dom_target 
-  )
+list(
+  A_dom = A_dom_target,
+  A_imp = A_imp_target,
+
+  X = X_target,
+
+  Z_dom = Z_dom_target,
+  Z_imp = Z_imp_target,
+
+  tax_products = tax_products_target,
+  P2_ADJ = P2_ADJ_target,
+  GVA = GVA_target,
+
+  Y_dom = Y_dom_target,
+  Y_imp_FCE = Y_imp_FCE_target,
+
+  L_dom = L_dom_target
+)
 }
 
 ##### #--this part 6 created the variables of how the economy looks like in a specific Scenario and target year
@@ -1509,20 +1585,39 @@ X_BASE_2023 <- q_s_dom
 Z_dom_BASE_2023 <- Z_dom
 Z_imp_BASE_2023 <- Z_imp
 
+tax_products_BASE_2023 <-
+  tax_products_2023
+
 Y_dom_BASE_2023 <-
   X_BASE_2023 - rowSums(Z_dom_BASE_2023)
+
+P2_ADJ_BASE_2023 <-
+  colSums(Z_dom_BASE_2023) +
+  colSums(Z_imp_BASE_2023) +
+  tax_products_BASE_2023
+
+GVA_BASE_2023 <-
+  X_BASE_2023 -
+  P2_ADJ_BASE_2023
 
 L_dom_BASE_2023 <- L_dom
 
 BASE_2023 <- list(
   A_dom = A_dom_BASE_2023,
   A_imp = A_imp_BASE_2023,
-  X     = X_BASE_2023,
+
+  X = X_BASE_2023,
+
   Z_dom = Z_dom_BASE_2023,
   Z_imp = Z_imp_BASE_2023,
+
+  tax_products = tax_products_BASE_2023,
+  P2_ADJ = P2_ADJ_BASE_2023,        ## sector-sepcific tax rate (keeping ir constant from 2023)
+  GVA = GVA_BASE_2023,
+
   Y_dom = Y_dom_BASE_2023,
   L_dom = L_dom_BASE_2023,
-  Y_imp_FCE = t_f_e_imp          ## added this: to capture imported fuels
+  Y_imp_FCE = t_f_e_imp        ## imports of finihsed fuels
 )
 
 
@@ -1709,12 +1804,29 @@ build_reference_path <- function(
       rowSums(Z_dom_current)
     
     
-    # GVA
-    # provisional until accounting validation
-    GVA_current <-
-      X_current -
-      colSums(Z_dom_current) -
-      colSums(Z_imp_current)
+################## GVA ############################
+# Domestic + imported intermediate inputs
+intermediate_inputs_current <-
+  colSums(Z_dom_current) +
+  colSums(Z_imp_current)
+
+
+# Taxes less subsidies on products
+tax_products_current <-
+  p2_tax_rate_2023 *
+  intermediate_inputs_current
+
+
+# Total intermediate consumption / final use
+P2_ADJ_current <-
+  intermediate_inputs_current +
+  tax_products_current
+
+
+# Gross value added
+GVA_current <-
+  X_current -
+  P2_ADJ_current
     
     
     # Store annual results
@@ -1727,6 +1839,24 @@ build_reference_path <- function(
     GVA_path[i, ] <- GVA_current
     
     Y_imp_FCE_path[i, ] <- Y_imp_FCE_ref
+tax_products_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
+
+P2_ADJ_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
   }
   
   
@@ -1759,7 +1889,14 @@ build_reference_path <- function(
 
 REF_path_2023_2030 <-
   build_reference_path()
+tax_products_path[i, ] <-
+  tax_products_current
 
+P2_ADJ_path[i, ] <-
+  P2_ADJ_current
+
+GVA_path[i, ] <-
+  GVA_current
 
 # ===================================================================
 # 4. EXTRACT REFERENCE ENDPOINT 2030
@@ -1794,11 +1931,17 @@ REF_endpoint_2030 <- list(
       "2030",
       ,
     ],
+
+
+tax_products =
+  REF_path_2023_2030$tax_products["2030", ],
+
+P2_ADJ =
+  REF_path_2023_2030$P2_ADJ["2030", ],
+
+GVA =
+  REF_path_2023_2030$GVA["2030", ],
   
-  GVA =
-    REF_path_2023_2030$GVA[
-      "2030",
-    ],
   
   Y_imp_FCE =
     REF_path_2023_2030$Y_imp_FCE[

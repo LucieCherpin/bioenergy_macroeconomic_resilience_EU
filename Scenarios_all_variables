@@ -1520,6 +1520,24 @@ BASE_2023 <- list(
   Y_imp_FCE = t_f_e_imp          ## added this: to capture imported fuels
 )
 
+# ===================================================================
+# NEW: 7A. DECOMPOSE 2023 DOMESTIC FINAL DEMAND FOR SFC REFERENCE PATH
+# ===================================================================
+
+C_dom_BASE_2023 <-
+  consumption_dom
+
+G_dom_BASE_2023 <-
+  g_dom
+
+# Remaining final-demand components:
+# investment, exports, inventories, etc.
+OTHER_dom_BASE_2023 <-
+  BASE_2023$Y_dom -
+  C_dom_BASE_2023 -
+  G_dom_BASE_2023
+
+
 
 
 # ===================================================================
@@ -1888,6 +1906,131 @@ S2_path_2023_2030 <-
     start_year     = 2023,
     end_year       = 2030
   )
+
+############################################################################################################################################################
+############################################################### OUTPUTc change analysis#####################################################################
+############################################################################################################################################################
+
+
+Define first a) advanced biof, b) convnetional biof, c) RFNBOs to make interpretation of results more detailed
+##################
+
+BIO <- unname(BIOFUEL_SECTORS)
+
+NONBIO <- setdiff(
+  seq_len(nIndustries),
+  BIO
+)
+
+ADVANCED_BIO <- unname(
+  BIOFUEL_SECTORS[
+    c(
+      "adv_biodiesel",
+      "adv_biogasoline",
+      "adv_bio_kerosene",
+      "adv_bio_hfo",
+      "adv_biogas"
+    )
+  ]
+)
+
+CONVENTIONAL_BIO <- unname(
+  BIOFUEL_SECTORS[
+    c(
+      "conv_biodiesel",
+      "conv_biogasoline",
+      "conv_bio_kerosene"
+    )
+  ]
+)
+
+RFNBO <- unname(
+  BIOFUEL_SECTORS["RFNBOs"]
+)
+
+
+# ==========================================================
+# OUTPUT differences in 2030 across scneaiors 
+# ==========================================================
+
+delta_X_S1_2030 <-
+  S1_2030$X -
+  REF_2030$X
+
+delta_X_S2_2030 <-
+  S2_2030$X -
+  REF_2030$X
+
+
+output_summary_2030 <- data.frame(
+  
+  scenario = c("S1", "S2"),
+  
+  advanced_biofuel_output_change = c(
+    sum(delta_X_S1_2030[ADVANCED_BIO]),
+    sum(delta_X_S2_2030[ADVANCED_BIO])
+  ),
+  
+  RFNBO_output_change = c(
+    sum(delta_X_S1_2030[RFNBO]),
+    sum(delta_X_S2_2030[RFNBO])
+  ),
+  
+  conventional_biofuel_output_change = c(
+    sum(delta_X_S1_2030[CONVENTIONAL_BIO]),
+    sum(delta_X_S2_2030[CONVENTIONAL_BIO])
+  ),
+  
+  all_biofuel_output_change = c(
+    sum(delta_X_S1_2030[BIO]),
+    sum(delta_X_S2_2030[BIO])
+  ),
+  
+  induced_nonbio_output_change = c(
+    sum(delta_X_S1_2030[NONBIO]),
+    sum(delta_X_S2_2030[NONBIO])
+  ),
+  
+  total_gross_output_change = c(
+    sum(delta_X_S1_2030),
+    sum(delta_X_S2_2030)
+  )
+)
+
+output_summary_2030
+
+
+
+# ==========================================================
+# compariosn of S2 and S1 output changes
+# ==========================================================
+
+output_S2_minus_S1_2030 <-
+  S2_endpoint_2030$X -
+  S1_endpoint_2030$X
+
+c(
+  biofuel_difference =
+    sum(output_S2_minus_S1_2030[BIO]),
+  
+  upstream_difference =
+    sum(output_S2_minus_S1_2030[NONBIO]),
+  
+  total_output_difference =
+    sum(output_S2_minus_S1_2030)
+)
+
+
+############################################################################################################################################################
+############################################################### GVA change analysis#####################################################################
+############################################################################################################################################################
+
+
+
+
+
+
+
 
 ############################################################################################################################################################
 #################################################### SFC dynamics ####################################################

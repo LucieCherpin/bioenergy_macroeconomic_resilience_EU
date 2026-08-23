@@ -1815,6 +1815,56 @@ GVA_REF_2030 <-
   REF_path_2023_2030$GVA["2030", ]
 
 
+# EXTRACT 2030 REFERENCE ENDPOINT
+
+REF_endpoint_2030 <- list(
+  
+  A_dom =
+    REF_path_2023_2030$A_dom,
+  
+  A_imp =
+    REF_path_2023_2030$A_imp,
+  
+  X =
+    REF_path_2023_2030$X[
+      "2030",
+    ],
+  
+  Y_dom =
+    REF_path_2023_2030$Y_dom[
+      "2030",
+    ],
+  
+  Z_dom =
+    REF_path_2023_2030$Z_dom[
+      "2030",
+      ,
+    ],
+  
+  Z_imp =
+    REF_path_2023_2030$Z_imp[
+      "2030",
+      ,
+    ],
+  
+  GVA =
+    REF_path_2023_2030$GVA[
+      "2030",
+    ],
+  
+  Y_imp_FCE =
+    REF_path_2023_2030$Y_imp_FCE[
+      "2030",
+    ],
+  
+  L_dom =
+    solve(
+      base::diag(nIndustries) -
+        REF_path_2023_2030$A_dom
+    )
+)
+
+
 
 # ===================================================================
 # 8. Build end points
@@ -1957,6 +2007,8 @@ build_linear_segment <- function(
   )
   
   years <- start_year:end_year
+
+n_years <- length(years)
 
 
   # ---------------------------------------------------------------
@@ -2188,7 +2240,7 @@ S2_path_2023_2030 <-
 ############################################################################################################################################################
 
 
-Define first a) advanced biof, b) convnetional biof, c) RFNBOs to make interpretation of results more detailed
+###Define first a) advanced biof, b) convnetional biof, c) RFNBOs to make interpretation of results more detailed
 ##################
 
 BIO <- unname(BIOFUEL_SECTORS)

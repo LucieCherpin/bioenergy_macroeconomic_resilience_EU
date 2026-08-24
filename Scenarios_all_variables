@@ -2099,38 +2099,30 @@ stopifnot(
 
 
 ############################################################################################################################################################
-####################################################  buiild linear development between 2023 and the three 2030 endpoints 
+#######  build linear development between 2023 and the three 2030 endpoints - fix only Aimp, Adom and X(BIO) --> build annual EGOGENOUS scenario drivers####
+############################################################################################################################################################
+####### note Y(NONBIO) and Zdom and Zimp are NOT calculated here, since thery are endoegenously calculated in the loop  ####################################
 ############################################################################################################################################################
 
 
-# ===================================================================
-# LINEAR TRANSITION BETWEEN TWO FIXED ENDPOINTS
-# ===================================================================
 
-build_linear_segment <- function(
+build_scenario_driver <- function(
     start_endpoint,
     end_endpoint,
     start_year,
     end_year
 ) {
-  
-  # Define biofuel and non-biofuel sectors locally
-  BIO <- unname(BIOFUEL_SECTORS)
-  
-  NONBIO <- setdiff(
-    seq_len(nIndustries),
-    BIO
-  )
-  
-  years <- start_year:end_year
 
-n_years <- length(years)
+  BIO <- unname(BIOFUEL_SECTORS)
+
+  years <- start_year:end_year
+  n_years <- length(years)
 
 
   # ---------------------------------------------------------------
   # Storage
   # ---------------------------------------------------------------
-  
+
   A_dom_path <- array(
     NA_real_,
     dim = c(n_years, nIndustries, nIndustries),
@@ -2140,7 +2132,7 @@ n_years <- length(years)
       output_sector = NULL
     )
   )
-  
+
   A_imp_path <- array(
     NA_real_,
     dim = c(n_years, nIndustries, nIndustries),
@@ -2150,7 +2142,190 @@ n_years <- length(years)
       output_sector = NULL
     )
   )
-  
+
+  # Only BIO output is exogenously prescribed
+  X_bio_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  # Imported finished fuels
+  Y_imp_FCE_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+
+  # ---------------------------------------------------------------
+  # Annual interpolation
+  # ---------------------------------------------------------------
+
+  for (i in seq_along(years)) {
+
+    current_year <- years[i]
+
+    lambda <-
+      (current_year - start_year) /
+      (end_year - start_year)
+
+
+    # -------------------------------------------------------------
+    # A MATRICES
+    #
+    # Keep all NONBIO technology coefficients at their 2023 values.
+    # Only the BIO columns evolve towards the scenario endpoint.
+    # -------------------------------------------------------------
+
+    A_dom_current <- start_endpoint$A_dom
+    A_imp_current <- start_endpoint$A_imp
+
+    A_dom_current[, BIO] <-
+      start_endpoint$A_dom[, BIO, drop = FALSE] +
+      lambda * (
+        end_endpoint$A_dom[, BIO, drop = FALSE] -
+          start_endpoint$A_dom[, BIO, drop = FALSE]
+      )
+
+    A_imp_current[, BIO] <-
+      start_endpoint$A_imp[, BIO, drop = FALSE] +
+      lambda * (
+        end_endpoint$A_imp[, BIO, drop = FALSE] -
+          start_endpoint$A_imp[, BIO, drop = FALSE]
+      )
+
+
+    # -------------------------------------------------------------
+    # DOMESTIC BIOFUEL OUTPUT
+    # -------------------------------------------------------------
+
+    X_bio_current <- rep(NA_real_, nIndustries)
+
+    X_bio_current[BIO] <-
+      start_endpoint$X[BIO] +
+      lambda * (
+        end_endpoint$X[BIO] -
+          start_endpoint$X[BIO]
+      )
+
+    # -------------------------------------------------------------
+    # FINISHED BIOFUEL IMPORTS
+    #
+    # Non-biofuel imported final expenditure stays at 2023.
+    # Only the biofuel rows change towards the scenario target.
+    # -------------------------------------------------------------
+
+    Y_imp_FCE_current <-
+      start_endpoint$Y_imp_FCE
+
+    Y_imp_FCE_current[BIO] <-
+      start_endpoint$Y_imp_FCE[BIO] +
+      lambda * (
+        end_endpoint$Y_imp_FCE[BIO] -
+          start_endpoint$Y_imp_FCE[BIO]
+      )
+
+
+    # -------------------------------------------------------------
+    # Store
+    # -------------------------------------------------------------
+
+    A_dom_path[i, , ] <- A_dom_current
+    A_imp_path[i, , ] <- A_imp_current
+
+    X_bio_path[i, ] <- X_bio_current
+
+    Y_imp_FCE_path[i, ] <-
+      Y_imp_FCE_current
+  }
+
+
+  # ---------------------------------------------------------------
+  # Return
+  # ---------------------------------------------------------------
+
+  list(
+    years = years,
+
+    A_dom = A_dom_path,
+    A_imp = A_imp_path,
+
+    X_bio = X_bio_path,
+
+    Y_imp_FCE = Y_imp_FCE_path
+  )
+}
+
+
+# ===================================================================
+# 11. BUILD REFERENCE, S1 AND S2 DRIVERS: 2023 -> 2030
+# ===================================================================
+
+
+# Reference:
+# no biofuel shock, therefore 2023 -> 2023
+REF_driver_2023_2030 <-
+  build_scenario_driver(
+    start_endpoint = BASE_2023,
+    end_endpoint   = BASE_2023,
+    start_year     = 2023,
+    end_year       = 2030
+  )
+
+
+# Scenario 1
+S1_driver_2023_2030 <-
+  build_scenario_driver(
+    start_endpoint = BASE_2023,
+    end_endpoint   = S1_endpoint_2030,
+    start_year     = 2023,
+    end_year       = 2030
+  )
+
+
+# Scenario 2
+S2_driver_2023_2030 <-
+  build_scenario_driver(
+    start_endpoint = BASE_2023,
+    end_endpoint   = S2_endpoint_2030,
+    start_year     = 2023,
+    end_year       = 2030
+  )
+
+
+
+############################################################################################################################################################
+#### SFC dynamics 
+#### this is the ONE common annual simulatio used for all scenarios --> the scenario driver provides the exoegnous BIO assumptions, the model calculates the engoengousr esponse of NONBIO sectors
+
+############################################################################################################################################################
+
+run_dynamic_scenario <- function(scenario_driver) {
+
+  BIO <- unname(BIOFUEL_SECTORS)
+
+  NONBIO <- setdiff(
+    seq_len(nIndustries),
+    BIO
+  )
+
+  years <- scenario_driver$years
+  n_years <- length(years)
+
+
+# =================================================================
+  # STORAGE
+  # =================================================================
+
   X_path <- matrix(
     NA_real_,
     nrow = n_years,
@@ -2160,26 +2335,7 @@ n_years <- length(years)
       sector = NULL
     )
   )
-  Z_dom_path <- array(
-    NA_real_,
-    dim = c(n_years, nIndustries, nIndustries),
-    dimnames = list(
-      year = as.character(years),
-      input_sector = NULL,
-      output_sector = NULL
-    )
-  )
-  
-  Z_imp_path <- array(
-    NA_real_,
-    dim = c(n_years, nIndustries, nIndustries),
-    dimnames = list(
-      year = as.character(years),
-      input_sector = NULL,
-      output_sector = NULL
-    )
-  )
-  
+
   Y_dom_path <- matrix(
     NA_real_,
     nrow = n_years,
@@ -2189,7 +2345,57 @@ n_years <- length(years)
       sector = NULL
     )
   )
-  
+
+  Z_dom_path <- array(
+    NA_real_,
+    dim = c(n_years, nIndustries, nIndustries),
+    dimnames = list(
+      year = as.character(years),
+      input_sector = NULL,
+      output_sector = NULL
+    )
+  )
+
+  Z_imp_path <- array(
+    NA_real_,
+    dim = c(n_years, nIndustries, nIndustries),
+    dimnames = list(
+      year = as.character(years),
+      input_sector = NULL,
+      output_sector = NULL
+    )
+  )
+
+  tax_products_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  P2_ADJ_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  GVA_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
   L_dom_path <- array(
     NA_real_,
     dim = c(n_years, nIndustries, nIndustries),
@@ -2199,160 +2405,577 @@ n_years <- length(years)
       output_sector = NULL
     )
   )
-  
-  # ---------------------------------------------------------------
-  # Annual interpolation
-  # ---------------------------------------------------------------
-  
-  
-  for (i in seq_along(years)) {
-    
-    current_year <- years[i]
-    
-    lambda <-
-      (current_year - start_year) /
-      (end_year - start_year)
-    
-    
-    # Linear technical coefficient development
-    A_dom_current <-
-      start_endpoint$A_dom +
-      lambda * (
-        end_endpoint$A_dom -
-          start_endpoint$A_dom
-      )
-    
-    A_imp_current <-
-      start_endpoint$A_imp +
-      lambda * (
-        end_endpoint$A_imp -
-          start_endpoint$A_imp
-      )
-##################################################
-###### Neu: also for the transition between 2023 and 2030, the BIO and NONBIO sectors evolve differently: X(BIO) evolves linearly  between fixed 2023 starting point and 2030 ending point; but X NONBIO evolves endogensouly  dependent on changed demand of biofuels
 
-# ==========================================================
-# BIOFUEL OUTPUT: LINEAR EXOGENOUS DEVELOPMENT
-# ==========================================================
-
-X_current <- numeric(nIndustries)
-
-X_current[BIO] <-
-  start_endpoint$X[BIO] +
-  lambda * (
-    end_endpoint$X[BIO] -
-      start_endpoint$X[BIO]
-  )
-
-
-# ==========================================================
-# NON-BIOFUEL OUTPUT: ENDOGENOUS RESPONSE
-# ==========================================================
-
-A_NN_current <-
-  A_dom_current[
-    NONBIO,
-    NONBIO,
-    drop = FALSE
-  ]
-
-A_NB_current <-
-  A_dom_current[
-    NONBIO,
-    BIO,
-    drop = FALSE
-  ]
-
-Y_nonbio_current <-
-  start_endpoint$Y_dom[NONBIO] +
-  lambda * (
-    end_endpoint$Y_dom[NONBIO] -
-      start_endpoint$Y_dom[NONBIO]
-  )
-
-X_current[NONBIO] <-
-  as.numeric(
-    solve(
-      base::diag(length(NONBIO)) - A_NN_current,
-      Y_nonbio_current +
-        A_NB_current %*% X_current[BIO]
+  Y_imp_FCE_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
     )
   )
 
-#############################################################
-##### Z resuls fro A and X ##################################
-###### note:  X_Currrent is still teh full 73-sector outputp vector containing both X_BIO and X_NONBIO
-#############################################################
-    
-    # Z follows from that year's A and X
+
+# Household and government demand are stored separately
+  # because these will later become part of the SFC dynamics.
+
+  C_dom_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  G_dom_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+# =================================================================
+  # 2023 INITIAL CONDITION
+  # =================================================================
+  #
+  # Do NOT solve 2023 again.
+  # It is the observed empirical starting point.
+  # =================================================================
+
+  X_path[1, ] <-
+    BASE_2023$X
+
+  Y_dom_path[1, ] <-
+    BASE_2023$Y_dom
+
+  Z_dom_path[1, , ] <-
+    BASE_2023$Z_dom
+
+  Z_imp_path[1, , ] <-
+    BASE_2023$Z_imp
+
+  tax_products_path[1, ] <-
+    BASE_2023$tax_products
+
+  P2_ADJ_path[1, ] <-
+    BASE_2023$P2_ADJ
+
+  GVA_path[1, ] <-
+    BASE_2023$GVA
+
+  L_dom_path[1, , ] <-
+    BASE_2023$L_dom
+
+  Y_imp_FCE_path[1, ] <-
+    BASE_2023$Y_imp_FCE
+
+  C_dom_path[1, ] <-
+    C_dom_BASE_2023
+
+  G_dom_path[1, ] <-
+    G_dom_BASE_2023
+
+
+  # =================================================================
+  # ANNUAL DYNAMIC LOOP
+  # =================================================================
+
+  for (i in 2:n_years) {
+
+    current_year <- years[i]
+
+    cat(
+      "Simulating year:",
+      current_year,
+      "\n"
+    )
+
+
+    # ===============================================================
+    # READ EXOGENOUS SCENARIO CONDITIONS FOR THIS YEAR
+    # ===============================================================
+
+    A_dom_current <-
+      scenario_driver$A_dom[
+        i,
+        ,
+      ]
+
+    A_imp_current <-
+      scenario_driver$A_imp[
+        i,
+        ,
+      ]
+
+    X_bio_current <-
+      scenario_driver$X_bio[
+        i,
+        BIO
+      ]
+
+    Y_imp_FCE_current <-
+      scenario_driver$Y_imp_FCE[
+        i,
+      ]
+
+
+    # ===============================================================
+    # SFC BEHAVIOURAL BLOCK
+    # ===============================================================
+    #
+    # CURRENT VERSION:
+    # household and government consumption are fixed at 2023.
+    #
+    # THIS is the precise place where the SFC feedback will later be:
+    #
+    # previous/current output
+    #       -> employment
+    #       -> wages
+    #       -> disposable income
+    #       -> household consumption
+    #       -> final demand
+    #
+    # ===============================================================
+
+    C_dom_current <-
+      C_dom_BASE_2023
+
+    G_dom_current <-
+      G_dom_BASE_2023
+
+    OTHER_dom_current <-
+      OTHER_dom_BASE_2023
+
+
+    # ===============================================================
+    # 3. NON-BIOFUEL FINAL DEMAND
+    # ===============================================================
+
+    Y_nonbio_current <-
+      (
+        C_dom_current +
+          G_dom_current +
+          OTHER_dom_current
+      )[NONBIO]
+
+
+    # ===============================================================
+    # 4. ENDOGENOUS NON-BIOFUEL OUTPUT
+    # ===============================================================
+
+    A_NN_current <-
+      A_dom_current[
+        NONBIO,
+        NONBIO,
+        drop = FALSE
+      ]
+
+    A_NB_current <-
+      A_dom_current[
+        NONBIO,
+        BIO,
+        drop = FALSE
+      ]
+
+
+    X_nonbio_current <-
+      solve(
+        base::diag(length(NONBIO)) -
+          A_NN_current,
+
+        Y_nonbio_current +
+          A_NB_current %*%
+          X_bio_current
+      )
+
+
+    # ===============================================================
+    # 5. BUILD COMPLETE 73-SECTOR OUTPUT VECTOR
+    # ===============================================================
+
+    X_current <-
+      numeric(nIndustries)
+
+    X_current[BIO] <-
+      X_bio_current
+
+    X_current[NONBIO] <-
+      as.numeric(
+        X_nonbio_current
+      )
+
+
+    # ===============================================================
+    # 6. INTERMEDIATE FLOWS
+    # ===============================================================
+
     Z_dom_current <-
-      A_dom_current %*% base::diag(X_current)
-    
+      A_dom_current %*%
+      base::diag(X_current)
+
     Z_imp_current <-
-      A_imp_current %*% base::diag(X_current)
-    
-    
-    # Y as accounting residual
+      A_imp_current %*%
+      base::diag(X_current)
+
+
+    # ===============================================================
+    # 7. DOMESTIC FINAL DEMAND AS ACCOUNTING RESIDUAL
+    # ===============================================================
+
     Y_dom_current <-
-      X_current - rowSums(Z_dom_current)
-    
-    
-    # Annual Leontief inverse
+      X_current -
+      rowSums(Z_dom_current)
+
+
+    # ===============================================================
+    # 8. TAXES, INTERMEDIATE CONSUMPTION AND GVA
+    # ===============================================================
+
+    intermediate_inputs_current <-
+      colSums(Z_dom_current) +
+      colSums(Z_imp_current)
+
+    tax_products_current <-
+      p2_tax_rate_2023 *
+      intermediate_inputs_current
+
+    P2_ADJ_current <-
+      intermediate_inputs_current +
+      tax_products_current
+
+    GVA_current <-
+      X_current -
+      P2_ADJ_current
+
+
+    # ===============================================================
+    # 9. LEONTIEF INVERSE
+    # ===============================================================
+
     L_dom_current <-
-      solve(diag - A_dom_current)
-    # -------------------------------------------------------------
-    # Store
-    # -------------------------------------------------------------
-    
-    A_dom_path[i, , ] <- A_dom_current
-    A_imp_path[i, , ] <- A_imp_current
-    X_path[i, ] <- X_current
-    Z_dom_path[i, , ] <- Z_dom_current
-    Z_imp_path[i, , ] <- Z_imp_current
-    
-    Y_dom_path[i, ] <- Y_dom_current
-    
-    L_dom_path[i, , ] <- L_dom_current
+      solve(
+        base::diag(nIndustries) -
+          A_dom_current
+      )
+
+
+    # ===============================================================
+    # 10. STORE THIS YEAR
+    # ===============================================================
+
+    X_path[i, ] <-
+      X_current
+
+    Y_dom_path[i, ] <-
+      Y_dom_current
+
+    Z_dom_path[i, , ] <-
+      Z_dom_current
+
+    Z_imp_path[i, , ] <-
+      Z_imp_current
+
+    tax_products_path[i, ] <-
+      tax_products_current
+
+    P2_ADJ_path[i, ] <-
+      P2_ADJ_current
+
+    GVA_path[i, ] <-
+      GVA_current
+
+    L_dom_path[i, , ] <-
+      L_dom_current
+
+    Y_imp_FCE_path[i, ] <-
+      Y_imp_FCE_current
+
+    C_dom_path[i, ] <-
+      C_dom_current
+
+    G_dom_path[i, ] <-
+      G_dom_current
   }
-  
-  
+
+
+  # =================================================================
+  # RETURN COMPLETE DYNAMIC PATH
+  # =================================================================
+
   list(
-    years    = years,
-    A_dom    = A_dom_path,
-    A_imp    = A_imp_path,
-    X  = X_path,
-    Y_dom = Y_dom_path,
-    L_dom = L_dom_path,
-    Z_dom = Z_dom_path,
-    Z_imp = Z_imp_path
+
+    years = years,
+
+    A_dom =
+      scenario_driver$A_dom,
+
+    A_imp =
+      scenario_driver$A_imp,
+
+    X =
+      X_path,
+
+    Y_dom =
+      Y_dom_path,
+
+    Z_dom =
+      Z_dom_path,
+
+    Z_imp =
+      Z_imp_path,
+
+    tax_products =
+      tax_products_path,
+
+    P2_ADJ =
+      P2_ADJ_path,
+
+    GVA =
+      GVA_path,
+
+    L_dom =
+      L_dom_path,
+
+    Y_imp_FCE =
+      Y_imp_FCE_path,
+
+    C_dom =
+      C_dom_path,
+
+    G_dom =
+      G_dom_path
   )
 }
 
+# ===================================================================
+# 13. RUN ALL SCENARIOS THROUGH THE SAME DYNAMIC MODEL
+# ===================================================================
 
 
-############################################################################################################################################################
-#################################################### build transitions ####################################################
-############################################################################################################################################################
-
-S1_path_2023_2030 <-
-  build_linear_segment(
-    start_endpoint = BASE_2023,
-    end_endpoint   = S1_endpoint_2030,
-    start_year     = 2023,
-    end_year       = 2030
+REF_dynamic_2023_2030 <-
+  run_dynamic_scenario(
+    REF_driver_2023_2030
   )
 
 
-S2_path_2023_2030 <-
-  build_linear_segment(
-    start_endpoint = BASE_2023,
-    end_endpoint   = S2_endpoint_2030,
-    start_year     = 2023,
-    end_year       = 2030
+S1_dynamic_2023_2030 <-
+  run_dynamic_scenario(
+    S1_driver_2023_2030
   )
 
+
+S2_dynamic_2023_2030 <-
+  run_dynamic_scenario(
+    S2_driver_2023_2030
+  )
+
+# ===================================================================
+# 14. EXTRACT ONE YEAR FROM A DYNAMIC RESULT
+# ===================================================================
+
+extract_dynamic_endpoint <- function(
+    dynamic_result,
+    year
+) {
+
+  year_char <- as.character(year)
+
+  if (!year_char %in%
+      as.character(dynamic_result$years)) {
+
+    stop(
+      paste(
+        "Year",
+        year,
+        "not contained in dynamic result."
+      )
+    )
+  }
+
+
+  list(
+
+    A_dom =
+      dynamic_result$A_dom[
+        year_char,
+        ,
+      ],
+
+    A_imp =
+      dynamic_result$A_imp[
+        year_char,
+        ,
+      ],
+
+    X =
+      dynamic_result$X[
+        year_char,
+      ],
+
+    Z_dom =
+      dynamic_result$Z_dom[
+        year_char,
+        ,
+      ],
+
+    Z_imp =
+      dynamic_result$Z_imp[
+        year_char,
+        ,
+      ],
+
+    Y_dom =
+      dynamic_result$Y_dom[
+        year_char,
+      ],
+
+    tax_products =
+      dynamic_result$tax_products[
+        year_char,
+      ],
+
+    P2_ADJ =
+      dynamic_result$P2_ADJ[
+        year_char,
+      ],
+
+    GVA =
+      dynamic_result$GVA[
+        year_char,
+      ],
+
+    Y_imp_FCE =
+      dynamic_result$Y_imp_FCE[
+        year_char,
+      ],
+
+    L_dom =
+      dynamic_result$L_dom[
+        year_char,
+        ,
+      ]
+  )
+}
+
+REF_dynamic_endpoint_2030 <-
+  extract_dynamic_endpoint(
+    REF_dynamic_2023_2030,
+    2030
+  )
+
+
+S1_dynamic_endpoint_2030 <-
+  extract_dynamic_endpoint(
+    S1_dynamic_2023_2030,
+    2030
+  )
+
+
+S2_dynamic_endpoint_2030 <-
+  extract_dynamic_endpoint(
+    S2_dynamic_2023_2030,
+    2030
+  )
+
+
+# ===================================================================
+# CHECK: dynamic model must currently reproduce static endpoints -- delete? 
+# ===================================================================
+
+all.equal(
+  S1_dynamic_endpoint_2030$X,
+  S1_endpoint_2030$X
+)
+
+all.equal(
+  S2_dynamic_endpoint_2030$X,
+  S2_endpoint_2030$X
+)
+
+all.equal(
+  S1_dynamic_endpoint_2030$GVA,
+  S1_endpoint_2030$GVA
+)
+
+all.equal(
+  S2_dynamic_endpoint_2030$GVA,
+  S2_endpoint_2030$GVA
+)
+
+all.equal(
+  REF_dynamic_endpoint_2030$X,
+  BASE_2023$X
+)
+
+
+
+
+#####################################################
+#### old version of SFC part ########################
+#####################################################
+#Define time loop
+##for (i in 2:nYears){
+  
+  #cat("Starting iteration:", i, "\n")
+  
+  #  for (iterations in 1:100){
+  
+  # Final expenditure by industry (domestic / imports)
+  #    D_dom[i, ] <- beta_C_dom[i, ] * C_dom[i] + beta_G_dom[i, ] * G_dom[i]
+  #   D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
+  
+  #  # Total final use f = D + GCF + EX (split)
+  # #f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
+  ##f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
+  
+  ## Domestic production from domestic final demand (Leontief)
+  #X_dom[i, ] <- L_dom %*% f_dom[i, ]
+  #X_imp[i, ] <- L_imp %*% f_imp[i, ]
+  
+  #Exports ## couple exports to total use
+  #EX_i[i, ] <- EX_i[i-1,] 
+  
+  #Rest of the World
+  #RoW[i,] = EX_i[i,] - IM_i[i,]
+  
+  #Optional totals
+ ## f_total <- f_dom[i, ] + f_imp[i, ]
+  #X_total <- X_dom[i, ] + X_imp[i, ]
+  
+  #Household Consumption
+  #C
+  
+  #Government Consumption
+  #G
+  
+  #Wages ?
+  #
+  
+  #Employment
+  
+  # Energy
+  #EN
+  
+  # Emissions
+  #EM
+  
+  #Land Use
+  
+  #Deforestation
+  #Water Impact
+  
+  
+} 
+
+
 ############################################################################################################################################################
-############################################################### OUTPUTc change analysis#####################################################################
+############################################################### OUTPUT change analysis#####################################################################
 ############################################################################################################################################################
 
 
@@ -2398,12 +3021,22 @@ RFNBO <- unname(
 # ==========================================================
 
 delta_X_S1_2030 <-
-  S1_endpoint_2030$X -
-  REF_endpoint_2030$X
+  S1_dynamic_endpoint_2030$X -
+  REF_dynamic_endpoint_2030$X
 
 delta_X_S2_2030 <-
-  S2_endpoint_2030$X -
-  REF_endpoint_2030$X
+  S2_dynamic_endpoint_2030$X -
+  REF_dynamic_endpoint_2030$X
+
+
+delta_GVA_S1_2030 <-
+  S1_dynamic_endpoint_2030$GVA -
+  REF_dynamic_endpoint_2030$GVA
+
+delta_GVA_S2_2030 <-
+  S2_dynamic_endpoint_2030$GVA -
+  REF_dynamic_endpoint_2030$GVA
+
 
 
 output_summary_2030 <- data.frame(
@@ -2473,66 +3106,3 @@ c(
 
 
 
-
-
-
-############################################################################################################################################################
-#################################################### SFC dynamics ####################################################
-############################################################################################################################################################
-
-
-
-
-#Define time loop
-for (i in 2:nYears){
-  
-  cat("Starting iteration:", i, "\n")
-  
-  #  for (iterations in 1:100){
-  
-  # Final expenditure by industry (domestic / imports)
-  #    D_dom[i, ] <- beta_C_dom[i, ] * C_dom[i] + beta_G_dom[i, ] * G_dom[i]
-  #   D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
-  
-  #  # Total final use f = D + GCF + EX (split)
-  # #f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
-  ##f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
-  
-  ## Domestic production from domestic final demand (Leontief)
-  #X_dom[i, ] <- L_dom %*% f_dom[i, ]
-  #X_imp[i, ] <- L_imp %*% f_imp[i, ]
-  
-  #Exports ## couple exports to total use
-  #EX_i[i, ] <- EX_i[i-1,] 
-  
-  #Rest of the World
-  #RoW[i,] = EX_i[i,] - IM_i[i,]
-  
-  #Optional totals
-  f_total <- f_dom[i, ] + f_imp[i, ]
-  #X_total <- X_dom[i, ] + X_imp[i, ]
-  
-  #Household Consumption
-  #C
-  
-  #Government Consumption
-  #G
-  
-  #Wages ?
-  #
-  
-  #Employment
-  
-  # Energy
-  #EN
-  
-  # Emissions
-  #EM
-  
-  #Land Use
-  
-  #Deforestation
-  #Water Impact
-  
-  
-} 

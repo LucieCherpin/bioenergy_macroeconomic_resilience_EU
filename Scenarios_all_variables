@@ -1774,7 +1774,7 @@ build_scenario_driver <- function(
     A_dom_current <- start_endpoint$A_dom
     A_imp_current <- start_endpoint$A_imp
 
-    A_dom_current[, BIO] <-
+    A_dom_current[, BIO] <-                              ### here, also technical coeffcicinets of BIO sectors are modified, meaning that NONBIO sectors' Adom and Aimp is kept constant
       start_endpoint$A_dom[, BIO, drop = FALSE] +
       lambda * (
         end_endpoint$A_dom[, BIO, drop = FALSE] -

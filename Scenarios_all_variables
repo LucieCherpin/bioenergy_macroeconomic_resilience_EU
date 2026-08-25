@@ -1901,120 +1901,112 @@ stopifnot(
 
 
 # ===================================================================
-# 8. Build end points
+# 8. BUILD EXOGENOUS SCENARIO ENDPOINTS
 # ===================================================================
 
-S1_endpoint_2030 <- build_endpoint(
-  scenario_cfg   = S1_2030,
-  import_cfg_eur = S1_imports_2030
-)
-
-S2_endpoint_2030 <- build_endpoint(
-  scenario_cfg   = S2_2030,
-  import_cfg_eur = S2_imports_2030
-)
-
-#S1_2035 <- build_endpoint(
-#  scenario_S1_2035
-#)
-
-#S1_2040 <- build_endpoint(
-#  scenario_S1_2040
-#)
-
-#S2_2035 <- build_endpoint(
-#S2_2030
-#)
-
-#S2_2040 <- build_endpoint(
-# scenario_S2_2040
-#)
-
-#S3_2030 <- build_endpoint(
-# scenario_S2_2030
-#)
-
-#S3_2035 <- build_endpoint(
-# scenario_S2_2035
-#)
-
-#S3_2040 <- build_endpoint(
-# scenario_S2_2040
-#)
+# These endpoints contain ONLY the exogenous scenario conditions:
+#
+# - A_dom      technical coefficients for domestic intermediate inputs
+# - A_imp      technical coefficients for imported intermediate inputs
+# - X_bio      domestic biofuel output
+# - Y_imp_FCE  imported finished biofuels
+#
+# X_NONBIO, total X, Z_dom, Z_imp, Y_dom, P2_ADJ, GVA and L_dom
+# are calculated endogenously later in run_dynamic_scenario().
 
 
-S1_endpoint_2030$Z_dom
-S2_endpoint_2030$Z_dom
+S1_endpoint_2030 <-
+  build_endpoint(
+    scenario_cfg   = S1_2030,
+    import_cfg_eur = S1_imports_2030
+  )
 
-S1_endpoint_2030$Z_imp
-S2_endpoint_2030$Z_imp
 
-S1_endpoint_2030$X
-S2_endpoint_2030$X
+S2_endpoint_2030 <-
+  build_endpoint(
+    scenario_cfg   = S2_2030,
+    import_cfg_eur = S2_imports_2030
+  )
 
-S1_endpoint_2030$Y_dom
-S2_endpoint_2030$Y_dom
 
+# Future endpoints can be added analogously:
+#
+# S1_endpoint_2035 <- build_endpoint(
+#   scenario_cfg   = S1_2035,
+#   import_cfg_eur = S1_imports_2035
+# )
+#
+# S1_endpoint_2040 <- build_endpoint(
+#   scenario_cfg   = S1_2040,
+#   import_cfg_eur = S1_imports_2040
+# )
+#
+# etc.
 
 
 # ===================================================================
-# 9. (OPTIONAL) EXTRACT INDIVIDUAL RESULTS
+# 9. CHECK EXOGENOUS SCENARIO ENDPOINTS
 # ===================================================================
 
+BIO <- unname(BIOFUEL_SECTORS)
 
-######### Scenario 1 / 2030
-A_dom_S1_2030 <- S1_endpoint_2030$A_dom
-A_imp_S1_2030 <- S1_endpoint_2030$A_imp
 
-X_S1_2030 <- S1_endpoint_2030$X
-
-Z_dom_S1_2030 <- S1_endpoint_2030$Z_dom
-Z_imp_S1_2030 <- S1_endpoint_2030$Z_imp
-
-Y_dom_S1_2030 <- S1_endpoint_2030$Y_dom
-
-L_dom_S1_2030 <- S1_endpoint_2030$L_dom
-
-##added 
-Y_imp_FCE_S1_2030 <-
-  S1_endpoint_2030$Y_imp_FCE
-
-Y_imp_FCE_S2_2030 <-
-  S2_endpoint_2030$Y_imp_FCE
-
-# ===================================================================
-# 9. BASIC CONSISTENCY CHECKS
-# ===================================================================
-sum(is.na(Z_dom_BASE_2023))
-sum(is.na(X_BASE_2023))
-sum(is.na(Y_dom_BASE_2023))
+# ---------------------------------------------------------------
+# Dimensions
+# ---------------------------------------------------------------
 
 stopifnot(
-  length(X_BASE_2023) == nIndustries,
-  length(X_S1_2030) == nIndustries,
-  all(dim(A_dom_BASE_2023) == c(nIndustries, nIndustries)),
-  all(dim(A_dom_S1_2030) == c(nIndustries, nIndustries)),
-  all(dim(Z_dom_BASE_2023) == c(nIndustries, nIndustries)),
-  all(dim(Z_dom_S1_2030) == c(nIndustries, nIndustries))
+
+  all(
+    dim(S1_endpoint_2030$A_dom) ==
+      c(nIndustries, nIndustries)
+  ),
+
+  all(
+    dim(S1_endpoint_2030$A_imp) ==
+      c(nIndustries, nIndustries)
+  ),
+
+  all(
+    dim(S2_endpoint_2030$A_dom) ==
+      c(nIndustries, nIndustries)
+  ),
+
+  all(
+    dim(S2_endpoint_2030$A_imp) ==
+      c(nIndustries, nIndustries)
+  ),
+
+  length(S1_endpoint_2030$X_bio) ==
+    length(BIO),
+
+  length(S2_endpoint_2030$X_bio) ==
+    length(BIO),
+
+  length(S1_endpoint_2030$Y_imp_FCE) ==
+    nIndustries,
+
+  length(S2_endpoint_2030$Y_imp_FCE) ==
+    nIndustries
 )
+
+
+# ---------------------------------------------------------------
+# No missing values in exogenous scenario conditions
+# ---------------------------------------------------------------
 
 stopifnot(
-  isTRUE(all.equal(
-    X_BASE_2023,
-    rowSums(Z_dom_BASE_2023) + Y_dom_BASE_2023
-  )),
-  isTRUE(all.equal(
-    X_S1_2030,
-    rowSums(Z_dom_S1_2030) + Y_dom_S1_2030
-  ))
+
+  !anyNA(S1_endpoint_2030$A_dom),
+  !anyNA(S1_endpoint_2030$A_imp),
+  !anyNA(S1_endpoint_2030$X_bio),
+  !anyNA(S1_endpoint_2030$Y_imp_FCE),
+
+  !anyNA(S2_endpoint_2030$A_dom),
+  !anyNA(S2_endpoint_2030$A_imp),
+  !anyNA(S2_endpoint_2030$X_bio),
+  !anyNA(S2_endpoint_2030$Y_imp_FCE)
 )
-
-
-#2035 Scenario Parameters
-
-
-#2040 Scenario Parameters
-
 
 ############################################################################################################################################################
 #######  build linear development between 2023 and the three 2030 endpoints - fix only Aimp, Adom and X(BIO) --> build annual EGOGENOUS scenario drivers####
@@ -2827,34 +2819,27 @@ S2_dynamic_endpoint_2030 <-
 
 
 # ===================================================================
-# CHECK: dynamic model must currently reproduce static endpoints -- delete? 
+# 15. BASIC DYNAMIC ENDPOINT CONSISTENCY CHECKS - checks whether X = Z^dom *1 + Y^dom
 # ===================================================================
 
-all.equal(
-  S1_dynamic_endpoint_2030$X,
-  S1_endpoint_2030$X
-)
+stopifnot(
 
-all.equal(
-  S2_dynamic_endpoint_2030$X,
-  S2_endpoint_2030$X
-)
+  isTRUE(
+    all.equal(
+      S1_dynamic_endpoint_2030$X,
+      rowSums(S1_dynamic_endpoint_2030$Z_dom) +
+        S1_dynamic_endpoint_2030$Y_dom
+    )
+  ),
 
-all.equal(
-  S1_dynamic_endpoint_2030$GVA,
-  S1_endpoint_2030$GVA
+  isTRUE(
+    all.equal(
+      S2_dynamic_endpoint_2030$X,
+      rowSums(S2_dynamic_endpoint_2030$Z_dom) +
+        S2_dynamic_endpoint_2030$Y_dom
+    )
+  )
 )
-
-all.equal(
-  S2_dynamic_endpoint_2030$GVA,
-  S2_endpoint_2030$GVA
-)
-
-all.equal(
-  REF_dynamic_endpoint_2030$X,
-  BASE_2023$X
-)
-
 
 
 
@@ -3025,8 +3010,8 @@ output_summary_2030
 # ==========================================================
 
 output_S2_minus_S1_2030 <-
-  S2_endpoint_2030$X -
-  S1_endpoint_2030$X
+  S2_dynamic_endpoint_2030$X -
+  S1_dynamic_endpoint_2030$X
 
 c(
   biofuel_difference =

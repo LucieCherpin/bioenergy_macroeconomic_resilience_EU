@@ -365,48 +365,10 @@ M_total[1, ]        <- M_intermediate[1, ] + M_final[1, ]
 #DEF_IN[i,] = DEF_IN[i,] / X_i[i,] # gives us deforestation per output of sector
 
 
-# ===================================================================
-#  SCENARIOS: SPECIFIC Z, X, AND Y MATRIX EXTRACTION
-# ===================================================================
-
-#Initialise Variables
-
-## will be done later instead, from one common calculation
-
-#Scenario 1
-#A_dom_S1_2030 <- A_dom
-#A_imp_S1_2030 <- A_imp
-#Z_dom_S1_2030 <- Z_dom
-#Z_imp_S1_2030 <- Z_imp
-#L_dom_S1_2030 <- L_dom
-#X_S1_2030     <- q_s_dom
-
-
-#Scenario 2
-#A_dom_S2_2030 <- A_dom
-#A_imp_S2_2030 <- A_imp
-#Z_dom_S2_2030 <- Z_dom
-#Z_imp_S2_2030 <- Z_imp
-#L_dom_S2_2030 <- L_dom
-#X_S2_2030     <- X_dom
-
-
-#Scenario 3
-#A_dom_S3_2030 <- A_dom
-#A_imp_S3_2030 <- A_imp
-#Z_dom_S3_2030 <- Z_dom
-#Z_imp_S3_2030 <- Z_imp
-#L_dom_S3_2030 <- L_dom
-#X_S3_2030     <- X_dom
 
 
 
-#Source Scenarios Script
-#source("Scenarios_biofuels")
-#Initialise Value Chains
-
-#2030 Scenario Parameters
-#Integrate Here Variable-Specific Changes per Scenario per Time Step
+############################################################
 # 1. BASIC SETTINGS
 ############################################################
 
@@ -729,6 +691,8 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
 ## works for BASE_2023 as well as future scenarios.
 ## Scenario-specific values (e.g. 2023 market values / CAPEX / OPEX distributions)
 ## override IVC_TECH_LIBRARY; otherwise the technology library is used as fallback.
+
+
 build_fuel_column <- function(fuel_cfg) {
   
   weights <- fuel_cfg$weights
@@ -1320,7 +1284,7 @@ S2_2030 <- list(
 # Monetary value in EUR, at market value
 # All imported finished fuels go to final consumption expenditure
 # ==========================================================
-## note: so far only an exogenous scenario vraiavle, stored in each endpoint, but not yet inegrated int annual SFC dynamics
+## note: so far only an exogenous scenario vraiavle, stored in each endpoint, but not yet inegrated into annual SFC dynamics
 
 
 S1_imports_2030 <- c(
@@ -1409,19 +1373,16 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
 ## biofuel-related sectors vs non-biofule reated sectors
   BIO <- unname(BIOFUEL_SECTORS)
   
-  NONBIO <- setdiff(
-    seq_len(nIndustries),
-    BIO
-  )
   
   # Start every scenario from the complete 2023 Eurostat IO economy.
   # Non-biofuel sectors therefore remain unchanged unless explicitly modified.
   A_dom_target <- A_dom
   A_imp_target <- A_imp
-  X_target    <- q_s_dom
   
   
-  X_target[BIO] <- 0
+  # Only BIO output is prescribed by the scenario
+  X_bio_target <- q_s_dom[BIO]
+
   ## new: added the imported finished biofuels going to final consumption expenditure
   Y_imp_FCE_target <-
     build_Y_imp_FCE(import_cfg_eur)
@@ -1435,11 +1396,14 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
     target_col <- BIOFUEL_SECTORS[[fuel_name]]
     fuel_cfg   <- scenario_cfg[[fuel_name]]
     
-    ##############################  ##############################  ##############################
-    
-    X_target[target_col] <- fuel_cfg$abs_production_eur / SCENARIO_EUR_TO_IO_UNIT
-    
-    # Scenario-specific technical coefficient column
+    ##Exogenous domestic biofuel output
+    X_bio_target[
+      match(target_col, BIO)
+    ] <-
+      fuel_cfg$abs_production_eur /
+      SCENARIO_EUR_TO_IO_UNIT
+
+    # Scenario-specific technical coefficient column (for biofuel sectors only)
     
     res_fuel <- build_fuel_column(fuel_cfg)
     
@@ -1472,6 +1436,15 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
     }
   }
 
+list(
+    A_dom = A_dom_target,
+    A_imp = A_imp_target,
+    X_bio = X_bio_target,
+    Y_imp_FCE = Y_imp_FCE_target
+  )
+}
+
+
   # ==========================================================
   # ENDOGENOUS OUTPUT RESPONSE OF NON-BIOFUEL SECTORS
   # ==========================================================
@@ -1499,7 +1472,11 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
       BIO,
       drop = FALSE
     ]
-  
+
+#################################################################################################
+###################  redundant because done in the loop now (check?)#############################
+#################################################################################################
+
   # Endogenous output of the non-biofuel economy
   X_nonbio_target <-
     solve(

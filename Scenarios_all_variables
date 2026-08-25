@@ -2139,6 +2139,9 @@ run_dynamic_scenario <- function(scenario_driver) {
     # 3. NON-BIOFUEL FINAL DEMAND
     # ===============================================================
 
+
+## final demand (Y) for NONBIO sectors is kept constant, since C_dom, G_dom, and OTHER_dom (consumption) are kept constant at 2023 (see rigth above)
+## would only chnage if we activated SFC dynamics
     Y_nonbio_current <-
       (
         C_dom_current +

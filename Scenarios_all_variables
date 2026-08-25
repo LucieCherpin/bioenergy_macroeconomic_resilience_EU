@@ -2083,6 +2083,28 @@ build_scenario_driver <- function(
     )
   )
 
+# ---------------------------------------------------------------
+  # BIO OUTPUT AT START AND END POINT
+  # ---------------------------------------------------------------
+
+  # BASE_2023 stores the complete 73-sector output vector as $X.
+  # Scenario endpoints store only exogenous biofuel output as $X_bio.
+
+  X_bio_start <-
+    if (!is.null(start_endpoint$X_bio)) {
+      start_endpoint$X_bio
+    } else {
+      start_endpoint$X[BIO]
+    }
+
+  X_bio_end <-
+    if (!is.null(end_endpoint$X_bio)) {
+      end_endpoint$X_bio
+    } else {
+      end_endpoint$X[BIO]
+    }
+
+
 
   # ---------------------------------------------------------------
   # Annual interpolation
@@ -2123,16 +2145,16 @@ build_scenario_driver <- function(
 
 
     # -------------------------------------------------------------
-    # DOMESTIC BIOFUEL OUTPUT
+    # DOMESTIC BIOFUEL OUTPUT - exogeneously set
     # -------------------------------------------------------------
 
     X_bio_current <- rep(NA_real_, nIndustries)
 
     X_bio_current[BIO] <-
-      start_endpoint$X[BIO] +
+      X_bio_start +
       lambda * (
-        end_endpoint$X[BIO] -
-          start_endpoint$X[BIO]
+        X_bio_end -
+          X_bio_start
       )
 
     # -------------------------------------------------------------
@@ -2501,6 +2523,8 @@ run_dynamic_scenario <- function(scenario_driver) {
         drop = FALSE
       ]
 
+
+## ouput of NONBIO sectirs is both from NONBIO inputs required by NONBIO and BIO production
 
     X_nonbio_current <-
       solve(

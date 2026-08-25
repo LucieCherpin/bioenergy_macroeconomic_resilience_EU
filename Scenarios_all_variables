@@ -47,7 +47,7 @@ national_accounts <- read_xlsx("nama_10_gdp__EU27.xlsx", sheet = "Sheet 1", rang
 ###General Parameters
 ##########################################
 
-nYears = 20             #Number of years
+nYears = 20             #Number of years ## can delete that no? becuase furtehre down: n_years = <- length(years)
 nIndustries = 73        #Industries of Eurostat input-output table
 
 
@@ -103,17 +103,8 @@ q_s_dom_safe[q_s_dom_safe == 0] <- 1e-6                                         
 Q_s_dom_i = matrix(rep(q_s_dom, times = nYears), nrow = nYears, byrow = TRUE)   #TS_BP - Total supply by industry matrix
 #Q_s_imp_i = matrix(rep(q_s_imp, times = nYears), nrow = nYears, byrow = TRUE)
 
-### total use of intermediate inputs
-x_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 17]))                   #TU - Total use by industry
-#x_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 17]))
-X_dom = matrix(rep(x_dom, times = nYears), nrow = nYears, byrow = TRUE)                             #TU - Total use by industry matrix
-#X_imp = matrix(rep(x_imp, times = nYears), nrow = nYears, byrow = TRUE)
 
-#P2_ADJ - Total intermediate consumption by industry
-i_d_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 11, 3:(nIndustries + 2)]))   #P2_ADJ - Total intermediate consumption by industry
-i_d_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 11, 3:(nIndustries + 2)]))
-I_D_dom_i <- matrix(rep(i_d_dom, times = nYears), nrow = nYears, byrow = TRUE)    #P2_ADJ - Total intermediate consumption by industry matrix
-I_D_imp_i <- matrix(rep(i_d_imp, times = nYears), nrow = nYears, byrow = TRUE)
+
 
 ##########################################
 ###Final Expenditure
@@ -316,14 +307,7 @@ L_dom <- solve(diag-A_dom)                                                  #Leo
 I_n <- diag(nrow(A_imp))
 #L_imp <- solve(I_n - A_imp)
 
-#Imports Relevant stuff
-M_intermediate <- matrix(0, nrow = nYears, ncol = nIndustries)
-M_final        <- matrix(0, nrow = nYears, ncol = nIndustries)
-M_total        <- matrix(0, nrow = nYears, ncol = nIndustries)
 
-M_intermediate[1, ] <- as.numeric(A_imp %*% X_dom[1, ])
-M_final[1, ]        <- f_imp[1, ]
-M_total[1, ]        <- M_intermediate[1, ] + M_final[1, ]
 
 #L_imp <- solve(diag-A_imp)
 
@@ -1311,17 +1295,6 @@ S2_imports_2030 <- c(
   adv_biogas        = 0
 )
 
-# ===================================================================
-# 5. COLLECT SCENARIOS
-# ===================================================================
-
-## Add S2_2030, S3_2030, etc. here later. The calculation code below
-## does not need to change when further scenario parameter lists are added.
-
-scenario_config <- list(
-  S1_2030   = S1_2030,
-  S2_2030 = S2_2030
-)
 
 ## Conversion from scenario values (stored in EUR) into the monetary unit
 ## of the Eurostat IO tables. Keep 1 if the IO tables are in EUR;
@@ -1485,8 +1458,6 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
 }
 
 
-
-##### #--this part 6 created the variables of how the economy looks like in a specific Scenario and target year
 # ===================================================================
 # 7. Common 2023 starting point derived from IOT
 # ===================================================================
@@ -1578,324 +1549,6 @@ stopifnot(
         OTHER_dom_BASE_2023
     )
   )
-)
-
-# ===================================================================
-# b) BUILD REFERENCE PATH
-# ===================================================================
-
-build_reference_path <- function(
-    start_endpoint = BASE_2023,
-    start_year = 2023,
-    end_year = 2030
-) {
-
-  years <- start_year:end_year
-  n_years <- length(years)
-
-  # ---------------------------------------------------------------
-  # Reference assumptions
-  # ---------------------------------------------------------------
-
-  A_dom_ref <- start_endpoint$A_dom
-  A_imp_ref <- start_endpoint$A_imp
-
-  Y_imp_FCE_ref <- start_endpoint$Y_imp_FCE
-
-  Y_dom_ref <-
-    C_dom_BASE_2023 +
-    G_dom_BASE_2023 +
-    OTHER_dom_BASE_2023
-
-
-  # ---------------------------------------------------------------
-  # Storage
-  # ---------------------------------------------------------------
-
-  X_path <- matrix(
-    NA_real_,
-    nrow = n_years,
-    ncol = nIndustries,
-    dimnames = list(
-      year = as.character(years),
-      sector = NULL
-    )
-  )
-
-  Y_dom_path <- matrix(
-    NA_real_,
-    nrow = n_years,
-    ncol = nIndustries,
-    dimnames = list(
-      year = as.character(years),
-      sector = NULL
-    )
-  )
-
-  GVA_path <- matrix(
-    NA_real_,
-    nrow = n_years,
-    ncol = nIndustries,
-    dimnames = list(
-      year = as.character(years),
-      sector = NULL
-    )
-  )
-
-  tax_products_path <- matrix(
-    NA_real_,
-    nrow = n_years,
-    ncol = nIndustries,
-    dimnames = list(
-      year = as.character(years),
-      sector = NULL
-    )
-  )
-
-  P2_ADJ_path <- matrix(
-    NA_real_,
-    nrow = n_years,
-    ncol = nIndustries,
-    dimnames = list(
-      year = as.character(years),
-      sector = NULL
-    )
-  )
-
-  Y_imp_FCE_path <- matrix(
-    NA_real_,
-    nrow = n_years,
-    ncol = nIndustries,
-    dimnames = list(
-      year = as.character(years),
-      sector = NULL
-    )
-  )
-
-  Z_dom_path <- array(
-    NA_real_,
-    dim = c(
-      n_years,
-      nIndustries,
-      nIndustries
-    ),
-    dimnames = list(
-      year = as.character(years),
-      input_sector = NULL,
-      output_sector = NULL
-    )
-  )
-
-  Z_imp_path <- array(
-    NA_real_,
-    dim = c(
-      n_years,
-      nIndustries,
-      nIndustries
-    ),
-    dimnames = list(
-      year = as.character(years),
-      input_sector = NULL,
-      output_sector = NULL
-    )
-  )
-
-
-  # ---------------------------------------------------------------
-  # Annual reference simulation
-  # ---------------------------------------------------------------
-
-  for (i in seq_along(years)) {
-
-    X_current <-
-      as.numeric(
-        solve(
-          base::diag(nIndustries) - A_dom_ref,
-          Y_dom_ref
-        )
-      )
-
-    Z_dom_current <-
-      A_dom_ref %*%
-      base::diag(X_current)
-
-    Z_imp_current <-
-      A_imp_ref %*%
-      base::diag(X_current)
-
-    Y_dom_current <-
-      X_current -
-      rowSums(Z_dom_current)
-
-
-    # -------------------------------------------------------------
-    # P2_ADJ AND GVA
-    # -------------------------------------------------------------
-
-    intermediate_inputs_current <-
-      colSums(Z_dom_current) +
-      colSums(Z_imp_current)
-
-    tax_products_current <-
-      p2_tax_rate_2023 *
-      intermediate_inputs_current
-
-    P2_ADJ_current <-
-      intermediate_inputs_current +
-      tax_products_current
-
-    GVA_current <-
-      X_current -
-      P2_ADJ_current
-
-
-    # -------------------------------------------------------------
-    # Store
-    # -------------------------------------------------------------
-
-    X_path[i, ] <- X_current
-    Y_dom_path[i, ] <- Y_dom_current
-
-    Z_dom_path[i, , ] <- Z_dom_current
-    Z_imp_path[i, , ] <- Z_imp_current
-
-    tax_products_path[i, ] <- tax_products_current
-    P2_ADJ_path[i, ] <- P2_ADJ_current
-    GVA_path[i, ] <- GVA_current
-
-    Y_imp_FCE_path[i, ] <- Y_imp_FCE_ref
-  }
-
-
-  # ---------------------------------------------------------------
-  # Return
-  # ---------------------------------------------------------------
-
-  list(
-    years = years,
-
-    A_dom = A_dom_ref,
-    A_imp = A_imp_ref,
-
-    X = X_path,
-    Y_dom = Y_dom_path,
-
-    Z_dom = Z_dom_path,
-    Z_imp = Z_imp_path,
-
-    tax_products = tax_products_path,
-    P2_ADJ = P2_ADJ_path,
-    GVA = GVA_path,
-
-    Y_imp_FCE = Y_imp_FCE_path
-  )
-}
-
-
-# ===================================================================
-# c). RUN REFERENCE PATH 2023-2030
-# ===================================================================
-
-REF_path_2023_2030 <-
-  build_reference_path()
-
-
-# ===================================================================
-# 4. EXTRACT REFERENCE ENDPOINT 2030
-# ===================================================================
-
-REF_endpoint_2030 <- list(
-  
-  A_dom =
-    REF_path_2023_2030$A_dom,
-  
-  A_imp =
-    REF_path_2023_2030$A_imp,
-  
-  X =
-    REF_path_2023_2030$X[
-      "2030",
-    ],
-  
-  Y_dom =
-    REF_path_2023_2030$Y_dom[
-      "2030",
-    ],
-  
-  Z_dom =
-    REF_path_2023_2030$Z_dom[
-      "2030",
-      ,
-    ],
-  
-  Z_imp =
-    REF_path_2023_2030$Z_imp[
-      "2030",
-      ,
-    ],
-
-
-tax_products =
-  REF_path_2023_2030$tax_products["2030", ],
-
-P2_ADJ =
-  REF_path_2023_2030$P2_ADJ["2030", ],
-
-GVA =
-  REF_path_2023_2030$GVA["2030", ],
-  
-  
-  Y_imp_FCE =
-    REF_path_2023_2030$Y_imp_FCE[
-      "2030",
-    ],
-  
-  L_dom =
-    solve(
-      base::diag(nIndustries) -
-        REF_path_2023_2030$A_dom
-    )
-)
-
-
-# ===================================================================
-# 5. OPTIONAL SHORTCUT OBJECTS
-# ===================================================================
-
-X_REF_2030 <-
-  REF_endpoint_2030$X
-
-GVA_REF_2030 <-
-  REF_endpoint_2030$GVA
-
-
-# ===================================================================
-# 6. BASIC REFERENCE-PATH CHECKS
-# ===================================================================
-
-# REF starts from the observed 2023 output structure
-all.equal(
-  REF_path_2023_2030$X[
-    "2023",
-  ],
-  BASE_2023$X
-)
-
-# Under the CURRENT no-growth/no-SFC-feedback specification,
-# 2030 should equal 2023
-all.equal(
-  REF_endpoint_2030$X,
-  REF_path_2023_2030$X[
-    "2023",
-  ]
-)
-
-# Check dimensions of the extracted endpoint
-stopifnot(
-  length(REF_endpoint_2030$X) == nIndustries,
-  length(REF_endpoint_2030$GVA) == nIndustries,
-  all(dim(REF_endpoint_2030$Z_dom) == c(nIndustries, nIndustries)),
-  all(dim(REF_endpoint_2030$Z_imp) == c(nIndustries, nIndustries))
 )
 
 
@@ -2236,9 +1889,7 @@ S2_driver_2023_2030 <-
 
 
 ############################################################################################################################################################
-#### SFC dynamics 
 #### this is the ONE common annual simulatio used for all scenarios --> the scenario driver provides the exoegnous BIO assumptions, the model calculates the engoengousr esponse of NONBIO sectors
-
 ############################################################################################################################################################
 
 run_dynamic_scenario <- function(scenario_driver) {
@@ -2841,64 +2492,6 @@ stopifnot(
   )
 )
 
-
-
-#####################################################
-#### old version of SFC part ########################
-#####################################################
-#Define time loop
-##for (i in 2:nYears){
-  
-  #cat("Starting iteration:", i, "\n")
-  
-  #  for (iterations in 1:100){
-  
-  # Final expenditure by industry (domestic / imports)
-  #    D_dom[i, ] <- beta_C_dom[i, ] * C_dom[i] + beta_G_dom[i, ] * G_dom[i]
-  #   D_imp[i, ] <- beta_C_imp[i, ] * C_imp[i] + beta_G_imp[i, ] * G_imp[i]
-  
-  #  # Total final use f = D + GCF + EX (split)
-  # #f_dom[i, ] <- D_dom[i, ] + GCF_dom[i, ] + EX_dom[i, ]
-  ##f_imp[i, ] <- D_imp[i, ] + GCF_imp[i, ] + EX_imp[i, ]
-  
-  ## Domestic production from domestic final demand (Leontief)
-  #X_dom[i, ] <- L_dom %*% f_dom[i, ]
-  #X_imp[i, ] <- L_imp %*% f_imp[i, ]
-  
-  #Exports ## couple exports to total use
-  #EX_i[i, ] <- EX_i[i-1,] 
-  
-  #Rest of the World
-  #RoW[i,] = EX_i[i,] - IM_i[i,]
-  
-  #Optional totals
- ## f_total <- f_dom[i, ] + f_imp[i, ]
-  #X_total <- X_dom[i, ] + X_imp[i, ]
-  
-  #Household Consumption
-  #C
-  
-  #Government Consumption
-  #G
-  
-  #Wages ?
-  #
-  
-  #Employment
-  
-  # Energy
-  #EN
-  
-  # Emissions
-  #EM
-  
-  #Land Use
-  
-  #Deforestation
-  #Water Impact
-  
-  
-#} 
 
 
 ############################################################################################################################################################

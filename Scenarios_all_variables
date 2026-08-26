@@ -2737,6 +2737,29 @@ S2_dynamic_endpoint_2030 <-
     2030
   )
 
+# ===================================================================
+# EXTRACT S1 / 2030 RESULTS AS STANDALONE OBJECTS
+# ===================================================================
+
+A_dom_S1_2030 <- S1_dynamic_endpoint_2030$A_dom
+A_imp_S1_2030 <- S1_dynamic_endpoint_2030$A_imp
+X_S1_2030     <- S1_dynamic_endpoint_2030$X
+Z_dom_S1_2030 <- S1_dynamic_endpoint_2030$Z_dom
+Z_imp_S1_2030 <- S1_dynamic_endpoint_2030$Z_imp
+Y_dom_S1_2030 <- S1_dynamic_endpoint_2030$Y_dom
+GVA_S1_2030   <- S1_dynamic_endpoint_2030$GVA
+
+# ===================================================================
+# EXTRACT S2 / 2030 RESULTS AS STANDALONE OBJECTS
+# ===================================================================
+
+A_dom_S2_2030 <- S2_dynamic_endpoint_2030$A_dom
+A_imp_S2_2030 <- S2_dynamic_endpoint_2030$A_imp
+X_S2_2030     <- S2_dynamic_endpoint_2030$X
+Z_dom_S2_2030 <- S2_dynamic_endpoint_2030$Z_dom
+Z_imp_S2_2030 <- S2_dynamic_endpoint_2030$Z_imp
+Y_dom_S2_2030 <- S2_dynamic_endpoint_2030$Y_dom
+GVA_S2_2030   <- S2_dynamic_endpoint_2030$GVA
 
 # ===================================================================
 # 15. BASIC DYNAMIC ENDPOINT CONSISTENCY CHECKS - checks whether X = Z^dom *1 + Y^dom

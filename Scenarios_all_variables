@@ -631,10 +631,12 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
                              dist_feed, dist_capex, dist_opex) {
   
   r_k     <- prod_cost / market_value
-  s_feed  <- r_k * alpha_cost["feed"]
-  s_capex <- r_k * alpha_cost["capex"]
-  s_opex  <- r_k * alpha_cost["opex"]
-  
+
+ s_feed  <- r_k * alpha_cost[["feed"]]
+s_capex <- r_k * alpha_cost[["capex"]]
+s_opex  <- r_k * alpha_cost[["opex"]]
+
+
  # Raw monetary feedstock components.
 # Negative values represent revenues / gate-fee credits,
 # not purchases of intermediate inputs.

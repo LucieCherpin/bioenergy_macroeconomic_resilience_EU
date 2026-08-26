@@ -2140,6 +2140,17 @@ run_dynamic_scenario <- function(scenario_driver) {
     )
   )
 
+# Gate-fee revenue by sector
+gate_fee_revenue_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
+
 
 # Household and government demand are stored separately
   # because these will later become part of the SFC dynamics.
@@ -2204,6 +2215,10 @@ run_dynamic_scenario <- function(scenario_driver) {
 
   G_dom_path[1, ] <-
     G_dom_BASE_2023
+
+gate_fee_revenue_path[1, ] <-
+  BASE_2023$gate_fee_coeff *
+  BASE_2023$X
 
 
   # =================================================================
@@ -2444,6 +2459,9 @@ gate_fee_coeff_current <-
 
     G_dom_path[i, ] <-
       G_dom_current
+
+gate_fee_revenue_path[i, ] <-
+  gate_fee_revenue_current
   }
 
 
@@ -2492,7 +2510,13 @@ gate_fee_coeff_current <-
       C_dom_path,
 
     G_dom =
-      G_dom_path
+      G_dom_path,
+
+gate_fee_coeff =
+  scenario_driver$gate_fee_coeff,
+
+gate_fee_revenue =
+  gate_fee_revenue_path,
   )
 }
 
@@ -2602,7 +2626,17 @@ extract_dynamic_endpoint <- function(
       dynamic_result$L_dom[
         year_char,
         ,
-      ]
+      ],
+
+    gate_fee_coeff =
+    dynamic_result$gate_fee_coeff[
+      year_char,
+    ],
+
+    gate_fee_revenue =
+    dynamic_result$gate_fee_revenue[
+      year_char,
+  ],
   )
 }
 

@@ -1543,6 +1543,11 @@ X_fuel_BASE_2023[ADV_BIOGAS] <-
 # 2023 technical coefficients
 # -------------------------------------------------------------------
 
+# These are the actual monetary IO coefficients:
+# A_IO = Z / total accounting output X.
+# They therefore remain fully consistent with observed Z and X.
+
+
 A_dom_BASE_2023 <- A_dom
 A_imp_BASE_2023 <- A_imp
 
@@ -1602,13 +1607,12 @@ GVA_BASE_2023 <-
   P2_ADJ_BASE_2023
 
 
-# Leontief inverse based on adjusted A matrix
+# Leontief inverse based on the actual monetary IO coefficient matrix
 L_dom_BASE_2023 <-
   solve(
     base::diag(nIndustries) -
-      A_dom_BASE_2023
+      A_dom_IO_BASE_2023
   )
-
 
 # -------------------------------------------------------------------
 # Collect 2023 baseline
@@ -1619,8 +1623,12 @@ BASE_2023 <- list(
   A_dom = A_dom_BASE_2023,
   A_imp = A_imp_BASE_2023,
 
+  # Actual monetary IO coefficients, consistent with observed Z and X
+  A_dom_IO = A_dom_IO_BASE_2023,
+  A_imp_IO = A_imp_IO_BASE_2023,
+
   X = X_BASE_2023,
-X_fuel = X_fuel_BASE_2023,
+  X_fuel = X_fuel_BASE_2023,
 
   # Observed Z still contains the 2023 gate-fee transaction.
   Z_dom = Z_dom_BASE_2023,
@@ -2098,6 +2106,30 @@ run_dynamic_scenario <- function(scenario_driver) {
   # STORAGE
   # =================================================================
 
+# Actual monetary IO coefficient matrices.
+# These are derived annually from the final Z and total accounting X,
+# so that A_IO = Z / X always holds.
+
+A_dom_IO_path <- array(
+  NA_real_,
+  dim = c(n_years, nIndustries, nIndustries),
+  dimnames = list(
+    year = as.character(years),
+    input_sector = NULL,
+    output_sector = NULL
+  )
+)
+
+A_imp_IO_path <- array(
+  NA_real_,
+  dim = c(n_years, nIndustries, nIndustries),
+  dimnames = list(
+    year = as.character(years),
+    input_sector = NULL,
+    output_sector = NULL
+  )
+)
+
   X_path <- matrix(
     NA_real_,
     nrow = n_years,
@@ -2231,7 +2263,13 @@ gate_fee_revenue_path <- matrix(
   # It is the observed empirical starting point.
   # =================================================================
 
-  X_path[1, ] <-
+A_dom_IO_path[1, , ] <-
+  BASE_2023$A_dom_IO
+
+A_imp_IO_path[1, , ] <-
+  BASE_2023$A_imp_IO 
+
+X_path[1, ] <-
     BASE_2023$X
 
   Y_dom_path[1, ] <-
@@ -2288,17 +2326,17 @@ gate_fee_revenue_path[1, ] <-
     # READ EXOGENOUS SCENARIO CONDITIONS FOR THIS YEAR
     # ===============================================================
 
-    A_dom_current <-
-      scenario_driver$A_dom[
-        i,
-        ,
-      ]
+    A_dom_tech_current <-
+  scenario_driver$A_dom[
+    i,
+    ,
+  ]
 
-    A_imp_current <-
-      scenario_driver$A_imp[
-        i,
-        ,
-      ]
+A_imp_tech_current <-
+  scenario_driver$A_imp[
+    i,
+    ,
+  ]
 
     X_bio_current <-
       scenario_driver$X_bio[
@@ -2365,19 +2403,18 @@ gate_fee_coeff_current <-
     # ===============================================================
 
     A_NN_current <-
-      A_dom_current[
-        NONBIO,
-        NONBIO,
-        drop = FALSE
-      ]
+  A_dom_tech_current[
+    NONBIO,
+    NONBIO,
+    drop = FALSE
+  ]
 
-    A_NB_current <-
-      A_dom_current[
-        NONBIO,
-        BIO,
-        drop = FALSE
-      ]
-
+A_NB_current <-
+  A_dom_tech_current[
+    NONBIO,
+    BIO,
+    drop = FALSE
+  ]
 
 ## ouput of NONBIO sectirs is both from NONBIO inputs required by NONBIO and BIO production
 
@@ -2440,11 +2477,11 @@ X_current[ADV_BIOGAS] <-
 # Technical intermediate requirements are driven by fuel production,
 # NOT by gate-fee revenue.
 Z_dom_current <-
-  A_dom_current %*%
+  A_dom_tech_current %*%
   base::diag(X_fuel_current)
 
 Z_imp_current <-
-  A_imp_current %*%
+  A_imp_tech_current %*%
   base::diag(X_fuel_current)
 
 
@@ -2460,6 +2497,43 @@ Z_dom_current[
   ] +
   gate_fee_revenue_current[ADV_BIOGAS]
 
+
+
+# ===============================================================
+# 6.2. NEW: !!:  ACTUAL MONETARY IO COEFFICIENT MATRICES
+# ===============================================================
+#
+# The technology matrices above are defined relative to X_fuel.
+# After all monetary transactions, including gate-fee revenue,
+# have been entered into Z and total accounting output X is known,
+# derive the actual IO coefficients:
+#
+# A_IO = Z / X
+#
+# This guarantees:
+#
+# Z = A_IO %*% diag(X)
+
+X_safe_current <- X_current
+X_safe_current[
+  abs(X_safe_current) < 1e-12
+] <- 1e-6
+
+A_dom_IO_current <-
+  sweep(
+    Z_dom_current,
+    2,
+    X_safe_current,
+    "/"
+  )
+
+A_imp_IO_current <-
+  sweep(
+    Z_imp_current,
+    2,
+    X_safe_current,
+    "/"
+  )
 
     # ===============================================================
     # 7. DOMESTIC FINAL DEMAND AS ACCOUNTING RESIDUAL
@@ -2496,17 +2570,23 @@ Z_dom_current[
     # ===============================================================
 
     L_dom_current <-
-      solve(
-        base::diag(nIndustries) -
-          A_dom_current
-      )
+  solve(
+    base::diag(nIndustries) -
+      A_dom_IO_current
+  )
 
 
     # ===============================================================
     # 10. STORE THIS YEAR
     # ===============================================================
+A_dom_IO_path[i, , ] <-
+  A_dom_IO_current
 
-    X_path[i, ] <-
+A_imp_IO_path[i, , ] <-
+  A_imp_IO_current
+   
+
+X_path[i, ] <-
       X_current
 
     Y_dom_path[i, ] <-
@@ -2552,11 +2632,19 @@ gate_fee_revenue_path[i, ] <-
 
     years = years,
 
-    A_dom =
-      scenario_driver$A_dom,
+    # Actual monetary IO coefficients
+A_dom =
+  A_dom_IO_path,
 
-    A_imp =
-      scenario_driver$A_imp,
+A_imp =
+  A_imp_IO_path,
+
+# Technology coefficients used internally to generate Z
+A_dom_tech =
+  scenario_driver$A_dom,
+
+A_imp_tech =
+  scenario_driver$A_imp,
 
     X =
       X_path,
@@ -2658,6 +2746,18 @@ extract_dynamic_endpoint <- function(
         year_char,
         ,
       ],
+
+A_dom_tech =
+  dynamic_result$A_dom_tech[
+    year_char,
+    ,
+  ],
+
+A_imp_tech =
+  dynamic_result$A_imp_tech[
+    year_char,
+    ,
+  ],
 
     X =
       dynamic_result$X[
@@ -2785,8 +2885,50 @@ stopifnot(
     )
   )
 
-)
+),
 
+# -------------------------------------------------------------------
+# IO coefficient consistency: Z = A %*% diag(X)
+# -------------------------------------------------------------------
+
+stopifnot(
+
+  isTRUE(
+    all.equal(
+      S1_dynamic_endpoint_2030$Z_dom,
+      S1_dynamic_endpoint_2030$A_dom %*%
+        base::diag(S1_dynamic_endpoint_2030$X),
+      tolerance = 1e-10
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      S1_dynamic_endpoint_2030$Z_imp,
+      S1_dynamic_endpoint_2030$A_imp %*%
+        base::diag(S1_dynamic_endpoint_2030$X),
+      tolerance = 1e-10
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      S2_dynamic_endpoint_2030$Z_dom,
+      S2_dynamic_endpoint_2030$A_dom %*%
+        base::diag(S2_dynamic_endpoint_2030$X),
+      tolerance = 1e-10
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      S2_dynamic_endpoint_2030$Z_imp,
+      S2_dynamic_endpoint_2030$A_imp %*%
+        base::diag(S2_dynamic_endpoint_2030$X),
+      tolerance = 1e-10
+    )
+  )
+)
 
 
 # -------------------------------------------------------------------

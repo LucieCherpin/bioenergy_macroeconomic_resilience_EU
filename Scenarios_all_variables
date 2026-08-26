@@ -635,9 +635,19 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
   s_capex <- r_k * alpha_cost["capex"]
   s_opex  <- r_k * alpha_cost["opex"]
   
-  a_feed  <- s_feed  * dist_feed
-  a_capex <- s_capex * dist_capex
-  a_opex  <- s_opex  * dist_opex
+ # Raw monetary feedstock components.
+# Negative values represent revenues / gate-fee credits,
+# not purchases of intermediate inputs.
+a_feed_raw <- s_feed * dist_feed
+
+# Only positive purchased inputs enter the IO technical coefficients.
+a_feed <- pmax(a_feed_raw, 0)
+
+# Negative feedstock components are stored separately as revenues.
+gate_fee_coeff <- -sum(pmin(a_feed_raw, 0))
+
+a_capex <- s_capex * dist_capex
+a_opex  <- s_opex * dist_opex
   
   a_dom <- c(
     agriculture    = get_v(a_feed, "agriculture"),
@@ -667,7 +677,11 @@ build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
     food_bev_imp    = get_v(a_feed, "food_bev_imp")
   )
   
-  list(a_dom = a_dom, a_imp = a_imp)
+  list(
+  a_dom = a_dom,
+  a_imp = a_imp,
+  gate_fee_coeff = gate_fee_coeff
+)
 }
 
 
@@ -684,6 +698,7 @@ build_fuel_column <- function(fuel_cfg) {
   
   a_dom_agg <- NULL
   a_imp_agg <- NULL
+gate_fee_coeff_agg <- 0
   
   for (ivc_id in ivc_ids) {
     
@@ -743,9 +758,14 @@ build_fuel_column <- function(fuel_cfg) {
     # Weighted aggregation across IVCs
     a_dom_agg <- a_dom_agg + w * ivc_res$a_dom
     a_imp_agg <- a_imp_agg + w * ivc_res$a_imp
+   gate_fee_coeff_agg <- gate_fee_coeff_agg + w * ivc_res$gate_fee_coeff
   }
   
-  list(a_dom = a_dom_agg, a_imp = a_imp_agg)
+  list(
+  a_dom = a_dom_agg,
+  a_imp = a_imp_agg,
+  gate_fee_coeff = gate_fee_coeff_agg
+)
 }
 
 
@@ -1336,6 +1356,8 @@ build_Y_imp_FCE <- function(import_cfg_eur) {
 
 
 
+
+
 # ===================================================================
 # 6. BUILD EXOGENOUS TARGET CONDITIONS FOR ONE SCENARIO
 # ===================================================================
@@ -1374,6 +1396,14 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
   
   Y_imp_FCE_target <-
     build_Y_imp_FCE(import_cfg_eur)
+
+ # ---------------------------------------------------------------
+  # 6.4. Gate fees for sewerage services
+  # ---------------------------------------------------------------
+# Gate-fee revenue coefficient per unit of sector output.
+# Zero for sectors without such revenues.
+gate_fee_coeff_target <-
+  numeric(nIndustries)
   
   
   # ---------------------------------------------------------------
@@ -1406,7 +1436,9 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
     
     res_fuel <- build_fuel_column(fuel_cfg)
     
-    
+    gate_fee_coeff_target[target_col] <-
+  res_fuel$gate_fee_coeff
+
     # Replace the old Eurostat technology column for this biofuel.
     A_dom_target[, target_col] <- 0
     A_imp_target[, target_col] <- 0
@@ -1453,7 +1485,8 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
     A_dom = A_dom_target,
     A_imp = A_imp_target,
     X_bio = X_bio_target,
-    Y_imp_FCE = Y_imp_FCE_target
+    Y_imp_FCE = Y_imp_FCE_target,
+     gate_fee_coeff = gate_fee_coeff_target
   )
 }
 
@@ -1502,6 +1535,7 @@ BASE_2023 <- list(
 
   Y_dom = Y_dom_BASE_2023,
   L_dom = L_dom_BASE_2023,
+  gate_fee_coeff = numeric(nIndustries),     # No separate gate-fee credit is identified in the 2023 Eurostat baseline.
   Y_imp_FCE = t_f_e_imp        ## imports of finihsed fuels
 )
 
@@ -1640,9 +1674,14 @@ stopifnot(
     nIndustries,
 
   length(S2_endpoint_2030$Y_imp_FCE) ==
-    nIndustries
-)
+    nIndustries,
 
+length(S1_endpoint_2030$gate_fee_coeff) ==
+  nIndustries,
+
+length(S2_endpoint_2030$gate_fee_coeff) ==
+  nIndustries
+)
 
 # ---------------------------------------------------------------
 # No missing values in exogenous scenario conditions
@@ -1658,7 +1697,14 @@ stopifnot(
   !anyNA(S2_endpoint_2030$A_dom),
   !anyNA(S2_endpoint_2030$A_imp),
   !anyNA(S2_endpoint_2030$X_bio),
-  !anyNA(S2_endpoint_2030$Y_imp_FCE)
+  !anyNA(S2_endpoint_2030$Y_imp_FCE),
+
+  !anyNA(S1_endpoint_2030$gate_fee_coeff),
+  !anyNA(S2_endpoint_2030$gate_fee_coeff),
+
+  all(S1_endpoint_2030$gate_fee_coeff >= 0),
+  all(S2_endpoint_2030$gate_fee_coeff >= 0)
+
 )
 
 ############################################################################################################################################################

@@ -2516,7 +2516,7 @@ gate_fee_coeff =
   scenario_driver$gate_fee_coeff,
 
 gate_fee_revenue =
-  gate_fee_revenue_path,
+  gate_fee_revenue_path
   )
 }
 
@@ -2636,7 +2636,7 @@ extract_dynamic_endpoint <- function(
     gate_fee_revenue =
     dynamic_result$gate_fee_revenue[
       year_char,
-  ],
+  ]
   )
 }
 

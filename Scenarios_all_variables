@@ -1546,7 +1546,22 @@ X_fuel_BASE_2023[ADV_BIOGAS] <-
 # These are the actual monetary IO coefficients:
 # A_IO = Z / total accounting output X.
 # They therefore remain fully consistent with observed Z and X.
+# -------------------------------------------------------------------
+# Actual monetary 2023 IO coefficients
+# -------------------------------------------------------------------
+# These are based on total accounting output X and therefore satisfy:
+# Z = A_IO %*% diag(X)
 
+A_dom_IO_BASE_2023 <- A_dom
+A_imp_IO_BASE_2023 <- A_imp
+
+
+# -------------------------------------------------------------------
+# 2023 technology coefficients
+# -------------------------------------------------------------------
+# These are used to generate technical intermediate requirements.
+# For advanced biogas they are expressed per unit of fuel market value,
+# excluding gate-fee revenue.
 
 A_dom_BASE_2023 <- A_dom
 A_imp_BASE_2023 <- A_imp
@@ -2885,7 +2900,7 @@ stopifnot(
     )
   )
 
-),
+)
 
 # -------------------------------------------------------------------
 # IO coefficient consistency: Z = A %*% diag(X)

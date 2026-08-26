@@ -886,7 +886,7 @@ S1_2030 <- list(
       IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000)),
     
     dist_feed = list(
-      IVC7 = c(agriculture = 0.33, food_bev = 0.33, chemicals = 0.33)## correct later, seweareg belongs here
+      IVC7 = c(food_bev = -0.18588, agriculture = -0.78770, -chemicals = 0.03363, sewerage = 2.00721)
     )
   ),
   

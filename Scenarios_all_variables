@@ -1378,7 +1378,11 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
   
   A_dom_target <- A_dom
   A_imp_target <- A_imp
-  
+
+  A_dom_target[                                            ### make gate fee payment NOT enter the technical input coefficienrs, is treated separately
+  BIOFUEL_SECTORS[["adv_biogas"]],
+  INPUT_SECTORS[["sewerage"]]
+] <- 0
   
   # ---------------------------------------------------------------
   # 6.2. EXOGENOUS DOMESTIC BIOFUEL OUTPUT
@@ -1398,10 +1402,11 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
     build_Y_imp_FCE(import_cfg_eur)
 
  # ---------------------------------------------------------------
-  # 6.4. Gate fees for sewerage services
+  # 6.4.DERIVED GATE-FEE REVENUE COEFFICIENT --> NOT an independent sceanrio assumption; but derived form the scenario-specific  IVC technology mix
   # ---------------------------------------------------------------
 # Gate-fee revenue coefficient per unit of sector output.
 # Zero for sectors without such revenues.
+
 gate_fee_coeff_target <-
   numeric(nIndustries)
   
@@ -1495,19 +1500,64 @@ gate_fee_coeff_target <-
 # 7. Common 2023 starting point derived from IOT
 # ===================================================================
 
+# Sector indices for gate-fee treatment
+ADV_BIOGAS <-
+  BIOFUEL_SECTORS[["adv_biogas"]]
+
+SEWERAGE <-
+  INPUT_SECTORS[["sewerage"]]
+
+# -------------------------------------------------------------------
+# 2023 technical coefficients
+# -------------------------------------------------------------------
+
 A_dom_BASE_2023 <- A_dom
 A_imp_BASE_2023 <- A_imp
+
+# Gate-fee payments are monetary transfers for waste treatment,
+# NOT Leontief technical input coefficients.
+A_dom_BASE_2023[
+  ADV_BIOGAS,
+  SEWERAGE
+] <- 0
+
+# -------------------------------------------------------------------
+# Observed 2023 quantities
+# -------------------------------------------------------------------
 
 X_BASE_2023 <- q_s_dom
 
 Z_dom_BASE_2023 <- Z_dom
 Z_imp_BASE_2023 <- Z_imp
 
+# -------------------------------------------------------------------
+# Observed 2023 gate-fee revenue coefficient
+# -------------------------------------------------------------------
+
+gate_fee_coeff_BASE_2023 <-
+  numeric(nIndustries)
+
+if (X_BASE_2023[ADV_BIOGAS] != 0) {
+
+  gate_fee_coeff_BASE_2023[ADV_BIOGAS] <-
+    Z_dom_BASE_2023[
+      ADV_BIOGAS,
+      SEWERAGE
+    ] /
+    X_BASE_2023[ADV_BIOGAS]
+}
+
+
+# -------------------------------------------------------------------
+# Remaining 2023 accounting quantities
+# -------------------------------------------------------------------
+
 tax_products_BASE_2023 <-
   tax_products_2023
 
 Y_dom_BASE_2023 <-
-  X_BASE_2023 - rowSums(Z_dom_BASE_2023)
+  X_BASE_2023 -
+  rowSums(Z_dom_BASE_2023)
 
 P2_ADJ_BASE_2023 <-
   colSums(Z_dom_BASE_2023) +
@@ -1518,28 +1568,43 @@ GVA_BASE_2023 <-
   X_BASE_2023 -
   P2_ADJ_BASE_2023
 
-L_dom_BASE_2023 <- L_dom
+
+# Leontief inverse based on adjusted A matrix
+L_dom_BASE_2023 <-
+  solve(
+    base::diag(nIndustries) -
+      A_dom_BASE_2023
+  )
+
+
+# -------------------------------------------------------------------
+# Collect 2023 baseline
+# -------------------------------------------------------------------
 
 BASE_2023 <- list(
+
   A_dom = A_dom_BASE_2023,
   A_imp = A_imp_BASE_2023,
 
   X = X_BASE_2023,
 
+  # Observed Z still contains the 2023 gate-fee transaction.
   Z_dom = Z_dom_BASE_2023,
   Z_imp = Z_imp_BASE_2023,
 
   tax_products = tax_products_BASE_2023,
-  P2_ADJ = P2_ADJ_BASE_2023,        ## total intermediate consumption
+  P2_ADJ = P2_ADJ_BASE_2023,
   GVA = GVA_BASE_2023,
 
   Y_dom = Y_dom_BASE_2023,
   L_dom = L_dom_BASE_2023,
-  gate_fee_coeff = numeric(nIndustries),     # No separate gate-fee credit is identified in the 2023 Eurostat baseline.
-  Y_imp_FCE = t_f_e_imp        ## imports of finihsed fuels
+
+  gate_fee_coeff =
+    gate_fee_coeff_BASE_2023,
+
+  Y_imp_FCE =
+    t_f_e_imp
 )
-
-
 
 # ===================================================================
 # NEW 7A:  REFERENCE SCENARIO: 2023 -> 2030
@@ -1774,6 +1839,20 @@ build_scenario_driver <- function(
     )
   )
 
+# Derived gate-fee revenue coefficient
+# (not an independent scenario assumption)
+gate_fee_coeff_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
+
+
+
 # ---------------------------------------------------------------
   # BIO OUTPUT AT START AND END POINT
   # ---------------------------------------------------------------
@@ -1795,6 +1874,11 @@ build_scenario_driver <- function(
       end_endpoint$X[BIO]
     }
 
+  gate_fee_coeff_start <-
+    start_endpoint$gate_fee_coeff
+
+  gate_fee_coeff_end <-
+    end_endpoint$gate_fee_coeff
 
 
   # ---------------------------------------------------------------
@@ -1866,6 +1950,13 @@ build_scenario_driver <- function(
       )
 
 
+gate_fee_coeff_current <-
+  gate_fee_coeff_start +
+  lambda * (
+    gate_fee_coeff_end -
+      gate_fee_coeff_start
+  )
+
     # -------------------------------------------------------------
     # Store
     # -------------------------------------------------------------
@@ -1877,6 +1968,9 @@ build_scenario_driver <- function(
 
     Y_imp_FCE_path[i, ] <-
       Y_imp_FCE_current
+
+gate_fee_coeff_path[i, ] <-
+  gate_fee_coeff_current
   }
 
 
@@ -1892,7 +1986,9 @@ build_scenario_driver <- function(
 
     X_bio = X_bio_path,
 
-    Y_imp_FCE = Y_imp_FCE_path
+    Y_imp_FCE = Y_imp_FCE_path,
+  
+    gate_fee_coeff = gate_fee_coeff_path
   )
 }
 
@@ -2152,6 +2248,11 @@ run_dynamic_scenario <- function(scenario_driver) {
         i,
       ]
 
+gate_fee_coeff_current <-
+  scenario_driver$gate_fee_coeff[
+    i,
+  ]
+
 
     # ===============================================================
     # SFC BEHAVIOURAL BLOCK
@@ -2242,6 +2343,15 @@ run_dynamic_scenario <- function(scenario_driver) {
       as.numeric(
         X_nonbio_current
       )
+
+# ===============================================================
+    # 5.2 build gate fee revenue per year
+    # ===============================================================
+
+    gate_fee_revenue_current <-
+    gate_fee_coeff_current *
+    X_current
+  
 
 
     # ===============================================================

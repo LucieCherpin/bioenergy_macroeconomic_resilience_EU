@@ -795,7 +795,7 @@ S1_2030 <- list(
       IVC13b_mar = c(feed = 0.292548351, capex = 0.317045718, opex = 0.390405932)
     ),
     dist_feed = list(
-      IVC1 = c(agriculture_imp = 1.0),
+      IVC1 = c(food_bev_imp = 1.0),
       IVC2_HVO = c(agriculture = 0.14497, adv_biodiesel = 0.72677, chemicals = 0.12825),
       IVC13a = c(agriculture = 0.55703, forestry = 0.22890, paper = 0.20022, food_bev = 0.01387),
       IVC13b_mar = c(agriculture = 0.590480, forestry = 0.210894, paper = 0.184505, food_bev = 0.014121)

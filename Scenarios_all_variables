@@ -1376,13 +1376,11 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
   # Non-biofuel technology remains at its 2023 Eurostat structure.
   # Biofuel columns are replaced below where scenario assumptions exist.
   
-  A_dom_target <- A_dom
-  A_imp_target <- A_imp
+A_dom_target <-
+  BASE_2023$A_dom
 
-  A_dom_target[                                            ### make gate fee payment NOT enter the technical input coefficienrs, is treated separately
-  BIOFUEL_SECTORS[["adv_biogas"]],
-  INPUT_SECTORS[["sewerage"]]
-] <- 0
+A_imp_target <-
+  BASE_2023$A_imp
   
   # ---------------------------------------------------------------
   # 6.2. EXOGENOUS DOMESTIC BIOFUEL OUTPUT
@@ -1391,7 +1389,8 @@ build_endpoint <- function(scenario_cfg, import_cfg_eur) {
   # Start from observed 2023 domestic output of the biofuel sectors.
   # Scenario-specific biofuel sectors are replaced below.
   
-  X_bio_target <- q_s_dom[BIO]
+ X_bio_target <-
+  BASE_2023$X_fuel[BIO]
   
   
   # ---------------------------------------------------------------
@@ -1508,20 +1507,6 @@ SEWERAGE <-
   INPUT_SECTORS[["sewerage"]]
 
 # -------------------------------------------------------------------
-# 2023 technical coefficients
-# -------------------------------------------------------------------
-
-A_dom_BASE_2023 <- A_dom
-A_imp_BASE_2023 <- A_imp
-
-# Gate-fee payments are monetary transfers for waste treatment,
-# NOT Leontief technical input coefficients.
-A_dom_BASE_2023[
-  ADV_BIOGAS,
-  SEWERAGE
-] <- 0
-
-# -------------------------------------------------------------------
 # Observed 2023 quantities
 # -------------------------------------------------------------------
 
@@ -1530,22 +1515,68 @@ X_BASE_2023 <- q_s_dom
 Z_dom_BASE_2023 <- Z_dom
 Z_imp_BASE_2023 <- Z_imp
 
+
 # -------------------------------------------------------------------
-# Observed 2023 gate-fee revenue coefficient
+# Observed 2023 gate-fee revenue
+# -------------------------------------------------------------------
+
+gate_fee_revenue_BASE_2023 <-
+  Z_dom_BASE_2023[
+    ADV_BIOGAS,
+    SEWERAGE
+  ]
+
+
+# Fuel market value excludes gate-fee revenue.
+# Total observed output X_BASE_2023 includes it.
+X_fuel_BASE_2023 <-
+  X_BASE_2023
+
+X_fuel_BASE_2023[ADV_BIOGAS] <-
+  X_BASE_2023[ADV_BIOGAS] -
+  gate_fee_revenue_BASE_2023
+
+
+# -------------------------------------------------------------------
+# 2023 technical coefficients
+# -------------------------------------------------------------------
+
+A_dom_BASE_2023 <- A_dom
+A_imp_BASE_2023 <- A_imp
+
+# For advanced biogas, technical coefficients must be expressed
+# per unit of fuel market value, excluding gate-fee revenue.
+A_dom_BASE_2023[, ADV_BIOGAS] <-
+  Z_dom_BASE_2023[, ADV_BIOGAS] /
+  X_fuel_BASE_2023[ADV_BIOGAS]
+
+A_imp_BASE_2023[, ADV_BIOGAS] <-
+  Z_imp_BASE_2023[, ADV_BIOGAS] /
+  X_fuel_BASE_2023[ADV_BIOGAS]
+
+# Gate-fee transaction is monetary accounting,
+# not a Leontief technical coefficient.
+A_dom_BASE_2023[
+  ADV_BIOGAS,
+  SEWERAGE
+] <- 0
+
+
+# -------------------------------------------------------------------
+# Observed 2023 gate-fee coefficient
 # -------------------------------------------------------------------
 
 gate_fee_coeff_BASE_2023 <-
   numeric(nIndustries)
 
-if (X_BASE_2023[ADV_BIOGAS] != 0) {
+if (X_fuel_BASE_2023[ADV_BIOGAS] != 0) {
 
   gate_fee_coeff_BASE_2023[ADV_BIOGAS] <-
-    Z_dom_BASE_2023[
-      ADV_BIOGAS,
-      SEWERAGE
-    ] /
-    X_BASE_2023[ADV_BIOGAS]
+    gate_fee_revenue_BASE_2023 /
+    X_fuel_BASE_2023[ADV_BIOGAS]
 }
+
+
 
 
 # -------------------------------------------------------------------
@@ -1587,6 +1618,7 @@ BASE_2023 <- list(
   A_imp = A_imp_BASE_2023,
 
   X = X_BASE_2023,
+X_fuel = X_fuel_BASE_2023,
 
   # Observed Z still contains the 2023 gate-fee transaction.
   Z_dom = Z_dom_BASE_2023,
@@ -1860,12 +1892,19 @@ gate_fee_coeff_path <- matrix(
   # BASE_2023 stores the complete 73-sector output vector as $X.
   # Scenario endpoints store only exogenous biofuel output as $X_bio.
 
-  X_bio_start <-
-    if (!is.null(start_endpoint$X_bio)) {
-      start_endpoint$X_bio
-    } else {
-      start_endpoint$X[BIO]
-    }
+ X_bio_start <-
+  if (!is.null(start_endpoint$X_bio)) {
+
+    start_endpoint$X_bio
+
+  } else if (!is.null(start_endpoint$X_fuel)) {
+
+    start_endpoint$X_fuel[BIO]
+
+  } else {
+
+    start_endpoint$X[BIO]
+  }
 
   X_bio_end <-
     if (!is.null(end_endpoint$X_bio)) {
@@ -2218,7 +2257,7 @@ gate_fee_revenue_path <- matrix(
 
 gate_fee_revenue_path[1, ] <-
   BASE_2023$gate_fee_coeff *
-  BASE_2023$X
+  BASE_2023$X_fuel
 
 
   # =================================================================
@@ -2344,42 +2383,73 @@ gate_fee_coeff_current <-
       )
 
 
-    # ===============================================================
-    # 5. BUILD COMPLETE 73-SECTOR OUTPUT VECTOR
-    # ===============================================================
+# ===============================================================
+# 5. BUILD FUEL / TECHNICAL OUTPUT VECTOR
+# ===============================================================
 
-    X_current <-
-      numeric(nIndustries)
+# For biofuel sectors this is the market value of fuel production
+# (physical production * fuel market price), excluding gate fees.
+X_fuel_current <-
+  numeric(nIndustries)
 
-    X_current[BIO] <-
-      X_bio_current
+X_fuel_current[BIO] <-
+  X_bio_current
 
-    X_current[NONBIO] <-
-      as.numeric(
-        X_nonbio_current
-      )
+X_fuel_current[NONBIO] <-
+  as.numeric(
+    X_nonbio_current
+  )
+
 
 # ===============================================================
-    # 5.2 build gate fee revenue per year
-    # ===============================================================
+# 5.2. GATE-FEE REVENUE
+# ===============================================================
 
-    gate_fee_revenue_current <-
-    gate_fee_coeff_current *
-    X_current
-  
+gate_fee_revenue_current <-
+  gate_fee_coeff_current *
+  X_fuel_current
 
 
-    # ===============================================================
-    # 6. INTERMEDIATE FLOWS
-    # ===============================================================
+# ===============================================================
+# 5.3. TOTAL ACCOUNTING OUTPUT
+# ===============================================================
 
-    Z_dom_current <-
-      A_dom_current %*%
-      base::diag(X_current)
+# Total sector output includes the additional gate-fee service
+# revenue of advanced biogas.
+X_current <-
+  X_fuel_current
 
-    Z_imp_current <-
-      A_imp_current %*%
-      base::diag(X_current)
+X_current[ADV_BIOGAS] <-
+  X_fuel_current[ADV_BIOGAS] +
+  gate_fee_revenue_current[ADV_BIOGAS]
+
+
+# ===============================================================
+# 6. INTERMEDIATE FLOWS
+# ===============================================================
+
+# Technical intermediate requirements are driven by fuel production,
+# NOT by gate-fee revenue.
+Z_dom_current <-
+  A_dom_current %*%
+  base::diag(X_fuel_current)
+
+Z_imp_current <-
+  A_imp_current %*%
+  base::diag(X_fuel_current)
+
+
+# Gate fee is added separately as a monetary transaction:
+# sewerage purchases a waste-treatment service from advanced biogas.
+Z_dom_current[
+  ADV_BIOGAS,
+  SEWERAGE
+] <-
+  Z_dom_current[
+    ADV_BIOGAS,
+    SEWERAGE
+  ] +
+  gate_fee_revenue_current[ADV_BIOGAS]
 
 
     # ===============================================================
@@ -2682,8 +2752,42 @@ stopifnot(
         S2_dynamic_endpoint_2030$Y_dom
     )
   )
+
 )
 
+
+# -------------------------------------------------------------------
+# Gate-fee accounting check
+# -------------------------------------------------------------------
+# Gate-fee revenue of advanced biogas must appear exactly as the
+# monetary transaction from sewerage to advanced biogas in Z_dom.
+
+stopifnot(
+
+  isTRUE(
+    all.equal(
+      S1_dynamic_endpoint_2030$Z_dom[
+        ADV_BIOGAS,
+        SEWERAGE
+      ],
+      S1_dynamic_endpoint_2030$gate_fee_revenue[
+        ADV_BIOGAS
+      ]
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      S2_dynamic_endpoint_2030$Z_dom[
+        ADV_BIOGAS,
+        SEWERAGE
+      ],
+      S2_dynamic_endpoint_2030$gate_fee_revenue[
+        ADV_BIOGAS
+      ]
+    )
+  )
+)
 
 
 ############################################################################################################################################################

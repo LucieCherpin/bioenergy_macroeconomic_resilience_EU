@@ -1906,12 +1906,19 @@ gate_fee_coeff_path <- matrix(
     start_endpoint$X[BIO]
   }
 
-  X_bio_end <-
-    if (!is.null(end_endpoint$X_bio)) {
-      end_endpoint$X_bio
-    } else {
-      end_endpoint$X[BIO]
-    }
+ X_bio_end <-
+  if (!is.null(end_endpoint$X_bio)) {
+
+    end_endpoint$X_bio
+
+  } else if (!is.null(end_endpoint$X_fuel)) {
+
+    end_endpoint$X_fuel[BIO]
+
+  } else {
+
+    end_endpoint$X[BIO]
+  }
 
   gate_fee_coeff_start <-
     start_endpoint$gate_fee_coeff
@@ -2753,6 +2760,36 @@ stopifnot(
     )
   )
 
+)
+
+
+
+# -------------------------------------------------------------------
+# Reference path must reproduce the unchanged 2023 baseline
+# -------------------------------------------------------------------
+
+stopifnot(
+
+  isTRUE(
+    all.equal(
+      REF_dynamic_endpoint_2030$X,
+      BASE_2023$X
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      REF_dynamic_endpoint_2030$Z_dom,
+      BASE_2023$Z_dom
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      REF_dynamic_endpoint_2030$GVA,
+      BASE_2023$GVA
+    )
+  )
 )
 
 

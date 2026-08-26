@@ -405,7 +405,7 @@ INPUT_SECTORS <- c(
 
 IVC_TECH_LIBRARY <- list(
   IVC1 = list(
-    market_value = 1450,
+    market_price = 1450,
     dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45,
                      construction = 0.15, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20,
@@ -413,7 +413,7 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC2_HVO = list(
-    market_value = 1750,
+    market_price = 1750,
     dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45,
                      construction = 0.15, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20,
@@ -421,7 +421,7 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC2_HEFA = list(
-    market_value = 2380,
+    market_price = 2380,
     dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45,
                      construction = 0.15, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20,
@@ -429,26 +429,26 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC5 = list(
-    market_value = 1000,
+    market_price = 1000,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.50,
                      construction = 0.15, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.20, chemicals = 0.50, legal_acc = 0.15,
                      repair_inst = 0.10, land_transp = 0.05)
   ),
   IVC6 = list(
-    market_value = 2380,
+    market_price = 2380,
     dist_capex   = c(fab_metal    = 0.00, elec_equip   = 0.02, machinery    = 0.50, construction = 0.15, architecture = 0.30, computer_el  = 0.03),
     dist_opex    = c(electricity = 0.20, chemicals   = 0.50, legal_acc   = 0.15, repair_inst = 0.10, land_transp = 0.05)
   ),
   
   IVC7 = list(
-    market_value = 1275,
+    market_price = 1275,
     dist_capex   = c( fab_metal    = 0.05, elec_equip   = 0.02, machinery    = 0.40, construction = 0.30, architecture = 0.20, computer_el  = 0.03),
     dist_opex    = c(electricity = 0.20, chemicals   = 0.50, legal_acc   = 0.15, repair_inst = 0.10, land_transp = 0.05)
   ),
   
   IVC8a = list(
-    market_value = 935,
+    market_price = 935,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
                      construction = 0.10, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
@@ -456,7 +456,7 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC8b = list(
-    market_value = 935,
+    market_price = 935,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
                      construction = 0.10, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
@@ -464,7 +464,7 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC8c = list(
-    market_value = 935,
+    market_price = 935,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.60,
                      construction = 0.10, architecture = 0.25, computer_el = 0.03),
     dist_opex    = c(electricity = 0.65, chemicals = 0.10, legal_acc = 0.15,
@@ -473,7 +473,7 @@ IVC_TECH_LIBRARY <- list(
   
   
   IVC9a = list(
-    market_value = 1275,
+    market_price = 1275,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
                      construction = 0.10, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
@@ -481,7 +481,7 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC9b = list(
-    market_value = 1275,
+    market_price = 1275,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.60,
                      construction = 0.10, architecture = 0.25, computer_el = 0.03),
     dist_opex    = c(electricity = 0.65, chemicals = 0.10, legal_acc = 0.15,
@@ -489,7 +489,7 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC11a_road = list(
-    market_value = 1750,
+    market_price = 1750,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
                      construction = 0.10, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
@@ -497,7 +497,7 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC11a_SAF = list(
-    market_value = 2380,
+    market_price = 2380,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
                      construction = 0.10, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
@@ -505,7 +505,7 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC12 = list(
-    market_value = 1000,
+    market_price = 1000,
     dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.50,
                      construction = 0.15, architecture = 0.30, computer_el = 0.03),
     dist_opex    = c(electricity = 0.20, chemicals = 0.50, legal_acc = 0.15,
@@ -513,7 +513,7 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC13a = list(
-    market_value = 1750,
+    market_price = 1750,
     dist_capex   = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45,
                      construction = 0.10, architecture = 0.25, computer_el = 0.03),
     dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
@@ -521,7 +521,7 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC13b_road = list(
-    market_value = 1150,
+    market_price = 1150,
     dist_capex   = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45,
                      construction = 0.10, architecture = 0.25, computer_el = 0.03),
     dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
@@ -529,7 +529,7 @@ IVC_TECH_LIBRARY <- list(
   ),
   
   IVC13b_mar = list(
-    market_value = 1150,
+    market_price = 1150,
     dist_capex   = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45,
                      construction = 0.10, architecture = 0.25, computer_el = 0.03),
     dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
@@ -544,7 +544,7 @@ IVC_TECH_LIBRARY <- list(
   
   IVC_T_FF = list(
     prod_cost    = 1598.13,
-    market_value = 1750,
+    market_price = 1750,
     dist_capex   = c(fab_metal = 0.07, machinery = 0.450, 
                      construction = 0.150, architecture = 0.300, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
@@ -553,7 +553,7 @@ IVC_TECH_LIBRARY <- list(
   
   IVC_HT_FF = list(
     prod_cost    = 1598.13,
-    market_value = 1750,
+    market_price = 1750,
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.020, machinery = 0.550, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
@@ -562,7 +562,7 @@ IVC_TECH_LIBRARY <- list(
   
   IVC_T_CC =list(
     prod_cost    = 1598.13,
-    market_value = 1750,
+    market_price = 1750,
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
                      construction = 0.150, architecture = 0.30, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
@@ -571,7 +571,7 @@ IVC_TECH_LIBRARY <- list(
   
   IVC_HT_CC =list(
     prod_cost    = 1598.13,
-    market_value = 1750,
+    market_price = 1750,
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
@@ -580,7 +580,7 @@ IVC_TECH_LIBRARY <- list(
   
   IVC_T_lipids =list(
     prod_cost    = 1598.13,
-    market_value = 1750,
+    market_price = 1750,
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
                      construction = 0.150, architecture = 0.30, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
@@ -589,7 +589,7 @@ IVC_TECH_LIBRARY <- list(
   
   IVC_HT_lipids_road =list(
     prod_cost    = 1598.13,
-    market_value = 1750,
+    market_price = 1750,
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
@@ -598,7 +598,7 @@ IVC_TECH_LIBRARY <- list(
   
   IVC_HT_lipids_SAF =list(
     prod_cost    = 1598.13,
-    market_value = 1750,
+    market_price = 1750,
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
@@ -607,7 +607,7 @@ IVC_TECH_LIBRARY <- list(
   
   IVC_EF_FF = list(
     prod_cost    = 1598.13,
-    market_value = 1750,
+    market_price = 1750,
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, 
                      construction = 0.150, architecture = 0.250, computer_el = 0.030),
     dist_opex    = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.200, 
@@ -627,10 +627,10 @@ get_v <- function(vec, k) {
 
 ## this  is like the technical coefficient vector for each IVC (not full biofuel product yet!)
 
-build_ivc_vector <- function(prod_cost, market_value, alpha_cost,
+build_ivc_vector <- function(prod_cost, market_price, alpha_cost,
                              dist_feed, dist_capex, dist_opex) {
   
-  r_k     <- prod_cost / market_value
+  r_k     <- prod_cost / market_price
 
  s_feed  <- r_k * alpha_cost[["feed"]]
 s_capex <- r_k * alpha_cost[["capex"]]
@@ -717,11 +717,11 @@ gate_fee_coeff_agg <- 0
     if (is.null(ivc_prod_cost)) ivc_prod_cost <- tech_base$prod_cost
     
     # Market value: scenario-specific first, otherwise technology library
-    ivc_market_value <- NULL
-    if (!is.null(fuel_cfg$market_value)) {
-      ivc_market_value <- fuel_cfg$market_value[[ivc_id]]
+    ivc_market_price <- NULL
+    if (!is.null(fuel_cfg$market_price)) {
+      ivc_market_price <- fuel_cfg$market_price[[ivc_id]]
     }
-    if (is.null(ivc_market_value)) ivc_market_value <- tech_base$market_value
+    if (is.null(ivc_market_price)) ivc_market_price <- tech_base$market_price
     
     # CAPEX distribution: scenario-specific first, otherwise technology library
     ivc_dist_capex <- NULL
@@ -737,14 +737,14 @@ gate_fee_coeff_agg <- 0
     }
     if (is.null(ivc_dist_opex)) ivc_dist_opex <- tech_base$dist_opex
     
-    if (is.null(ivc_prod_cost) || is.null(ivc_market_value) ||
+    if (is.null(ivc_prod_cost) || is.null(ivc_market_price) ||
         is.null(ivc_dist_capex) || is.null(ivc_dist_opex)) {
       stop(paste("Missing technology input for", ivc_id))
     }
     
     ivc_res <- build_ivc_vector(
       prod_cost    = ivc_prod_cost,
-      market_value = ivc_market_value,
+      market_price = ivc_market_price,
       alpha_cost   = fuel_cfg$alpha[[ivc_id]],
       dist_feed    = fuel_cfg$dist_feed[[ivc_id]],
       dist_capex   = ivc_dist_capex,
@@ -780,16 +780,16 @@ gate_fee_coeff_agg <- 0
 S1_2030 <- list(
   
   adv_biodiesel = list(
-    abs_production_eur = 3108280000,
+    abs_market_value = 3108280000,
     weights = c(IVC1 = 0.79304, IVC2_HVO = 0.15764, IVC13a = 0.03429, IVC13b_mar = 0.01502),
     prod_cost = list(
-      IVC1 = 870,
+      IVC1 = 1350,
       IVC2_HVO = 1287.68,
       IVC13a = 1598.13,
       IVC13b_mar = 2160.57
     ),
     alpha = list(
-      IVC1 = c(feed = 0.5977011, capex = 0.0954023, opex = 0.3068966),
+     IVC1 = c(feed  = 0.7407407, capex = 0.0614815, opex  = 0.1977778),
       IVC2_HVO = c(feed = 0.476579435, capex = 0.208902273, opex = 0.314518292),
       IVC13a = c(feed = 0.132113077, capex = 0.50371231, opex = 0.364174614),
       IVC13b_mar = c(feed = 0.292548351, capex = 0.317045718, opex = 0.390405932)
@@ -803,7 +803,7 @@ S1_2030 <- list(
   ),
   
   adv_biogasoline = list(
-    abs_production_eur = 615780000,
+    abs_market_value = 615780000,
     weights = c(IVC5 = 0.3663, IVC12 = 0.3663, IVC13a = 0.2234, IVC13b_road = 0.0440),
     prod_cost = list(
       IVC5 = 1385.43,
@@ -826,7 +826,7 @@ S1_2030 <- list(
   ),
   
   adv_bio_kerosene = list(
-    abs_production_eur = 2094400000,
+    abs_market_value = 2094400000,
     weights = c(IVC2_HEFA = 0.9418605, IVC11a_SAF = 0.0581395),
     prod_cost = list(
       IVC2_HEFA = 1811.29,
@@ -843,7 +843,7 @@ S1_2030 <- list(
   ),
   
   adv_bio_hfo = list(
-    abs_production_eur = 841500000,
+    abs_market_value = 841500000,
     weights = c(IVC8a = 0.5, IVC8b = 0.5),
     prod_cost = list(
       IVC8a = 586.20,
@@ -860,7 +860,7 @@ S1_2030 <- list(
   ),
   
   RFNBOs = list(
-    abs_production_eur = 201190000,
+    abs_market_value = 201190000,
     weights = c(IVC8c = 0.8019559, IVC9b = 0.1980441),
     prod_cost = list(
       IVC8c = 132.07,
@@ -877,7 +877,7 @@ S1_2030 <- list(
   ),
   
   adv_biogas = list(
-    abs_production_eur = 1550800000,
+    abs_market_value = 1550800000,
     weights = c(IVC7 = 1.0),
     prod_cost = list(
       IVC7 = 1024.42),
@@ -891,7 +891,7 @@ S1_2030 <- list(
   ),
   
   conv_biodiesel = list(
-    abs_production_eur = 19194170000,
+    abs_market_value = 19194170000,
     weights = c(
       IVC_T_FF = 0.2644,
       IVC_HT_FF = 0.2279,
@@ -920,7 +920,7 @@ S1_2030 <- list(
   
   
   conv_biogasoline = list(
-    abs_production_eur = 4436260000,
+    abs_market_value = 4436260000,
     weights = c(IVC_EF_FF = 1.0),
     alpha = list(
       IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20)
@@ -931,7 +931,7 @@ S1_2030 <- list(
   ),
   
   conv_bio_kerosene = list(
-    abs_production_eur = 966980000,
+    abs_market_value = 966980000,
     weights = c(IVC_HT_lipids_SAF = 1.0),
     alpha = list(
       IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19)
@@ -950,7 +950,7 @@ S2_2030 <- list(
   
   adv_biodiesel = list(
     
-    abs_production_eur = 11494612742.822803,
+    abs_market_value = 11494612742.822803,
     
     weights = c(
       IVC2_HVO     = 0.04520720616486377,
@@ -1033,7 +1033,7 @@ S2_2030 <- list(
   
   adv_biogasoline = list(
     
-    abs_production_eur = 10469280187.844357,
+    abs_market_value = 10469280187.844357,
     
     weights = c(
       IVC5        = 0.3475427957928554,
@@ -1108,7 +1108,7 @@ S2_2030 <- list(
   
   adv_biogas = list(
     
-    abs_production_eur = 1550799064.2865152,
+    abs_market_value = 1550799064.2865152,
     
     weights = c(
       IVC7  = 0.7455009438309625,
@@ -1158,7 +1158,7 @@ S2_2030 <- list(
   
   adv_bio_kerosene = list(
     
-    abs_production_eur = 5039024672.710369,
+    abs_market_value = 5039024672.710369,
     
     weights = c(
       IVC2_HEFA  = 0.18804032399597803,
@@ -1220,7 +1220,7 @@ S2_2030 <- list(
   
   adv_bio_hfo = list(
     
-    abs_production_eur = 1553519526.3020425,
+    abs_market_value = 1553519526.3020425,
     weights = c(IVC8a = 0.5, IVC8b = 0.5),
     prod_cost = list(IVC8a = 587.7154729470917, IVC8b = 936),
     
@@ -1245,7 +1245,7 @@ S2_2030 <- list(
   
   RFNBOs = list(
     
-    abs_production_eur = 679812591.4521649,
+    abs_market_value = 679812591.4521649,
     
     weights = c(
       IVC8c = 0.2373338073285326,
@@ -1432,7 +1432,7 @@ gate_fee_coeff_target <-
     X_bio_target[
       match(target_col, BIO)
     ] <-
-      fuel_cfg$abs_production_eur /
+      fuel_cfg$abs_market_value /
       SCENARIO_EUR_TO_IO_UNIT
     
     

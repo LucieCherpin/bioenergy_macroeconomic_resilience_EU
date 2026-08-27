@@ -1332,13 +1332,13 @@ S3_2030 <- list(
     alpha = list(
       IVC2_HVO = c(feed = 0.474231, capex = 0.209840, opex = 0.315929),
       IVC11a_road = c(feed = 0.109891, capex = 0.535920, opex = 0.354189),
-      IVC13a = c(feed = 0.131679, capex = 0.503964, opex = 0.364357),
+      IVC13a = c(feed = 0.131679, capex = 0.503964, opex = 0.364357)
     ),
 
     dist_feed = list(
       IVC2_HVO = c(agriculture = 0.210755, adv_biodiesel = 0.670858, chemicals = 0.118387),
       IVC11a_road = c(agriculture = 0.621964, forestry = 0.148703, paper = 0.182277, food_bev = 0.014502, sewerage = 0, adv_biodiesel = 0.032554),
-      IVC13a = c(agriculture = 0.627305, forestry = 0.160874, paper = 0.197195, food_bev = 0.014626, sewerage = 0),
+      IVC13a = c(agriculture = 0.627305, forestry = 0.160874, paper = 0.197195, food_bev = 0.014626, sewerage = 0)
     )
   ),
 

@@ -1598,12 +1598,12 @@ S3_exports_2030 <- c(
   conv_biodiesel    = 0,
   adv_biodiesel     = 0,
   conv_biogasoline  = 0,
-  adv_biogasoline   = NA_real_,
+  adv_biogasoline   = 30137468584.173,
   conv_bio_kerosene = 0,
-  adv_bio_kerosene  = NA_real_,
-  adv_bio_hfo       = NA_real_,
-  RFNBOs            = NA_real_,
-  adv_biogas        = NA_real_
+  adv_bio_kerosene  = 892829381.237,
+  adv_bio_hfo       = 25347018903.397,
+  RFNBOs            = 17050082963,604,
+  adv_biogas        = 50107314824.089
 )
 
 
@@ -1981,7 +1981,9 @@ BASE_2023 <- list(
     gate_fee_coeff_BASE_2023,
 
   Y_imp_FCE =
-    t_f_e_imp
+    t_f_e_imp,
+exports =
+  numeric(nIndustries)
 )
 
 # ===================================================================
@@ -2594,6 +2596,26 @@ gate_fee_revenue_path <- matrix(
   )
 )
 
+exports_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
+
+Y_domestic_final_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
+
 
 # Household and government demand are stored separately
   # because these will later become part of the SFC dynamics.
@@ -2637,6 +2659,13 @@ X_path[1, ] <-
 
   Y_dom_path[1, ] <-
     BASE_2023$Y_dom
+
+exports_path[1, ] <-
+  scenario_driver$exports[1, ]
+
+Y_domestic_final_path[1, ] <-
+  BASE_2023$Y_dom -
+  exports_path[1, ]
 
   Z_dom_path[1, , ] <-
     BASE_2023$Z_dom
@@ -3060,6 +3089,11 @@ A_imp_tech =
 
     Y_imp_FCE =
       Y_imp_FCE_path,
+exports =
+  exports_path,
+
+Y_domestic_final =
+  Y_domestic_final_path,
 
     C_dom =
       C_dom_path,

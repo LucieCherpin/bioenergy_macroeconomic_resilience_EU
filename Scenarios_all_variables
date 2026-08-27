@@ -1318,10 +1318,17 @@ conv_bio_kerosene = list(
 )
 )
 
+# ==========================================================
+# SCENARIO 3 - 2030
+# ==========================================================
+
+
+
+
 
 
 # ==========================================================
-# FINISHED BIOFUEL IMPORTS - S1 / 2030
+# FINISHED BIOFUEL IMPORTS - 2030
 # Monetary value in EUR, at market value
 # All imported finished fuels go to final consumption expenditure
 # ==========================================================
@@ -1352,6 +1359,18 @@ S2_imports_2030 <- c(
   adv_biogas        = 0
 )
 
+
+S3_imports_2030 <- c(
+  conv_biodiesel    =  2640822799.72     ## discuss with Dina
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 0,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 0,
+  adv_bio_hfo       = 0,
+  RFNBOs            = 0,
+  adv_biogas        = 0
+)
 
 ## Conversion from scenario values (stored in EUR) into the monetary unit
 ## of the Eurostat IO tables. Keep 1 if the IO tables are in EUR;

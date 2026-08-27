@@ -3583,6 +3583,10 @@ delta_GVA_S2_2030 <-
   S2_dynamic_endpoint_2030$GVA -
   REF_dynamic_endpoint_2030$GVA
 
+delta_X_S3_2030 <-
+  S3_dynamic_endpoint_2030$X -
+  REF_dynamic_endpoint_2030$X
+
 
 
 output_summary_2030 <- data.frame(
@@ -3591,37 +3595,42 @@ output_summary_2030 <- data.frame(
   
   advanced_biofuel_output_change = c(
     sum(delta_X_S1_2030[ADVANCED_BIO]),
-    sum(delta_X_S2_2030[ADVANCED_BIO])
+    sum(delta_X_S2_2030[ADVANCED_BIO]),
+    sum(delta_X_S3_2030[ADVANCED_BIO])
   ),
   
   RFNBO_output_change = c(
     sum(delta_X_S1_2030[RFNBO]),
-    sum(delta_X_S2_2030[RFNBO])
+    sum(delta_X_S2_2030[RFNBO]),
+    sum(delta_X_S3_2030[RFNBO])
   ),
   
   conventional_biofuel_output_change = c(
     sum(delta_X_S1_2030[CONVENTIONAL_BIO]),
-    sum(delta_X_S2_2030[CONVENTIONAL_BIO])
+    sum(delta_X_S2_2030[CONVENTIONAL_BIO]),
+    sum(delta_X_S3_2030[CONVENTIONAL_BIO])
   ),
   
   all_biofuel_output_change = c(
     sum(delta_X_S1_2030[BIO]),
-    sum(delta_X_S2_2030[BIO])
+    sum(delta_X_S2_2030[BIO]),
+    sum(delta_X_S3_2030[BIO])
   ),
   
   induced_nonbio_output_change = c(
     sum(delta_X_S1_2030[NONBIO]),
-    sum(delta_X_S2_2030[NONBIO])
+    sum(delta_X_S2_2030[NONBIO]),
+    sum(delta_X_S3_2030[NONBIO])
   ),
   
   total_gross_output_change = c(
     sum(delta_X_S1_2030),
-    sum(delta_X_S2_2030)
+    sum(delta_X_S2_2030),
+    sum(delta_X_S3_2030)
   )
 )
 
 output_summary_2030
-
 
 
 # ==========================================================

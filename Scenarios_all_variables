@@ -3406,7 +3406,7 @@ stopifnot(
  isTRUE(
     all.equal(
       S3_dynamic_endpoint_2030$X,
-      rowSums(S2_dynamic_endpoint_2030$Z_dom) +
+      rowSums(S3_dynamic_endpoint_2030$Z_dom) +
         S3_dynamic_endpoint_2030$Y_dom
     )
   )

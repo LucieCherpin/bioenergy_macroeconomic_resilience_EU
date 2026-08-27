@@ -47,7 +47,7 @@ national_accounts <- read_xlsx("nama_10_gdp__EU27.xlsx", sheet = "Sheet 1", rang
 ###General Parameters
 ##########################################
 
-nYears = 20             #Number of years ## can delete that no? becuase furtehre down: n_years = <- length(years)
+nYears = 20             #Number of years 
 nIndustries = 73        #Industries of Eurostat input-output table
 
 
@@ -880,7 +880,7 @@ S1_2030 <- list(
       IVC9b = 394.26
     ),
     alpha = list(
-      IVC8c = c(feed = 0.35000000, capex = 0.43160000, opex = 0.2194),
+      IVC8c = c(feed = 0.35000000, capex = 0.43160000, opex = 0.2184),
       IVC9b = c(feed = 0.292, capex = 0.325, opex = 0.383)
     ),
     dist_feed = list(
@@ -1624,14 +1624,24 @@ build_Y_imp_FCE <- function(import_cfg_eur) {
 # BUILD BIOFUEL EXPORT VECTOR
 # ===================================================================
 
-build_exports <- function(export_cfg_eur) {
+build_exports <- function(
+    export_cfg_eur,
+    base_exports
+) {
 
-  exports_target <- numeric(nIndustries)
+  # Keep non-biofuel exports at observed 2023 values
+  exports_target <- base_exports
 
+  # Replace only biofuel exports with scenario assumptions
   for (fuel_name in names(export_cfg_eur)) {
 
     if (!fuel_name %in% names(BIOFUEL_SECTORS)) {
-      stop(paste("Unknown biofuel in export configuration:", fuel_name))
+      stop(
+        paste(
+          "Unknown biofuel in export configuration:",
+          fuel_name
+        )
+      )
     }
 
     sector_idx <- BIOFUEL_SECTORS[[fuel_name]]
@@ -1643,7 +1653,6 @@ build_exports <- function(export_cfg_eur) {
 
   exports_target
 }
-
 
 
 
@@ -1702,8 +1711,10 @@ A_imp_target <-
 # ---------------------------------------------------------------
 
 exports_target <-
-  build_exports(export_cfg_eur)
-
+  build_exports(
+    export_cfg_eur,
+    BASE_2023$exports
+  )
  # ---------------------------------------------------------------
   # 6.4.DERIVED GATE-FEE REVENUE COEFFICIENT --> NOT an independent sceanrio assumption; but derived form the scenario-specific  IVC technology mix
   # ---------------------------------------------------------------
@@ -1830,7 +1841,6 @@ exports_BASE_2023 <- as.numeric(
   )
 )
 
-exports_BASE_2023[is.na(exports_BASE_2023)] <- 0
 
 
 # -------------------------------------------------------------------
@@ -2135,7 +2145,17 @@ length(S1_endpoint_2030$gate_fee_coeff) ==
   nIndustries,
 
 length(S2_endpoint_2030$gate_fee_coeff) ==
+  nIndustries,
+
+length(S3_endpoint_2030$X_bio) ==
+  length(BIO),
+
+length(S3_endpoint_2030$Y_imp_FCE) ==
+  nIndustries,
+
+length(S3_endpoint_2030$gate_fee_coeff) ==
   nIndustries
+
 )
 
 # ---------------------------------------------------------------
@@ -2164,7 +2184,8 @@ stopifnot(
   !anyNA(S3_endpoint_2030$gate_fee_coeff),
 
   all(S1_endpoint_2030$gate_fee_coeff >= 0),
-  all(S2_endpoint_2030$gate_fee_coeff >= 0)
+  all(S2_endpoint_2030$gate_fee_coeff >= 0),
+  all(S3_endpoint_2030$gate_fee_coeff >= 0)
 
 )
 
@@ -3345,6 +3366,14 @@ stopifnot(
       rowSums(S2_dynamic_endpoint_2030$Z_dom) +
         S2_dynamic_endpoint_2030$Y_dom
     )
+  ),
+
+ isTRUE(
+    all.equal(
+      S3_dynamic_endpoint_2030$X,
+      rowSums(S2_dynamic_endpoint_2030$Z_dom) +
+        S3_dynamic_endpoint_2030$Y_dom
+    )
   )
 
 )
@@ -3523,7 +3552,7 @@ delta_GVA_S2_2030 <-
 
 output_summary_2030 <- data.frame(
   
-  scenario = c("S1", "S2"),
+  scenario = c("S1", "S2", "S3"),
   
   advanced_biofuel_output_change = c(
     sum(delta_X_S1_2030[ADVANCED_BIO]),

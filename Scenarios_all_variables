@@ -871,7 +871,54 @@ S1_2030 <- list(
       IVC13b_mar = c(agriculture = 0.590480, forestry = 0.210894, paper = 0.184505, food_bev = 0.014121)
     )
   ),
-  
+
+
+  adv_biogas = list(
+  abs_market_value = 4159802158.27,
+
+  weights = c(
+    IVC7  = 0.96168688,
+    IVC9a = 0.03831312
+  ),
+
+  prod_cost = list(
+    IVC7  = 1024.42,
+    IVC9a = 1369.48
+  ),
+
+  alpha = list(
+    IVC7 = c(
+      feed  = -0.020579023,
+      capex = 0.590578966,
+      opex  = 0.430000057
+    ),
+
+    IVC9a = c(
+      feed  = 0.152963116,
+      capex = 0.584163369,
+      opex  = 0.262873516
+    )
+  ),
+
+  dist_feed = list(
+    IVC7 = c(
+      food_bev    = -0.18588,
+      agriculture = -0.78770,
+      chemicals   = -0.03363,
+      sewerage    = 2.00721
+    ),
+
+    IVC9a = c(
+      agriculture   = 0.563405804,
+      forestry      = 0.215806435,
+      paper         = 0.188803181,
+      food_bev      = 0.014031109,
+      adv_biodiesel = 0.017953472
+    )
+  )
+),
+
+
   RFNBOs = list(
     abs_market_value = 201190000,
     weights = c(IVC8c = 0.8019559, IVC9b = 0.1980441),
@@ -889,19 +936,7 @@ S1_2030 <- list(
     )
   ),
   
-  adv_biogas = list(
-    abs_market_value = 1550800000,
-    weights = c(IVC7 = 1.0),
-    prod_cost = list(
-      IVC7 = 1024.42),
-    
-    alpha = list(
-      IVC7 = c(feed = -0.020579, capex = 0.590579, opex = 0.430000)),
-    
-    dist_feed = list(
-      IVC7 = c(food_bev = -0.18588, agriculture = -0.78770, chemicals = -0.03363, sewerage = 2.00721)
-    )
-  ),
+
   
   conv_biodiesel = list(
     abs_market_value = 19194170000,
@@ -1094,54 +1129,54 @@ S2_2030 <- list(
   
   
   adv_biogas = list(
+  
+  abs_market_value = 26710403622.80,
+  
+  weights = c(
+    IVC7  = 0.403075195,
+    IVC9a = 0.596924805
+  ),
+  
+  prod_cost = list(
+    IVC7  = 1029.703482,
+    IVC9a = 1372.151249
+  ),
+  
+  alpha = list(
     
-    abs_market_value = 1550799064.2865152,
-    
-    weights = c(
-      IVC7  = 0.7455009438309625,
-      IVC9a = 0.2544990561690374
+    IVC7 = c(
+      feed  = -0.015340841,
+      capex = 0.587547785,
+      opex  = 0.427793056
     ),
     
-    prod_cost = list(
-      IVC7  = 1029.703482363837,
-      IVC9a = 1372.151249485031
-    ),
-    
-    alpha = list(
-      
-      IVC7 = c(
-        feed  = -0.01534084122926304,
-        capex = 0.5875477847381197,
-        opex  = 0.42779305649114335
-      ),
-      
-      IVC9a = c(
-        feed  = 0.15461214612066382,
-        capex = 0.5830261061236801,
-        opex  = 0.26236174775565607
-      )
-    ),
-    
-    dist_feed = list(
-      
-      IVC7 = c(
-        food_bev    = -0.27065849773126127,
-        agriculture = -1.2300084378216753,
-        chemicals   = -0.03277653092136247,
-        sewerage    = 2.533443466474299
-      ),
-      
-      IVC9a = c(
-        food_bev        = 0.014721564546594932,
-        agriculture     = 0.631363174029521,
-        forestry        = 0.1509506868128259,
-        paper           = 0.18503140054223777,
-        sewerage        = 0,
-        adv_biodiesel   = 0.008966587034410207,
-        adv_biogasoline = 0.008966587034410207
-      )
+    IVC9a = c(
+      feed  = 0.154612146,
+      capex = 0.583026106,
+      opex  = 0.262361748
     )
   ),
+  
+  dist_feed = list(
+    
+    IVC7 = c(
+      food_bev    = -0.270658498,
+      agriculture = -1.230008438,
+      chemicals   = -0.032776531,
+      sewerage    = 2.533443466
+    ),
+    
+    IVC9a = c(
+      food_bev        = 0.014721565,
+      agriculture     = 0.631363174,
+      forestry        = 0.150950687,
+      paper           = 0.185031401,
+      sewerage        = 0,
+      adv_biodiesel   = 0.008966587,
+      adv_biogasoline = 0.008966587
+    )
+  )
+),
   
   adv_bio_kerosene = list(
     

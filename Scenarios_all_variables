@@ -607,6 +607,7 @@ IVC_EF_FF = list(
   dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, construction = 0.15, architecture = 0.25, computer_el = 0.03),
   dist_opex = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.10)
 ) 
+)
 
 ############################################################
 # 3. HELPER FUNCTIONS

@@ -800,8 +800,7 @@ S1_2030 <- list(
     prod_cost = list(
       IVC1 = 1350,
       IVC2_HVO = 1287.68,
-      IVC13a = 1598.13
-    ),
+      IVC13a = 1598.13),
     alpha = list(
      IVC1 = c(feed  = 0.7407407, capex = 0.0614815, opex  = 0.1977778),
       IVC2_HVO = c(feed = 0.476579435, capex = 0.208902273, opex = 0.314518292),
@@ -821,8 +820,7 @@ S1_2030 <- list(
       IVC5 = 1385.43,
       IVC12 = 988.04,
       IVC13a = 1598.13,
-      IVC13b_road = 1740.45
-    ),
+      IVC13b_road = 1740.45),
     alpha = list(
       IVC5 = c(feed = 0.2270, capex = 0.4006, opex = 0.3724),
       IVC12 = c(feed = 0.6200, capex = 0.1000, opex = 0.2800),

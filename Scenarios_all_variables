@@ -543,88 +543,70 @@ IVC_TECH_LIBRARY <- list(
   # Here, more stays the same, hence TECH LIBRARY is longer: production costs stay constant, as well as feed/ CAPEX/ OPEX shares
   # ==========================================================
   
-  IVC_T_FF = list(
-    prod_cost    = 1598.13,
-    market_price = 1750,
-    alpha = c(feed  = 0.74, capex = 0.07, opex  = 0.19),
-    dist_capex   = c(fab_metal = 0.07, machinery = 0.450, 
-                     construction = 0.150, architecture = 0.300, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
-                     repair_inst = 0.150, land_transp = 0.100, sewerage = 0.0)
-  ),
-  
-  IVC_HT_FF = list(
-    prod_cost    = 1598.13,
-    market_price = 1750,
-    alpha = c(feed = 0.70, capex = 0.10, opex = 0.18),
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.020, machinery = 0.550, 
-                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                     repair_inst = 0.150, land_transp = 0.05)
-  ),
-  
-  IVC_T_CC =list(
-    prod_cost    = 1598.13,
-    market_price = 1750,
-    alpha = c(feed = 0.74, capex = 0.07, opex = 0.19),
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
-                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
-                     repair_inst = 0.150, land_transp = 0.100)
-  ),
-  
-  IVC_HT_CC =list(
-    prod_cost    = 1598.13,
-    market_price = 1750,
-   alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
-                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                     repair_inst = 0.150, land_transp = 0.050)
-  ),
-  
-  IVC_T_lipids =list(
-    prod_cost    = 1598.13,
-    market_price = 1750,
-  alpha = c(feed = 0.74, capex = 0.04, opex = 0.22),
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
-                     construction = 0.150, architecture = 0.30, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
-                     repair_inst = 0.150, land_transp = 0.100)
-  ),
-  
-  IVC_HT_lipids_road =list(
-    prod_cost    = 1598.13,
-    market_price = 1750,
-    alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
-                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                     repair_inst = 0.150, land_transp = 0.05)
-  ),
-  
-  IVC_HT_lipids_SAF =list(
-    prod_cost    = 1598.13,
-    market_price = 1750,
-    alpha = c(feed = 0.68, capex = 0.13, opex = 0.19),
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
-                     construction = 0.100, architecture = 0.250, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
-                     repair_inst = 0.150, land_transp = 0.05)
-  ),
-  
-  IVC_EF_FF = list(
-    prod_cost    = 1598.13,
-    market_price = 1750,
-    alpha = c(feed = 0.70, capex = 0.10, opex = 0.20),
-    dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, 
-                     construction = 0.150, architecture = 0.250, computer_el = 0.030),
-    dist_opex    = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.200, 
-                     repair_inst = 0.150, land_transp = 0.10)
-  )
-  
-)
 
+IVC_T_FF = list(
+  prod_cost = 629,
+  market_price = 1165.6261363636365,
+  alpha = c(feed = 0.75, capex = 0.065, opex = 0.185),
+  dist_capex = c(fab_metal = 0.07, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.25, repair_inst = 0.15, land_transp = 0.10, sewerage = 0.0)
+),
+
+IVC_HT_FF = list(
+  prod_cost = 665.824761904762,
+  market_price = 1165.6261363636365,
+  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
+  dist_capex = c(fab_metal = 0.07, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+),
+
+IVC_T_CC = list(
+  prod_cost = 1598.13,
+  market_price = 1750,
+  alpha = c(feed = 0.74, capex = 0.07, opex = 0.19),
+  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.25, repair_inst = 0.15, land_transp = 0.10)
+), # not present in Scenario 2 table -> current values retained
+
+IVC_HT_CC = list(
+  prod_cost = 1218,
+  market_price = 1165.6261363636365,
+  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
+  dist_capex = c(fab_metal = 0.07, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+),
+
+IVC_T_lipids = list(
+  prod_cost = 1253,
+  market_price = 1165.6261363636365,
+  alpha = c(feed = 0.74, capex = 0.04, opex = 0.22),
+  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.25, repair_inst = 0.15, land_transp = 0.10)
+),
+
+IVC_HT_lipids_road = list(
+  prod_cost = 1598.13,
+  market_price = 1750,
+  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
+  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+), # not present in Scenario 2 table -> current values retained
+
+IVC_HT_lipids_SAF = list(
+  prod_cost = 2903,
+  market_price = 2100,
+  alpha = c(feed = 0.68, capex = 0.13, opex = 0.19),
+  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+),
+
+IVC_EF_FF = list(
+  prod_cost = 903.57,
+  market_price = 1018.96958174905,
+  alpha = c(feed = 0.70, capex = 0.10, opex = 0.20),
+  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, construction = 0.15, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.10)
+) 
 
 ############################################################
 # 3. HELPER FUNCTIONS
@@ -935,7 +917,7 @@ S1_2030 <- list(
 
     dist_feed = list(
       IVC_T_FF = c(food_bev = 0.80056, food_bev_imp = 0.19944),
-      IVC_HT_FF = c(food_bev = 0.960664611, food_bev_imp = 0.039335389),
+      IVC_HT_FF = c(food_bev = 0.8005538423, food_bev_imp = 0.1994461577),
       IVC_T_CC = c(agriculture = 1.0),
       IVC_HT_CC = c(agriculture = 1.0),
       IVC_T_lipids = c(food_bev = 0.72, food_bev_imp = 0.28),
@@ -1301,7 +1283,39 @@ S2_2030 <- list(
         chemicals = 1.0
       )
     )
+  ),
+
+conv_biodiesel = list(
+  abs_market_value = 15867820045.058933,
+  weights = c(
+    IVC_T_FF = 0.2671212912279528,
+    IVC_HT_FF = 0.31548833578698177,
+    IVC_T_lipids = 0.3888093145422895,
+    IVC_HT_CC = 0.028581058442776
+  ),
+  dist_feed = list(
+    IVC_T_FF = c(food_bev = 0.8005538422808232, food_bev_imp = 0.1994461577191768),
+    IVC_HT_FF = c(food_bev = 0.8005538422808232, food_bev_imp = 0.1994461577191768),
+    IVC_T_lipids = c(food_bev = 0.72, food_bev_imp = 0.28),
+    IVC_HT_CC = c(agriculture = 1.0)
   )
+),
+
+conv_biogasoline = list(
+  abs_market_value = 79556645.65899728,
+  weights = c(IVC_EF_FF = 1.0),
+  dist_feed = list(
+    IVC_EF_FF = c(agriculture = 1.0)
+  )
+),
+
+conv_bio_kerosene = list(
+  abs_market_value = 0,
+  weights = c(IVC_HT_lipids_SAF = 1.0),
+  dist_feed = list(
+    IVC_HT_lipids_SAF = c(food_bev = 0.61, food_bev_imp = 0.39)
+  )
+)
 )
 
 

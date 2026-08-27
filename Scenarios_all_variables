@@ -540,11 +540,13 @@ IVC_TECH_LIBRARY <- list(
   
   # ==========================================================
   # CONVENTIONAL BIOFUEL TECHNOLOGIES
+  # Here, more stays the same, hence TECH LIBRARY is longer: production costs stay constant, as well as feed/ CAPEX/ OPEX shares
   # ==========================================================
   
   IVC_T_FF = list(
     prod_cost    = 1598.13,
     market_price = 1750,
+    alpha = c(feed  = 0.74, capex = 0.07, opex  = 0.19),
     dist_capex   = c(fab_metal = 0.07, machinery = 0.450, 
                      construction = 0.150, architecture = 0.300, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
@@ -554,6 +556,7 @@ IVC_TECH_LIBRARY <- list(
   IVC_HT_FF = list(
     prod_cost    = 1598.13,
     market_price = 1750,
+    alpha = c(feed = 0.70, capex = 0.10, opex = 0.18),
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.020, machinery = 0.550, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
@@ -563,6 +566,7 @@ IVC_TECH_LIBRARY <- list(
   IVC_T_CC =list(
     prod_cost    = 1598.13,
     market_price = 1750,
+    alpha = c(feed = 0.74, capex = 0.07, opex = 0.19),
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
                      construction = 0.150, architecture = 0.30, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
@@ -572,6 +576,7 @@ IVC_TECH_LIBRARY <- list(
   IVC_HT_CC =list(
     prod_cost    = 1598.13,
     market_price = 1750,
+   alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
@@ -581,6 +586,7 @@ IVC_TECH_LIBRARY <- list(
   IVC_T_lipids =list(
     prod_cost    = 1598.13,
     market_price = 1750,
+  alpha = c(feed = 0.74, capex = 0.04, opex = 0.22),
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.450, 
                      construction = 0.150, architecture = 0.30, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.250, 
@@ -590,6 +596,7 @@ IVC_TECH_LIBRARY <- list(
   IVC_HT_lipids_road =list(
     prod_cost    = 1598.13,
     market_price = 1750,
+    alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
@@ -599,6 +606,7 @@ IVC_TECH_LIBRARY <- list(
   IVC_HT_lipids_SAF =list(
     prod_cost    = 1598.13,
     market_price = 1750,
+    alpha = c(feed = 0.68, capex = 0.13, opex = 0.19),
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.550, 
                      construction = 0.100, architecture = 0.250, computer_el = 0.030),
     dist_opex    = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.200, 
@@ -608,6 +616,7 @@ IVC_TECH_LIBRARY <- list(
   IVC_EF_FF = list(
     prod_cost    = 1598.13,
     market_price = 1750,
+    alpha = c(feed = 0.70, capex = 0.10, opex = 0.20),
     dist_capex   = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, 
                      construction = 0.150, architecture = 0.250, computer_el = 0.030),
     dist_opex    = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.200, 
@@ -700,7 +709,7 @@ build_fuel_column <- function(fuel_cfg) {
   
   a_dom_agg <- NULL
   a_imp_agg <- NULL
-gate_fee_coeff_agg <- 0
+  gate_fee_coeff_agg <- 0
   
   for (ivc_id in ivc_ids) {
     
@@ -716,13 +725,25 @@ gate_fee_coeff_agg <- 0
     }
     if (is.null(ivc_prod_cost)) ivc_prod_cost <- tech_base$prod_cost
     
-    # Market value: scenario-specific first, otherwise technology library
+    # Market price: scenario-specific first, otherwise technology library
     ivc_market_price <- NULL
     if (!is.null(fuel_cfg$market_price)) {
       ivc_market_price <- fuel_cfg$market_price[[ivc_id]]
     }
     if (is.null(ivc_market_price)) ivc_market_price <- tech_base$market_price
     
+   # Feed / CAPEX / OPEX cost shares:
+    # scenario-specific first, otherwise technology library
+      ivc_alpha <- NULL
+    
+    if (!is.null(fuel_cfg$alpha)) {
+      ivc_alpha <- fuel_cfg$alpha[[ivc_id]]
+    }
+    
+    if (is.null(ivc_alpha)) {
+      ivc_alpha <- tech_base$alpha
+    }
+
     # CAPEX distribution: scenario-specific first, otherwise technology library
     ivc_dist_capex <- NULL
     if (!is.null(fuel_cfg$dist_capex)) {
@@ -737,15 +758,26 @@ gate_fee_coeff_agg <- 0
     }
     if (is.null(ivc_dist_opex)) ivc_dist_opex <- tech_base$dist_opex
     
-    if (is.null(ivc_prod_cost) || is.null(ivc_market_price) ||
-        is.null(ivc_dist_capex) || is.null(ivc_dist_opex)) {
-      stop(paste("Missing technology input for", ivc_id))
-    }
+if (
+  is.null(ivc_prod_cost) ||
+  is.null(ivc_market_price) ||
+  is.null(ivc_alpha) ||
+  is.null(ivc_dist_capex) ||
+  is.null(ivc_dist_opex)
+) {
+
+  stop(
+    paste(
+      "Missing technology input for",
+      ivc_id
+    )
+  )
+}
     
     ivc_res <- build_ivc_vector(
       prod_cost    = ivc_prod_cost,
       market_price = ivc_market_price,
-      alpha_cost   = fuel_cfg$alpha[[ivc_id]],
+      alpha_cost   = ivc_alpha,
       dist_feed    = fuel_cfg$dist_feed[[ivc_id]],
       dist_capex   = ivc_dist_capex,
       dist_opex    = ivc_dist_opex
@@ -773,7 +805,7 @@ gate_fee_coeff_agg <- 0
 
 
 #####################################################################################
-# 4. Scenarios 1 and 2 for 2030 - still some values (conventional and RFNBOs) misisng
+# 4. SCENARIO 1
 #####################################################################################
 
 
@@ -900,14 +932,7 @@ S1_2030 <- list(
       IVC_T_lipids = 0.1518,
       IVC_HT_lipids_road = 0.0638
     ),
-    alpha = list(
-      IVC_T_FF = c(feed = 0.74, capex = 0.07, opex = 0.19),
-      IVC_HT_FF = c(feed = 0.70, capex = 0.10, opex = 0.18),
-      IVC_T_CC = c(feed = 0.74, capex = 0.07, opex = 0.19),
-      IVC_HT_CC = c(feed = 0.67, capex = 0.13, opex = 0.20),
-      IVC_T_lipids = c(feed = 0.74, capex = 0.04, opex = 0.22),
-      IVC_HT_lipids_road = c(feed = 0.67, capex = 0.13, opex = 0.20)
-    ),
+
     dist_feed = list(
       IVC_T_FF = c(food_bev = 0.80056, food_bev_imp = 0.19944),
       IVC_HT_FF = c(food_bev = 0.960664611, food_bev_imp = 0.039335389),
@@ -922,9 +947,7 @@ S1_2030 <- list(
   conv_biogasoline = list(
     abs_market_value = 4436260000,
     weights = c(IVC_EF_FF = 1.0),
-    alpha = list(
-      IVC_EF_FF = c(feed = 0.70, capex = 0.10, opex = 0.20)
-    ),
+
     dist_feed = list(
       IVC_EF_FF = c(agriculture = 1.0)
     )
@@ -933,9 +956,7 @@ S1_2030 <- list(
   conv_bio_kerosene = list(
     abs_market_value = 966980000,
     weights = c(IVC_HT_lipids_SAF = 1.0),
-    alpha = list(
-      IVC_HT_lipids_SAF = c(feed = 0.68, capex = 0.13, opex = 0.19)
-    ),
+  
     dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.61, food_bev_imp = 0.39)
     )

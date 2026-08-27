@@ -880,8 +880,8 @@ S1_2030 <- list(
       IVC9b = 394.26
     ),
     alpha = list(
-      IVC8c = c(feed = 0.35000000, capex = 0.43160000, opex = 0.21960000),
-      IVC9b = c(feed = 0.29000000, capex = 0.32470000, opex = 0.38300000)
+      IVC8c = c(feed = 0.35000000, capex = 0.43160000, opex = 0.2194),
+      IVC9b = c(feed = 0.292, capex = 0.325, opex = 0.383)
     ),
     dist_feed = list(
       IVC8c = c(chemicals = 1.0),
@@ -1326,7 +1326,7 @@ S3_2030 <- list(
     prod_cost = list(
       IVC2_HVO = 1281.931518,
       IVC11a_road = 2696.298983,
-      IVC13a = 1597.335977,
+      IVC13a = 1597.335977
     ),
 
     alpha = list(
@@ -1492,7 +1492,7 @@ weights = c(
       IVC_T_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
       IVC_T_CC = c(agriculture = 1.0),
-      IVC_T_lipids = c(food_bev = 0.715489, food_bev_imp = 0.284511)
+      IVC_T_lipids = c(food_bev = 0.72, food_bev_imp = 0.28)
     )
   ),
 
@@ -1586,7 +1586,7 @@ S3_exports_2030 <- c(
   adv_bio_kerosene  = 892829381.237,
   adv_bio_hfo       = 25347018903.397,
   RFNBOs            = 17050082963.604,
-  adv_biogas        = 50107314824.089
+  adv_biogas        = 46832350022.428
 )
 
 
@@ -2095,6 +2095,15 @@ stopifnot(
     dim(S2_endpoint_2030$A_imp) ==
       c(nIndustries, nIndustries)
   ),
+ all(
+    dim(S3_endpoint_2030$A_dom) ==
+      c(nIndustries, nIndustries)
+  ),
+
+  all(
+    dim(S3_endpoint_2030$A_imp) ==
+      c(nIndustries, nIndustries)
+  ),
 
   length(S1_endpoint_2030$X_bio) ==
     length(BIO),
@@ -2131,8 +2140,14 @@ stopifnot(
   !anyNA(S2_endpoint_2030$X_bio),
   !anyNA(S2_endpoint_2030$Y_imp_FCE),
 
+  !anyNA(S3_endpoint_2030$A_dom),
+  !anyNA(S3_endpoint_2030$A_imp),
+  !anyNA(S3_endpoint_2030$X_bio),
+  !anyNA(S3_endpoint_2030$Y_imp_FCE),
+
   !anyNA(S1_endpoint_2030$gate_fee_coeff),
   !anyNA(S2_endpoint_2030$gate_fee_coeff),
+  !anyNA(S3_endpoint_2030$gate_fee_coeff),
 
   all(S1_endpoint_2030$gate_fee_coeff >= 0),
   all(S2_endpoint_2030$gate_fee_coeff >= 0)
@@ -3263,6 +3278,12 @@ S1_dynamic_endpoint_2030 <-
 S2_dynamic_endpoint_2030 <-
   extract_dynamic_endpoint(
     S2_dynamic_2023_2030,
+    2030
+  )
+
+S3_dynamic_endpoint_2030 <-
+  extract_dynamic_endpoint(
+    S3_dynamic_2023_2030,
     2030
   )
 

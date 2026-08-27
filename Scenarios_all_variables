@@ -1206,7 +1206,7 @@ S2_2030 <- list(
     )
   ),
   
-  
+  adv_bio_hfo = list(
 abs_market_value = 3498457026.30,
 
 weights = c(
@@ -1427,7 +1427,7 @@ S3_2030 <- list(
     )
   ),
 
-
+adv_bio_hfo = list(
  abs_market_value = 31280446332.50,
 
 weights = c(
@@ -2400,7 +2400,7 @@ gate_fee_coeff_path[i, ] <-
 
 
 # ===================================================================
-# 11. BUILD REFERENCE, S1 AND S2 DRIVERS: 2023 -> 2030
+# 11. BUILD REFERENCE, S1 AND S2 and S3 DRIVERS: 2023 -> 2030
 # ===================================================================
 
 
@@ -2430,6 +2430,14 @@ S2_driver_2023_2030 <-
   build_scenario_driver(
     start_endpoint = BASE_2023,
     end_endpoint   = S2_endpoint_2030,
+    start_year     = 2023,
+    end_year       = 2030
+  )
+
+S3_driver_2023_2030 <-
+  build_scenario_driver(
+    start_endpoint = BASE_2023,
+    end_endpoint   = S3_endpoint_2030,
     start_year     = 2023,
     end_year       = 2030
   )
@@ -3116,6 +3124,11 @@ S2_dynamic_2023_2030 <-
     S2_driver_2023_2030
   )
 
+S3_dynamic_2023_2030 <-
+  run_dynamic_scenario(
+    S3_driver_2023_2030
+  )
+
 # ===================================================================
 # 14. EXTRACT ONE YEAR FROM A DYNAMIC RESULT
 # ===================================================================
@@ -3187,6 +3200,15 @@ A_imp_tech =
       dynamic_result$Y_dom[
         year_char,
       ],
+exports =
+  dynamic_result$exports[
+    year_char,
+  ],
+
+Y_domestic_final =
+  dynamic_result$Y_domestic_final[
+    year_char,
+  ],
 
     tax_products =
       dynamic_result$tax_products[

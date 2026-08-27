@@ -1586,6 +1586,27 @@ S3_imports_2030 <- c(
 SCENARIO_EUR_TO_IO_UNIT <- 1e6
 
 
+# ==========================================================
+# BIOFUEL EXPORTS - 2030
+# Monetary values in EUR
+# ==========================================================
+
+S1_exports_2030 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))        ## vector with all zero, because in S1 and S2 there are NO exports
+S2_exports_2030 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
+
+S3_exports_2030 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = NA_real_,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = NA_real_,
+  adv_bio_hfo       = NA_real_,
+  RFNBOs            = NA_real_,
+  adv_biogas        = NA_real_
+)
+
+
 # ===================================================================
 # BUILD IMPORTED FINAL CONSUMPTION EXPENDITURE VECTOR
 # ===================================================================
@@ -1617,6 +1638,34 @@ build_Y_imp_FCE <- function(import_cfg_eur) {
   Y_imp_FCE_target
 }
 
+# ===================================================================
+# BUILD BIOFUEL EXPORT VECTOR
+# ===================================================================
+
+build_exports <- function(export_cfg_eur) {
+
+  exports_target <- numeric(nIndustries)
+
+  for (fuel_name in names(export_cfg_eur)) {
+
+    if (!fuel_name %in% names(BIOFUEL_SECTORS)) {
+      stop(paste("Unknown biofuel in export configuration:", fuel_name))
+    }
+
+    sector_idx <- BIOFUEL_SECTORS[[fuel_name]]
+
+    exports_target[sector_idx] <-
+      export_cfg_eur[[fuel_name]] /
+      SCENARIO_EUR_TO_IO_UNIT
+  }
+
+  exports_target
+}
+
+
+
+
+
 
 
 
@@ -1625,7 +1674,11 @@ build_Y_imp_FCE <- function(import_cfg_eur) {
 # 6. BUILD EXOGENOUS TARGET CONDITIONS FOR ONE SCENARIO
 # ===================================================================
 
-build_endpoint <- function(scenario_cfg, import_cfg_eur) {
+build_endpoint <- function(
+    scenario_cfg,
+    import_cfg_eur,
+    export_cfg_eur
+) {
   
   
   # Biofuel sectors
@@ -1662,6 +1715,12 @@ A_imp_target <-
   
   Y_imp_FCE_target <-
     build_Y_imp_FCE(import_cfg_eur)
+# ---------------------------------------------------------------
+# EXOGENOUS BIOFUEL EXPORTS
+# ---------------------------------------------------------------
+
+exports_target <-
+  build_exports(export_cfg_eur)
 
  # ---------------------------------------------------------------
   # 6.4.DERIVED GATE-FEE REVENUE COEFFICIENT --> NOT an independent sceanrio assumption; but derived form the scenario-specific  IVC technology mix
@@ -1753,7 +1812,8 @@ gate_fee_coeff_target <-
     A_imp = A_imp_target,
     X_bio = X_bio_target,
     Y_imp_FCE = Y_imp_FCE_target,
-     gate_fee_coeff = gate_fee_coeff_target
+    exports = exports_target,
+    gate_fee_coeff = gate_fee_coeff_target
   )
 }
 
@@ -1984,19 +2044,23 @@ stopifnot(
 # X_NONBIO, total X, Z_dom, Z_imp, Y_dom, P2_ADJ, GVA and L_dom
 # are calculated endogenously later in run_dynamic_scenario().
 
+S1_endpoint_2030 <- build_endpoint(
+  scenario_cfg = S1_2030,
+  import_cfg_eur = S1_imports_2030,
+  export_cfg_eur = S1_exports_2030
+)
 
-S1_endpoint_2030 <-
-  build_endpoint(
-    scenario_cfg   = S1_2030,
-    import_cfg_eur = S1_imports_2030
-  )
+S2_endpoint_2030 <- build_endpoint(
+  scenario_cfg = S2_2030,
+  import_cfg_eur = S2_imports_2030,
+  export_cfg_eur = S2_exports_2030
+)
 
-
-S2_endpoint_2030 <-
-  build_endpoint(
-    scenario_cfg   = S2_2030,
-    import_cfg_eur = S2_imports_2030
-  )
+S3_endpoint_2030 <- build_endpoint(
+  scenario_cfg = S3_2030,
+  import_cfg_eur = S3_imports_2030,
+  export_cfg_eur = S3_exports_2030
+)
 
 
 # Future endpoints can be added analogously:
@@ -2157,6 +2221,16 @@ build_scenario_driver <- function(
     )
   )
 
+exports_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
+
 # Derived gate-fee revenue coefficient
 # (not an independent scenario assumption)
 gate_fee_coeff_path <- matrix(
@@ -2205,6 +2279,9 @@ gate_fee_coeff_path <- matrix(
 
     end_endpoint$X[BIO]
   }
+
+exports_start <- start_endpoint$exports
+exports_end   <- end_endpoint$exports
 
   gate_fee_coeff_start <-
     start_endpoint$gate_fee_coeff
@@ -2281,6 +2358,13 @@ gate_fee_coeff_path <- matrix(
           start_endpoint$Y_imp_FCE[BIO]
       )
 
+exports_current <-
+  exports_start +
+  lambda * (
+    exports_end -
+    exports_start
+  )
+
 
 gate_fee_coeff_current <-
   gate_fee_coeff_start +
@@ -2301,6 +2385,7 @@ gate_fee_coeff_current <-
     Y_imp_FCE_path[i, ] <-
       Y_imp_FCE_current
 
+exports_path[i, ] <- exports_current
 gate_fee_coeff_path[i, ] <-
   gate_fee_coeff_current
   }
@@ -2319,6 +2404,8 @@ gate_fee_coeff_path[i, ] <-
     X_bio = X_bio_path,
 
     Y_imp_FCE = Y_imp_FCE_path,
+
+    exports = exports_path,
   
     gate_fee_coeff = gate_fee_coeff_path
   )
@@ -2819,6 +2906,28 @@ A_imp_IO_current <-
       X_current -
       rowSums(Z_dom_current)
 
+exports_current <-
+  scenario_driver$exports[i, ]
+
+Y_domestic_final_current <-
+  Y_dom_current -
+  exports_current
+
+
+## Plausibilitätscheck
+if (
+  any(
+    Y_domestic_final_current[BIO] < -1e-8
+  )
+) {
+  stop(
+    paste(
+      "Biofuel exports exceed available final use in year",
+      current_year
+    )
+  )
+}
+
 
     # ===============================================================
     # 8. TAXES, INTERMEDIATE CONSUMPTION AND GVA
@@ -2888,6 +2997,9 @@ X_path[i, ] <-
 
     Y_imp_FCE_path[i, ] <-
       Y_imp_FCE_current
+
+exports_path[i, ] <- exports_current
+Y_domestic_final_path[i, ] <- Y_domestic_final_current
 
     C_dom_path[i, ] <-
       C_dom_current

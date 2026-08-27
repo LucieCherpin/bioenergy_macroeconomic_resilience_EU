@@ -1821,6 +1821,18 @@ Z_dom_BASE_2023 <- Z_dom
 Z_imp_BASE_2023 <- Z_imp
 
 
+exports_BASE_2023 <- as.numeric(
+  unlist(
+    IO_EU_domestic[
+      2:(nIndustries + 1),
+      nIndustries + 9
+    ]
+  )
+)
+
+exports_BASE_2023[is.na(exports_BASE_2023)] <- 0
+
+
 # -------------------------------------------------------------------
 # Observed 2023 gate-fee revenue
 # -------------------------------------------------------------------
@@ -1915,6 +1927,10 @@ Y_dom_BASE_2023 <-
   X_BASE_2023 -
   rowSums(Z_dom_BASE_2023)
 
+Y_domestic_final_BASE_2023 <-
+  Y_dom_BASE_2023 -
+  exports_BASE_2023
+
 P2_ADJ_BASE_2023 <-
   colSums(Z_dom_BASE_2023) +
   colSums(Z_imp_BASE_2023) +
@@ -1931,6 +1947,8 @@ L_dom_BASE_2023 <-
     base::diag(nIndustries) -
       A_dom_IO_BASE_2023
   )
+
+
 
 # -------------------------------------------------------------------
 # Collect 2023 baseline
@@ -1959,13 +1977,10 @@ BASE_2023 <- list(
   Y_dom = Y_dom_BASE_2023,
   L_dom = L_dom_BASE_2023,
 
-  gate_fee_coeff =
-    gate_fee_coeff_BASE_2023,
+  gate_fee_coeff = gate_fee_coeff_BASE_2023,
 
-  Y_imp_FCE =
-    t_f_e_imp,
-exports =
-  numeric(nIndustries)
+  Y_imp_FCE = t_f_e_imp,
+  exports = exports_BASE_2023
 )
 
 # ===================================================================

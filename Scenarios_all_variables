@@ -804,12 +804,12 @@ S1_2030 <- list(
     alpha = list(
      IVC1 = c(feed  = 0.7407407, capex = 0.0614815, opex  = 0.1977778),
       IVC2_HVO = c(feed = 0.476579435, capex = 0.208902273, opex = 0.314518292),
-      IVC13a = c(feed = 0.132113077, capex = 0.50371231, opex = 0.364174614),
+      IVC13a = c(feed = 0.132113077, capex = 0.50371231, opex = 0.364174614)
     ),
     dist_feed = list(
       IVC1 = c(food_bev_imp = 1.0),
       IVC2_HVO = c(agriculture = 0.14497, adv_biodiesel = 0.72677, chemicals = 0.12825),
-      IVC13a = c(agriculture = 0.55703, forestry = 0.22890, paper = 0.20022, food_bev = 0.01387),
+      IVC13a = c(agriculture = 0.55703, forestry = 0.22890, paper = 0.20022, food_bev = 0.01387)
     )
   ),
   

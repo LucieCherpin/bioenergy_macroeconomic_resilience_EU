@@ -1622,7 +1622,8 @@ S3_exports_2030 <- c(
   adv_bio_kerosene  = 892829381.237,
   adv_bio_hfo       = 25347018903.397,
   RFNBOs            = 17050082963.604,
-  adv_biogas        = 46832350022.428
+  adv_biogas        = 20790959910.667
+
 )
 
 

@@ -1471,7 +1471,7 @@ weights = c(
 
    prod_cost = list(
   IVC8a = 587.715473,
-  IVC8b =  936.00
+  IVC8b =  936.00,
   IVC13b_mar = 2163.117208
 ),
 

@@ -216,3 +216,10 @@ NONBIO_output_decomposition_2030 <- data.frame(
 )
 
 NONBIO_output_decomposition_2030
+ ---------------------------------------------------------------
+  # show the results
+  # ---------------------------------------------------------------
+
+
+print(output_summary_2030)
+print(NONBIO_output_decomposition_2030)

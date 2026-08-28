@@ -578,7 +578,7 @@ IVC_HT_FF = list(
 
 IVC_T_CC = list(
   prod_cost = 1598.13,
-  market_price = 1750,
+  market_price =  1165.6261363636365,
   alpha = c(feed = 0.74, capex = 0.07, opex = 0.19),
   dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_el = 0.03),
   dist_opex = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.25, repair_inst = 0.15, land_transp = 0.10)
@@ -602,7 +602,7 @@ IVC_T_lipids = list(
 
 IVC_HT_lipids_road = list(
   prod_cost = 1598.13,
-  market_price = 1750,
+  market_price =  1165.6261363636365,
   alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
   dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
   dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
@@ -957,12 +957,12 @@ S1_2030 <- list(
   conv_biodiesel = list(
     abs_market_value = 19194170000,
     weights = c(
-      IVC_T_FF = 0.2644,
-      IVC_HT_FF = 0.2279,
-      IVC_T_CC = 0.1943,
-      IVC_HT_CC = 0.0978,
-      IVC_T_lipids = 0.1518,
-      IVC_HT_lipids_road = 0.0638
+      IVC_T_FF = 0.2458,
+      IVC_HT_FF = 0.2821,
+      IVC_T_CC = 0.1807,
+      IVC_HT_CC = 0.0909,
+      IVC_T_lipids = 0.1412,
+      IVC_HT_lipids_road = 0.0593
     ),
 
     dist_feed = list(

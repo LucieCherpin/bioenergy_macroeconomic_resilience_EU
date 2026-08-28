@@ -1462,24 +1462,28 @@ S3_2030 <- list(
   ),
 
 adv_bio_hfo = list(
- abs_market_value = 31280446332.50,
+ abs_market_value =  59067164755.86,
 
 weights = c(
-  IVC8a = 0.807462,
-  IVC13b_mar = 0.192538
+  IVC8a = 0.427610911,
+  IVC8b = 0.523121014, 
+  IVC13b_mar = 0.049268075
 ),
 
    prod_cost = list(
   IVC8a = 587.715473,
+  IVC8b =  936.00
   IVC13b_mar = 2163.117208
 ),
 
     alpha = list(
   IVC8a = c(feed = 0.205398, capex = 0.478123, opex = 0.316479),
+  IVC8b = c(feed  = 0.7564102564102564, capex = 0.1452991452991453, opex  = 0.09829059829059829),
   IVC13b_mar = c(feed = 0.293381, capex = 0.316673, opex = 0.389946)
 ),
     dist_feed = list(
   IVC8a = c(food_bev = 0.014518, agriculture = 0.622630, forestry = 0.148863, paper = 0.182472, sewerage = 0, adv_biodiesel = 0.031517),
+  IVC8b = c(adv_biogas = 1.0),
   IVC13b_mar = c(agriculture = 0.659084, forestry = 0.146554, paper = 0.179642, food_bev = 0.014720, sewerage = 0)
 )
   ),

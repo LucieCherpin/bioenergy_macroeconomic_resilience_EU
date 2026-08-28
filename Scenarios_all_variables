@@ -3387,6 +3387,35 @@ Y_dom_S2_2030 <- S2_dynamic_endpoint_2030$Y_dom
 GVA_S2_2030   <- S2_dynamic_endpoint_2030$GVA
 
 # ===================================================================
+# EXTRACT S3 / 2030 RESULTS AS STANDALONE OBJECTS
+# ===================================================================
+
+A_dom_S3_2030 <- S3_dynamic_endpoint_2030$A_dom
+A_imp_S3_2030 <- S3_dynamic_endpoint_2030$A_imp
+X_S3_2030     <- S3_dynamic_endpoint_2030$X
+Z_dom_S3_2030 <- S3_dynamic_endpoint_2030$Z_dom
+Z_imp_S3_2030 <- S3_dynamic_endpoint_2030$Z_imp
+Y_dom_S3_2030 <- S3_dynamic_endpoint_2030$Y_dom
+GVA_S3_2030   <- S3_dynamic_endpoint_2030$GVA
+
+
+# ===================================================================
+# SAVE 2030 MODEL RESULTS
+# ===================================================================
+
+model_results_2030 <- list(
+  REF = REF_dynamic_endpoint_2030,
+  S1  = S1_dynamic_endpoint_2030,
+  S2  = S2_dynamic_endpoint_2030,
+  S3  = S3_dynamic_endpoint_2030
+)
+
+saveRDS(
+  model_results_2030,
+  "model_results_2030.rds"
+)
+
+# ===================================================================
 # 15. BASIC DYNAMIC ENDPOINT CONSISTENCY CHECKS - checks whether X = Z^dom *1 + Y^dom
 # ===================================================================
 
@@ -3525,142 +3554,13 @@ stopifnot(
 )
 
 
-############################################################################################################################################################
-############################################################### OUTPUT change analysis#####################################################################
-############################################################################################################################################################
-
-
-###Define first a) advanced biof, b) convnetional biof, c) RFNBOs to make interpretation of results more detailed
-##################
-
-BIO <- unname(BIOFUEL_SECTORS)
-
-NONBIO <- setdiff(
-  seq_len(nIndustries),
-  BIO
-)
-
-ADVANCED_BIO <- unname(
-  BIOFUEL_SECTORS[
-    c(
-      "adv_biodiesel",
-      "adv_biogasoline",
-      "adv_bio_kerosene",
-      "adv_bio_hfo",
-      "adv_biogas"
-    )
-  ]
-)
-
-CONVENTIONAL_BIO <- unname(
-  BIOFUEL_SECTORS[
-    c(
-      "conv_biodiesel",
-      "conv_biogasoline",
-      "conv_bio_kerosene"
-    )
-  ]
-)
-
-RFNBO <- unname(
-  BIOFUEL_SECTORS["RFNBOs"]
-)
-
-
-# ==========================================================
-# OUTPUT differences in 2030 across scneaiors 
-# ==========================================================
-
-delta_X_S1_2030 <-
-  S1_dynamic_endpoint_2030$X -
-  REF_dynamic_endpoint_2030$X
-
-delta_X_S2_2030 <-
-  S2_dynamic_endpoint_2030$X -
-  REF_dynamic_endpoint_2030$X
-
-
-delta_GVA_S1_2030 <-
-  S1_dynamic_endpoint_2030$GVA -
-  REF_dynamic_endpoint_2030$GVA
-
-delta_GVA_S2_2030 <-
-  S2_dynamic_endpoint_2030$GVA -
-  REF_dynamic_endpoint_2030$GVA
-
-delta_X_S3_2030 <-
-  S3_dynamic_endpoint_2030$X -
-  REF_dynamic_endpoint_2030$X
 
 
 
-output_summary_2030 <- data.frame(
-  
-  scenario = c("S1", "S2", "S3"),
-  
-  advanced_biofuel_output_change = c(
-    sum(delta_X_S1_2030[ADVANCED_BIO]),
-    sum(delta_X_S2_2030[ADVANCED_BIO]),
-    sum(delta_X_S3_2030[ADVANCED_BIO])
-  ),
-  
-  RFNBO_output_change = c(
-    sum(delta_X_S1_2030[RFNBO]),
-    sum(delta_X_S2_2030[RFNBO]),
-    sum(delta_X_S3_2030[RFNBO])
-  ),
-  
-  conventional_biofuel_output_change = c(
-    sum(delta_X_S1_2030[CONVENTIONAL_BIO]),
-    sum(delta_X_S2_2030[CONVENTIONAL_BIO]),
-    sum(delta_X_S3_2030[CONVENTIONAL_BIO])
-  ),
-  
-  all_biofuel_output_change = c(
-    sum(delta_X_S1_2030[BIO]),
-    sum(delta_X_S2_2030[BIO]),
-    sum(delta_X_S3_2030[BIO])
-  ),
-  
-  induced_nonbio_output_change = c(
-    sum(delta_X_S1_2030[NONBIO]),
-    sum(delta_X_S2_2030[NONBIO]),
-    sum(delta_X_S3_2030[NONBIO])
-  ),
-  
-  total_gross_output_change = c(
-    sum(delta_X_S1_2030),
-    sum(delta_X_S2_2030),
-    sum(delta_X_S3_2030)
-  )
-)
-
-output_summary_2030
 
 
-# ==========================================================
-# compariosn of S2 and S1 output changes
-# ==========================================================
-
-output_S2_minus_S1_2030 <-
-  S2_dynamic_endpoint_2030$X -
-  S1_dynamic_endpoint_2030$X
-
-c(
-  biofuel_difference =
-    sum(output_S2_minus_S1_2030[BIO]),
-  
-  upstream_difference =
-    sum(output_S2_minus_S1_2030[NONBIO]),
-  
-  total_output_difference =
-    sum(output_S2_minus_S1_2030)
-)
 
 
-############################################################################################################################################################
-############################################################### GVA change analysis#####################################################################
-############################################################################################################################################################
 
 
 

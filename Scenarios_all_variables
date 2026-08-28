@@ -939,12 +939,12 @@ S1_2030 <- list(
     abs_market_value = 201190000,
     weights = c(IVC8c = 0.8019559, IVC9b = 0.1980441),
     prod_cost = list(
-      IVC8c = 132.07,
-      IVC9b = 394.26
+      IVC8c = 377.87,
+      IVC9b = 1975.56
     ),
     alpha = list(
-      IVC8c = c(feed = 0.35000000, capex = 0.43160000, opex = 0.2184),
-      IVC9b = c(feed = 0.292, capex = 0.325, opex = 0.383)
+      IVC8c = c(feed = 0.7724, capex = 0.1508, opex = 0.0767),
+      IVC9b = c(feed = 0.8588, capex = 0.0648, opex = 0.0764)
     ),
     dist_feed = list(
       IVC8c = c(chemicals = 1.0),

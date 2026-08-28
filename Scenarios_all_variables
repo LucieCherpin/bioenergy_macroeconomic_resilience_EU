@@ -874,8 +874,7 @@ S1_2030 <- list(
    prod_cost = list(
   IVC8a = 586.20,
   IVC8b = 936.00,
-  IVC13b_mar = 2160.57
-),
+  IVC13b_mar = 2160.57),
     alpha = list(
       IVC8a = c(feed = 0.20333994, capex = 0.47936076, opex = 0.31729929),
       IVC8b = c(feed = 0.75641026, capex = 0.14529915, opex = 0.09829060),

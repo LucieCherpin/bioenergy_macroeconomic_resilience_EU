@@ -3138,6 +3138,8 @@ A_dom_tech =
 
 A_imp_tech =
   scenario_driver$A_imp,
+X_bio =
+  scenario_driver$X_bio,
 
     X =
       X_path,

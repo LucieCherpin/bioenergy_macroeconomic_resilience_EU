@@ -3262,6 +3262,11 @@ A_imp_tech =
     ,
   ],
 
+X_bio =
+  dynamic_result$X_bio[
+    year_char,
+  ],
+
     X =
       dynamic_result$X[
         year_char,

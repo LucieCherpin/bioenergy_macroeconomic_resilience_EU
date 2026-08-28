@@ -3407,7 +3407,14 @@ model_results_2030 <- list(
   REF = REF_dynamic_endpoint_2030,
   S1  = S1_dynamic_endpoint_2030,
   S2  = S2_dynamic_endpoint_2030,
-  S3  = S3_dynamic_endpoint_2030
+  S3  = S3_dynamic_endpoint_2030;
+
+ metadata = list(
+    BIO = BIO,
+    NONBIO = NONBIO,
+    sector_names = sector_names
+  )
+
 )
 
 saveRDS(

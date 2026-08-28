@@ -955,7 +955,7 @@ S1_2030 <- list(
 
   
   conv_biodiesel = list(
-    abs_market_value = 19194170000,
+    abs_market_value =  20642403242.71 ,
     weights = c(
       IVC_T_FF = 0.2458,
       IVC_HT_FF = 0.2821,

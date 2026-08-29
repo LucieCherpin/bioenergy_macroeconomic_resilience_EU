@@ -370,6 +370,36 @@ BIOFUEL_SECTORS <- c(
   adv_biogas        = 33
 )
 
+FUEL_TECH_GROUP <- c(
+
+  conv_biodiesel =
+    "conventional",
+
+  conv_biogasoline =
+    "conventional",
+
+  conv_bio_kerosene =
+    "conventional",
+
+  adv_biodiesel =
+    "advanced",
+
+  adv_biogasoline =
+    "advanced",
+
+  adv_bio_kerosene =
+    "advanced",
+
+  adv_bio_hfo =
+    "advanced",
+
+  RFNBOs =
+    "advanced",
+
+  adv_biogas =
+    "advanced"
+)
+
 
 INPUT_SECTORS <- c(
   agriculture      = 1,
@@ -398,6 +428,16 @@ INPUT_SECTORS <- c(
   architecture     = 55
 )
 
+#### make all sectors also exist as XY_import sector
+
+DOM_INPUT_NAMES <- names(INPUT_SECTORS)
+
+IMP_INPUT_NAMES <-
+  paste0(
+    DOM_INPUT_NAMES,
+    "_imp"
+  )
+
 
 BIO <-
   unname(BIOFUEL_SECTORS)
@@ -414,6 +454,57 @@ sector_names <-
       2:(nIndustries + 1)
     ]
   )
+
+# ================================================================
+# DOMESTIC / IMPORT SOURCING OF CAPEX AND OPEX
+# ================================================================
+
+CAPEX_IMPORT_SHARES <- list(
+
+  conventional = c(
+    machinery    = 0.10,
+    fab_metal    = 0.05,
+    computer_el  = 0.40,
+    elec_equip   = 0.00,
+    construction = 0.00,
+    architecture = 0.00
+  ),
+
+  advanced = c(
+    machinery    = 0.40,
+    fab_metal    = 0.50,
+    computer_el  = 0.70,
+    elec_equip   = 0.10,
+    construction = 0.00,
+    architecture = 0.00
+  )
+)
+
+
+OPEX_IMPORT_SHARES <- list(
+
+  conventional = c(
+    chemicals    = 0.10,
+    electricity  = 0.00,
+    legal_acc    = 0.00,
+    repair_inst  = 0.00,
+    land_transp  = 0.00,
+    sewerage     = 0.00
+  ),
+
+  advanced = c(
+    chemicals    = 0.60,
+    electricity  = 0.00,
+    legal_acc    = 0.00,
+    repair_inst  = 0.00,
+    land_transp  = 0.00,
+    sewerage     = 0.00
+  )
+)
+
+
+
+
 
 ############################################################
 # 2. TECHNOLOGY LIBRARY
@@ -632,68 +723,251 @@ IVC_EF_FF = list(
 get_v <- function(vec, k) {
   if (k %in% names(vec)) unname(vec[k]) else 0
 }
-
-## this  is like the technical coefficient vector for each IVC (not full biofuel product yet!)
-
-build_ivc_vector <- function(prod_cost, market_price, alpha_cost,
-                             dist_feed, dist_capex, dist_opex) {
-  
-  r_k     <- prod_cost / market_price
-
- s_feed  <- r_k * alpha_cost[["feed"]]
-s_capex <- r_k * alpha_cost[["capex"]]
-s_opex  <- r_k * alpha_cost[["opex"]]
+    ############################################################
+    # Distribute the CAPEX/ OPEX shares onto domestic vs imported
+    ############################################################
 
 
- # Raw monetary feedstock components.
-# Negative values represent revenues / gate-fee credits,
-# not purchases of intermediate inputs.
-a_feed_raw <- s_feed * dist_feed
+apply_import_shares <- function(
+    distribution,
+    import_shares
+) {
 
-# Only positive purchased inputs enter the IO technical coefficients.
-a_feed <- pmax(a_feed_raw, 0)
+  if (is.null(distribution)) {
+    return(numeric(0))
+  }
 
-# Negative feedstock components are stored separately as revenues.
-gate_fee_coeff <- -sum(pmin(a_feed_raw, 0))
+  out <- numeric(0)
 
-a_capex <- s_capex * dist_capex
-a_opex  <- s_opex * dist_opex
-  
-  a_dom <- c(
-    agriculture    = get_v(a_feed, "agriculture"),
-    forestry       = get_v(a_feed, "forestry"),
-    paper          = get_v(a_feed, "paper"),
-    food_bev       = get_v(a_feed, "food_bev"),
-    sewerage       = get_v(a_feed, "sewerage") + get_v(a_opex, "sewerage"),
-    adv_biodiesel  = get_v(a_feed, "adv_biodiesel"),
-    adv_biogasoline = get_v(a_feed, "adv_biogasoline"),
-    adv_bio_hfo    = get_v(a_feed, "adv_bio_hfo"),
-    adv_biogas     = get_v(a_feed, "adv_biogas"),
-    fab_metal      = get_v(a_capex, "fab_metal"),
-    elec_equip     = get_v(a_capex, "elec_equip"),
-    machinery      = get_v(a_capex, "machinery"),
-    construction   = get_v(a_capex, "construction"),
-    architecture   = get_v(a_capex, "architecture"),
-    computer_el    = get_v(a_capex, "computer_el"),
-    electricity    = get_v(a_opex, "electricity"),
-    chemicals      = get_v(a_feed, "chemicals") + get_v(a_opex, "chemicals"),
-    legal_acc      = get_v(a_opex, "legal_acc"),
-    repair_inst    = get_v(a_opex, "repair_inst"),
-    land_transp    = get_v(a_opex, "land_transp")
-  )
-  
-  a_imp <- c(
-    agriculture_imp = get_v(a_feed, "agriculture_imp"),
-    food_bev_imp    = get_v(a_feed, "food_bev_imp")
-  )
-  
-  list(
-  a_dom = a_dom,
-  a_imp = a_imp,
-  gate_fee_coeff = gate_fee_coeff
-)
+  for (sector in names(distribution)) {
+
+    total_share <-
+      distribution[[sector]]
+
+    import_share <-
+      if (sector %in% names(import_shares)) {
+        import_shares[[sector]]
+      } else {
+        0
+      }
+
+    if (
+      import_share < 0 ||
+      import_share > 1
+    ) {
+      stop(
+        paste(
+          "Invalid import share for",
+          sector
+        )
+      )
+    }
+
+    domestic_value <-
+      total_share *
+      (1 - import_share)
+
+    imported_value <-
+      total_share *
+      import_share
+
+    if (domestic_value != 0) {
+      out[sector] <-
+        domestic_value
+    }
+
+    if (imported_value != 0) {
+      out[
+        paste0(
+          sector,
+          "_imp"
+        )
+      ] <-
+        imported_value
+    }
+  }
+
+  out
 }
 
+split_dom_imp <- function(x) {
+
+  # Sum duplicate entries, e.g. chemicals from feed + OPEX
+  x <-
+    tapply(
+      x,
+      names(x),
+      sum
+    )
+
+  a_dom <-
+    setNames(
+      numeric(length(DOM_INPUT_NAMES)),
+      DOM_INPUT_NAMES
+    )
+
+  a_imp <-
+    setNames(
+      numeric(length(IMP_INPUT_NAMES)),
+      IMP_INPUT_NAMES
+    )
+
+  dom_names <-
+    intersect(
+      names(x),
+      DOM_INPUT_NAMES
+    )
+
+  imp_names <-
+    intersect(
+      names(x),
+      IMP_INPUT_NAMES
+    )
+
+  a_dom[dom_names] <-
+    x[dom_names]
+
+  a_imp[imp_names] <-
+    x[imp_names]
+
+  list(
+    dom = a_dom,
+    imp = a_imp
+  )
+}
+
+
+
+
+##############################################################################################
+## Technical coefficient vector for each IVC
+##############################################################################################
+
+build_ivc_vector <- function(
+    prod_cost,
+    market_price,
+    alpha_cost,
+    dist_feed,
+    dist_capex,
+    dist_opex,
+    sourcing_group
+) {
+
+  # ------------------------------------------------------------
+  # Cost intensity per EUR of biofuel output
+  # ------------------------------------------------------------
+
+  r_k <- prod_cost / market_price
+
+  s_feed  <- r_k * alpha_cost[["feed"]]
+  s_capex <- r_k * alpha_cost[["capex"]]
+  s_opex  <- r_k * alpha_cost[["opex"]]
+
+
+  # ------------------------------------------------------------
+  # FEEDSTOCK
+  # Domestic/import split is already explicitly contained
+  # in dist_feed, e.g. food_bev / food_bev_imp
+  # ------------------------------------------------------------
+
+  # Raw monetary feedstock components
+  a_feed_raw <-
+    s_feed *
+    dist_feed
+
+  # Negative values represent revenues / gate-fee credits,
+  # not purchases of intermediate inputs
+  gate_fee_coeff <-
+    -sum(
+      pmin(
+        a_feed_raw,
+        0
+      )
+    )
+
+  # Only positive purchased feedstock inputs enter A
+  a_feed <-
+    pmax(
+      a_feed_raw,
+      0
+    )
+
+
+  # ------------------------------------------------------------
+  # CAPEX
+  # Apply domestic/import sourcing assumptions
+  # ------------------------------------------------------------
+
+  dist_capex_sourced <-
+    apply_import_shares(
+      distribution = dist_capex,
+      import_shares =
+        CAPEX_IMPORT_SHARES[[sourcing_group]]
+    )
+
+  a_capex <-
+    s_capex *
+    dist_capex_sourced
+
+
+  # ------------------------------------------------------------
+  # OPEX
+  # Apply domestic/import sourcing assumptions
+  # ------------------------------------------------------------
+
+  dist_opex_sourced <-
+    apply_import_shares(
+      distribution = dist_opex,
+      import_shares =
+        OPEX_IMPORT_SHARES[[sourcing_group]]
+    )
+
+  a_opex <-
+    s_opex *
+    dist_opex_sourced
+
+
+  # ------------------------------------------------------------
+  # COMBINE FEEDSTOCK + CAPEX + OPEX
+  # ------------------------------------------------------------
+
+  all_inputs <-
+    c(
+      a_feed,
+      a_capex,
+      a_opex
+    )
+
+
+  # ------------------------------------------------------------
+  # SPLIT INTO DOMESTIC AND IMPORTED INPUT VECTORS
+  # ------------------------------------------------------------
+
+  input_split <-
+    split_dom_imp(
+      all_inputs
+    )
+
+
+  # ------------------------------------------------------------
+  # RETURN
+  # ------------------------------------------------------------
+
+  list(
+    a_dom =
+      input_split$dom,
+
+    a_imp =
+      input_split$imp,
+
+    gate_fee_coeff =
+      gate_fee_coeff
+  )
+}
+
+##############################################################################################
+## Technical coefficient vector for each final biofuel product
+##############################################################################################
 
 ## now technical coefficient vector for the final biofuel product
 ## works for BASE_2023 as well as future scenarios.
@@ -701,7 +975,10 @@ a_opex  <- s_opex * dist_opex
 ## override IVC_TECH_LIBRARY; otherwise the technology library is used as fallback.
 
 
-build_fuel_column <- function(fuel_cfg) {
+build_fuel_column <- function(
+    fuel_cfg,
+    sourcing_group
+) {
   
   weights <- fuel_cfg$weights
   ivc_ids <- names(weights)
@@ -779,7 +1056,8 @@ if (
       alpha_cost   = ivc_alpha,
       dist_feed    = fuel_cfg$dist_feed[[ivc_id]],
       dist_capex   = ivc_dist_capex,
-      dist_opex    = ivc_dist_opex
+      dist_opex    = ivc_dist_opex,
+      sourcing_group = sourcing_group
     )
     
     # Initialise aggregate vectors based on the first active IVC

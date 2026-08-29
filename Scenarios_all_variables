@@ -1844,7 +1844,7 @@ S1_imports_2030 <- c(
   conv_bio_kerosene = 0,
   adv_bio_kerosene  = 1865379175.15,
   adv_bio_hfo       = 1741730959.95,
-  RFNBOs            = 0,
+  RFNBOs            = 359095080.85,
   adv_biogas        = 0
 )
 

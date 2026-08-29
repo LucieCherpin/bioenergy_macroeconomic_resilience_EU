@@ -994,18 +994,16 @@ build_fuel_column <- function(
     tech_base <- IVC_TECH_LIBRARY[[ivc_id]]
     if (is.null(tech_base)) tech_base <- list()
     
-    # Production cost: scenario-specific first, otherwise technology library
-    ivc_prod_cost <- NULL
-    if (!is.null(fuel_cfg$prod_cost)) {
-      ivc_prod_cost <- fuel_cfg$prod_cost[[ivc_id]]
-    }
-    if (is.null(ivc_prod_cost)) ivc_prod_cost <- tech_base$prod_cost
-    
-    # Market price: scenario-specific first, otherwise technology library
-    ivc_market_price <- NULL
-    if (!is.null(fuel_cfg$market_price)) {
-      ivc_market_price <- fuel_cfg$market_price[[ivc_id]]
-    }
+# CAPEX and OPEX component distributions are IVC-specific
+# and constant across scenarios and years.
+
+ivc_dist_capex <-
+  tech_base$dist_capex
+
+ivc_dist_opex <-
+  tech_base$dist_opex
+
+
     if (is.null(ivc_market_price)) ivc_market_price <- tech_base$market_price
     
    # Feed / CAPEX / OPEX cost shares:
@@ -2052,7 +2050,18 @@ gate_fee_coeff_target <-
     
     target_col <- BIOFUEL_SECTORS[[fuel_name]]
     fuel_cfg   <- scenario_cfg[[fuel_name]]
-    
+
+sourcing_group <-
+  FUEL_TECH_GROUP[[fuel_name]]
+
+if (is.null(sourcing_group)) {
+  stop(
+    paste(
+      "No sourcing group defined for",
+      fuel_name
+    )
+  )
+}
     
     # -------------------------------------------------------------
     # 6.4a. EXOGENOUS DOMESTIC BIOFUEL OUTPUT
@@ -2069,7 +2078,11 @@ gate_fee_coeff_target <-
     # 6.4b. SCENARIO-SPECIFIC BIOFUEL TECHNOLOGY
     # -------------------------------------------------------------
     
-    res_fuel <- build_fuel_column(fuel_cfg)
+ res_fuel <-
+  build_fuel_column(
+    fuel_cfg = fuel_cfg,
+    sourcing_group = sourcing_group
+  )
     
     gate_fee_coeff_target[target_col] <-
   res_fuel$gate_fee_coeff

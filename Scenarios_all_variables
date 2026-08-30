@@ -2021,6 +2021,36 @@ S1_2035 <- list(
 )
 
 
+# ==========================================================
+# FINISHED BIOFUEL IMPORTS - S1 2035
+# Monetary values in EUR
+# ==========================================================
+
+S1_imports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 11609442472.0000,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 2658381657.0000,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 8222014081.0000,
+  adv_bio_hfo       = 762619367.7000,
+  RFNBOs            = 17801918753.0000,
+  adv_biogas        = 0
+)
+
+
+# ==========================================================
+# FINISHED BIOFUEL EXPORTS - S1 2035
+# S1 assumes no finished biofuel exports
+# ==========================================================
+
+S1_exports_2035 <-
+  setNames(
+    rep(0, length(BIOFUEL_SECTORS)),
+    names(BIOFUEL_SECTORS)
+  )
+
+
 #####################################################################################
 # SCENARIO 2 - 2035
 #####################################################################################

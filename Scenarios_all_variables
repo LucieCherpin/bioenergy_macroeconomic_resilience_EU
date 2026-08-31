@@ -47,7 +47,7 @@ national_accounts <- read_xlsx("nama_10_gdp__EU27.xlsx", sheet = "Sheet 1", rang
 ###General Parameters
 ##########################################
 
-nYears = 20             #Number of years 
+nYears <- length(2023:2040)            #Number of years 
 nIndustries = 73        #Industries of Eurostat input-output table
 
 
@@ -1379,7 +1379,7 @@ S1_2030 <- list(
   conv_bio_kerosene = list(
     abs_market_value = 966980000,
     weights = c(IVC_HT_lipids_SAF = 1.0),
-  
+
     dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.61, food_bev_imp = 0.39)
     )
@@ -2406,20 +2406,10 @@ S2_2035 <- list(
   conv_biodiesel = list(
 
     abs_market_value = 15987016701.4600,
-
     weights = c(IVC_T_FF = 0.2007, IVC_HT_FF = 0.2766,
                 IVC_HT_CC = 0.0486, IVC_T_lipids = 0.4740),
-
     prod_cost = list(IVC_T_FF = 629.0000, IVC_HT_FF = 665.8248,
                      IVC_HT_CC = 1218.0000, IVC_T_lipids = 1253.0000),
-
-    alpha = list(
-      IVC_T_FF     = c(feed = 0.7500, capex = 0.0650, opex = 0.1850),
-      IVC_HT_FF    = c(feed = 0.7000, capex = 0.1000, opex = 0.2000),
-      IVC_HT_CC    = c(feed = 0.6400, capex = 0.1400, opex = 0.2200),
-      IVC_T_lipids = c(feed = 0.7207, capex = 0.0662, opex = 0.2131)
-    ),
-
     dist_feed = list(
       IVC_T_FF     = c(food_bev = 0.8006, food_bev_imp = 0.1994),
       IVC_HT_FF    = c(food_bev = 0.8006, food_bev_imp = 0.1994),
@@ -2443,15 +2433,8 @@ S2_2035 <- list(
     # Market value derived from reported output:
     # 2,905,420.248872 t * EUR 2,100/t
     abs_market_value = 6101382522.6300,
-
     weights = c(IVC_HT_lipids_SAF = 1.0000),
-
     prod_cost = list(IVC_HT_lipids_SAF = 2903.0000),
-
-    alpha = list(
-      IVC_HT_lipids_SAF = c(feed = 0.6755, capex = 0.1295, opex = 0.1950)
-    ),
-
     dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.5732, food_bev_imp = 0.4268)
     )
@@ -2681,13 +2664,6 @@ S3_2035 <- list(
     prod_cost = list(
       IVC_T_FF = 629.0000, IVC_HT_FF = 665.8248,
       IVC_HT_CC = 1218.0000, IVC_T_lipids = 1253.0000
-    ),
-
-    alpha = list(
-      IVC_T_FF     = c(feed = 0.7500, capex = 0.0650, opex = 0.1850),
-      IVC_HT_FF    = c(feed = 0.7000, capex = 0.1000, opex = 0.2000),
-      IVC_HT_CC    = c(feed = 0.6400, capex = 0.1400, opex = 0.2200),
-      IVC_T_lipids = c(feed = 0.7207, capex = 0.0662, opex = 0.2131)
     ),
 
     dist_feed = list(
@@ -3258,21 +3234,7 @@ S3_endpoint_2040 <- build_endpoint(
   export_cfg_eur = S3_exports_2040
 )
 
-# Future endpoints can be added analogously:
-#
-# S1_endpoint_2035 <- build_endpoint(
-#   scenario_cfg   = S1_2035,
-#   import_cfg_eur = S1_imports_2035,
-    export_cfg_eur = S1_exports_2035
-# )
-#
-# S1_endpoint_2040 <- build_endpoint(
-#   scenario_cfg   = S1_2040,
-#   import_cfg_eur = S1_imports_2040,
-#    export_cfg_eur = S1_exports_2035
-# )
-#
-# etc.
+
 
 
 # ===================================================================
@@ -3282,100 +3244,39 @@ S3_endpoint_2040 <- build_endpoint(
 BIO <- unname(BIOFUEL_SECTORS)
 
 
-# ---------------------------------------------------------------
-# Dimensions
-# ---------------------------------------------------------------
+check_endpoint <- function(endpoint) {
 
-stopifnot(
+  stopifnot(
+    all(dim(endpoint$A_dom) == c(nIndustries, nIndustries)),
+    all(dim(endpoint$A_imp) == c(nIndustries, nIndustries)),
+    length(endpoint$X_bio) == length(BIO),
+    length(endpoint$Y_imp_FCE) == nIndustries,
+    length(endpoint$exports) == nIndustries,
+    length(endpoint$gate_fee_coeff) == nIndustries,
 
-  all(
-    dim(S1_endpoint_2030$A_dom) ==
-      c(nIndustries, nIndustries)
-  ),
+    !anyNA(endpoint$A_dom),
+    !anyNA(endpoint$A_imp),
+    !anyNA(endpoint$X_bio),
+    !anyNA(endpoint$Y_imp_FCE),
+    !anyNA(endpoint$exports),
+    !anyNA(endpoint$gate_fee_coeff),
 
-  all(
-    dim(S1_endpoint_2030$A_imp) ==
-      c(nIndustries, nIndustries)
-  ),
+    all(endpoint$gate_fee_coeff >= 0)
+  )
+}
 
-  all(
-    dim(S2_endpoint_2030$A_dom) ==
-      c(nIndustries, nIndustries)
-  ),
+check_endpoint(S1_endpoint_2030)
+check_endpoint(S1_endpoint_2035)
+check_endpoint(S1_endpoint_2040)
 
-  all(
-    dim(S2_endpoint_2030$A_imp) ==
-      c(nIndustries, nIndustries)
-  ),
- all(
-    dim(S3_endpoint_2030$A_dom) ==
-      c(nIndustries, nIndustries)
-  ),
+check_endpoint(S2_endpoint_2030)
+check_endpoint(S2_endpoint_2035)
+check_endpoint(S2_endpoint_2040)
 
-  all(
-    dim(S3_endpoint_2030$A_imp) ==
-      c(nIndustries, nIndustries)
-  ),
+check_endpoint(S3_endpoint_2030)
+check_endpoint(S3_endpoint_2035)
+check_endpoint(S3_endpoint_2040)
 
-  length(S1_endpoint_2030$X_bio) ==
-    length(BIO),
-
-  length(S2_endpoint_2030$X_bio) ==
-    length(BIO),
-
-  length(S1_endpoint_2030$Y_imp_FCE) ==
-    nIndustries,
-
-  length(S2_endpoint_2030$Y_imp_FCE) ==
-    nIndustries,
-
-length(S1_endpoint_2030$gate_fee_coeff) ==
-  nIndustries,
-
-length(S2_endpoint_2030$gate_fee_coeff) ==
-  nIndustries,
-
-length(S3_endpoint_2030$X_bio) ==
-  length(BIO),
-
-length(S3_endpoint_2030$Y_imp_FCE) ==
-  nIndustries,
-
-length(S3_endpoint_2030$gate_fee_coeff) ==
-  nIndustries
-
-)
-
-# ---------------------------------------------------------------
-# No missing values in exogenous scenario conditions
-# ---------------------------------------------------------------
-
-stopifnot(
-
-  !anyNA(S1_endpoint_2030$A_dom),
-  !anyNA(S1_endpoint_2030$A_imp),
-  !anyNA(S1_endpoint_2030$X_bio),
-  !anyNA(S1_endpoint_2030$Y_imp_FCE),
-
-  !anyNA(S2_endpoint_2030$A_dom),
-  !anyNA(S2_endpoint_2030$A_imp),
-  !anyNA(S2_endpoint_2030$X_bio),
-  !anyNA(S2_endpoint_2030$Y_imp_FCE),
-
-  !anyNA(S3_endpoint_2030$A_dom),
-  !anyNA(S3_endpoint_2030$A_imp),
-  !anyNA(S3_endpoint_2030$X_bio),
-  !anyNA(S3_endpoint_2030$Y_imp_FCE),
-
-  !anyNA(S1_endpoint_2030$gate_fee_coeff),
-  !anyNA(S2_endpoint_2030$gate_fee_coeff),
-  !anyNA(S3_endpoint_2030$gate_fee_coeff),
-
-  all(S1_endpoint_2030$gate_fee_coeff >= 0),
-  all(S2_endpoint_2030$gate_fee_coeff >= 0),
-  all(S3_endpoint_2030$gate_fee_coeff >= 0)
-
-)
 
 ############################################################################################################################################################
 #######  build linear development between 2023 and the three 2030 endpoints - fix only Aimp, Adom and X(BIO) --> build annual EGOGENOUS scenario drivers####
@@ -3903,6 +3804,15 @@ REF_driver_2023_2040 <-                  ### stationary base line scenario/ coun
     start_year     = 2023,
     end_year       = 2040
   )
+
+stopifnot(
+  identical(S1_driver_2023_2040$years, 2023:2040),
+  identical(S2_driver_2023_2040$years, 2023:2040),
+  identical(S3_driver_2023_2040$years, 2023:2040),
+  identical(REF_driver_2023_2040$years, 2023:2040)
+)
+
+
 ############################################################################################################################################################
 #### this is the ONE common annual simulatio used for all scenarios --> the scenario driver provides the exoegnous BIO assumptions, the model calculates the engoengousr esponse of NONBIO sectors
 ############################################################################################################################################################
@@ -4713,16 +4623,36 @@ Y_domestic_final =
   )
 }
 
+# ===================================================================
+# EXTRACT REFERENCE ENDPOINTS
+# ===================================================================
+
 REF_dynamic_endpoint_2030 <-
   extract_dynamic_endpoint(
-    REF_dynamic_2023_2030,
+    REF_dynamic_2023_2040,
     2030
   )
 
+REF_dynamic_endpoint_2035 <-
+  extract_dynamic_endpoint(
+    REF_dynamic_2023_2040,
+    2035
+  )
+
+REF_dynamic_endpoint_2040 <-
+  extract_dynamic_endpoint(
+    REF_dynamic_2023_2040,
+    2040
+  )
+
+
+# ===================================================================
+# EXTRACT S1 ENDPOINTS
+# ===================================================================
 
 S1_dynamic_endpoint_2030 <-
   extract_dynamic_endpoint(
-    S1_dynamic_2023_2030,
+    S1_dynamic_2023_2040,
     2030
   )
 
@@ -4738,9 +4668,14 @@ S1_dynamic_endpoint_2040 <-
     2040
   )
 
+
+# ===================================================================
+# EXTRACT S2 ENDPOINTS
+# ===================================================================
+
 S2_dynamic_endpoint_2030 <-
   extract_dynamic_endpoint(
-    S2_dynamic_2023_2030,
+    S2_dynamic_2023_2040,
     2030
   )
 
@@ -4756,6 +4691,10 @@ S2_dynamic_endpoint_2040 <-
     2040
   )
 
+
+# ===================================================================
+# EXTRACT S3 ENDPOINTS
+# ===================================================================
 
 S3_dynamic_endpoint_2030 <-
   extract_dynamic_endpoint(
@@ -4816,12 +4755,28 @@ GVA_S3_2030   <- S3_dynamic_endpoint_2030$GVA
 # SAVE 2030 MODEL RESULTS
 # ===================================================================
 
-model_results_2030 <- list(
+model_results <- list(
 
-  REF = REF_dynamic_endpoint_2030,
-  S1  = S1_dynamic_endpoint_2030,
-  S2  = S2_dynamic_endpoint_2030,
-  S3  = S3_dynamic_endpoint_2030,
+  `2030` = list(
+    REF = REF_dynamic_endpoint_2030,
+    S1  = S1_dynamic_endpoint_2030,
+    S2  = S2_dynamic_endpoint_2030,
+    S3  = S3_dynamic_endpoint_2030
+  ),
+
+  `2035` = list(
+    REF = REF_dynamic_endpoint_2035,
+    S1  = S1_dynamic_endpoint_2035,
+    S2  = S2_dynamic_endpoint_2035,
+    S3  = S3_dynamic_endpoint_2035
+  ),
+
+  `2040` = list(
+    REF = REF_dynamic_endpoint_2040,
+    S1  = S1_dynamic_endpoint_2040,
+    S2  = S2_dynamic_endpoint_2040,
+    S3  = S3_dynamic_endpoint_2040
+  ),
 
   metadata = list(
     BIO = BIO,
@@ -4831,8 +4786,8 @@ model_results_2030 <- list(
 )
 
 saveRDS(
-  model_results_2030,
-  "model_results_2030.rds"
+  model_results,
+  "model_results.rds"
 )
 
 # ===================================================================

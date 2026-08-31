@@ -1031,7 +1031,10 @@ ivc_dist_opex <-
       ivc_dist_opex <- fuel_cfg$dist_opex[[ivc_id]]
     }
     if (is.null(ivc_dist_opex)) ivc_dist_opex <- tech_base$dist_opex
-    
+
+
+
+
 if (
   is.null(ivc_prod_cost) ||
   is.null(ivc_market_price) ||

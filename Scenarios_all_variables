@@ -2178,7 +2178,7 @@ S3_imports_2035 <- c(
 )
 
 # ==========================================================
-# FINISHED BIOFUEL EXPORTS - S1 2035
+# FINISHED BIOFUEL EXPORTS - 2035
 # S1 assumes no finished biofuel exports
 # ==========================================================
 
@@ -2188,17 +2188,23 @@ S1_exports_2035 <-
     names(BIOFUEL_SECTORS)
   )
 
-S1_exports_2035 <-
+S2_exports_2035 <-
   setNames(
     rep(0, length(BIOFUEL_SECTORS)),
     names(BIOFUEL_SECTORS)
   )
 
-S1_exports_2035 <-
-  setNames(
-    rep(0, length(BIOFUEL_SECTORS)),
-    names(BIOFUEL_SECTORS)
-  )
+S3_exports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 27271757981.279,   
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 12712433934.555,   
+  adv_bio_hfo       = 45041564760.057,   
+  RFNBOs            = 4871514959.822,   
+  adv_biogas        = 19447282892.296    
+)
 
 
 #####################################################################################

@@ -1997,8 +1997,8 @@ S1_2035 <- list(
   ),
 
   conv_biodiesel = list(
-    abs_market_value = 16481752685.80,
-    weights = c(IVC_T_FF = 0.265148045, IVC_HT_FF = 0.202447002, IVC_T_CC = 0.387961892, IVC_HT_CC = 0.144443062),
+    abs_market_value =  15648464562.73,
+    weights = c(IVC_T_FF = 0.25, IVC_HT_FF = 0.25, IVC_T_CC = 0.25, IVC_HT_CC = 0.25),
     dist_feed = list(
       IVC_T_FF = c(food_bev = 0.800553842, food_bev_imp = 0.199446158),
       IVC_HT_FF = c(food_bev = 0.800553842, food_bev_imp = 0.199446158),
@@ -2014,7 +2014,7 @@ S1_2035 <- list(
   ),
 
   conv_bio_kerosene = list(
-    abs_market_value = 0,
+    abs_market_value = 3226744186.05,
     weights = c(IVC_HT_lipids_SAF = 1),
     dist_feed = list(IVC_HT_lipids_SAF = c(food_bev = 0.61, food_bev_imp = 0.39))
   )

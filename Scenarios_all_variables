@@ -2127,9 +2127,9 @@ S2_2035 <- list(
 
   adv_biogas = list(
 
-    abs_market_value = 35117968541.2800,
+    abs_market_value =  44887169427.93,
 
-    weights = c(IVC7 = 0.4143, IVC9a = 0.5857),
+    weights = c(IVC7 = 0.3568, IVC9a = 0.6432),
 
     prod_cost = list(IVC7 = 1032.8576, IVC9a = 1397.8934),
 

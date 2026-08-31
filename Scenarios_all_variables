@@ -2138,8 +2138,7 @@ S1_2035 <- list(
 
 
 # ==========================================================
-# FINISHED BIOFUEL IMPORTS - S1 2035
-# Monetary values in EUR
+# FINISHED BIOFUEL IMPORTS - 2035
 # ==========================================================
 
 S1_imports_2035 <- c(
@@ -2154,11 +2153,46 @@ S1_imports_2035 <- c(
   adv_biogas        = 0
 )
 
+S2_imports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 0,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 0,
+  adv_bio_hfo       = 0,
+  RFNBOs            = 0,
+  adv_biogas        = 0
+)
+
+S3_imports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 0,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 0,
+  adv_bio_hfo       = 0,
+  RFNBOs            = 0,
+  adv_biogas        = 0
+)
 
 # ==========================================================
 # FINISHED BIOFUEL EXPORTS - S1 2035
 # S1 assumes no finished biofuel exports
 # ==========================================================
+
+S1_exports_2035 <-
+  setNames(
+    rep(0, length(BIOFUEL_SECTORS)),
+    names(BIOFUEL_SECTORS)
+  )
+
+S1_exports_2035 <-
+  setNames(
+    rep(0, length(BIOFUEL_SECTORS)),
+    names(BIOFUEL_SECTORS)
+  )
 
 S1_exports_2035 <-
   setNames(
@@ -3830,9 +3864,9 @@ combine_scenario_drivers <- function(...) {
 
 
 
-+++++++++++++++++++++++++++++++++++++++++++++++
-### create one complete driver for each Scenario
-+++++++++++++++++++++++++++++++++++++++++++++++
+# ===================================================================
+# CREATE ONE COMPLETE DRIVER FOR EACH SCENARIO
+# ===================================================================
 
 
 S1_driver_2023_2040 <-

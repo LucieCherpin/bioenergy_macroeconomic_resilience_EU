@@ -3182,6 +3182,41 @@ S3_endpoint_2030 <- build_endpoint(
   export_cfg_eur = S3_exports_2030
 )
 
+S1_endpoint_2035 <- build_endpoint(
+  scenario_cfg   = S1_2035,
+  import_cfg_eur = S1_imports_2035,
+  export_cfg_eur = S1_exports_2035
+)
+
+S2_endpoint_2035 <- build_endpoint(
+  scenario_cfg   = S2_2035,
+  import_cfg_eur = S2_imports_2035,
+  export_cfg_eur = S2_exports_2035
+)
+
+S3_endpoint_2035 <- build_endpoint(
+  scenario_cfg   = S3_2035,
+  import_cfg_eur = S3_imports_2035,
+  export_cfg_eur = S3_exports_2035
+)
+
+S1_endpoint_2040 <- build_endpoint(
+  scenario_cfg   = S1_2040,
+  import_cfg_eur = S1_imports_2040,
+  export_cfg_eur = S1_exports_2040
+)
+
+S2_endpoint_2040 <- build_endpoint(
+  scenario_cfg   = S2_2040,
+  import_cfg_eur = S2_imports_2040,
+  export_cfg_eur = S2_exports_2040
+)
+
+S3_endpoint_2040 <- build_endpoint(
+  scenario_cfg   = S3_2040,
+  import_cfg_eur = S3_imports_2040,
+  export_cfg_eur = S3_exports_2040
+)
 
 # Future endpoints can be added analogously:
 #
@@ -3561,49 +3596,273 @@ gate_fee_coeff_path[i, ] <-
 
 
 # ===================================================================
-# 11. BUILD REFERENCE, S1 AND S2 and S3 DRIVERS: 2023 -> 2030
+# 11. BUILD PATHWAYS BRIDGING THE YEARS - INTERPOLATION WITH THREE FIXED ENDPOINTS
 # ===================================================================
 
+# ===================================================================
+# SCENARIO 1: PIECEWISE EXOGENOUS PATH
+# 2023 -> 2030 -> 2035 -> 2040
+# ===================================================================
 
-# Reference:
-# no biofuel shock, therefore 2023 -> 2023
-REF_driver_2023_2030 <-
+S1_driver_2023_2030 <- build_scenario_driver(
+  start_endpoint = BASE_2023,
+  end_endpoint   = S1_endpoint_2030,
+  start_year     = 2023,
+  end_year       = 2030
+)
+
+S1_driver_2030_2035 <- build_scenario_driver(
+  start_endpoint = S1_endpoint_2030,
+  end_endpoint   = S1_endpoint_2035,
+  start_year     = 2030,
+  end_year       = 2035
+)
+
+S1_driver_2035_2040 <- build_scenario_driver(
+  start_endpoint = S1_endpoint_2035,
+  end_endpoint   = S1_endpoint_2040,
+  start_year     = 2035,
+  end_year       = 2040
+)
+
+# ===================================================================
+# SCENARIO 2: PIECEWISE EXOGENOUS PATH
+# 2023 -> 2030 -> 2035 -> 2040
+# ===================================================================
+
+S2_driver_2023_2030 <- build_scenario_driver(
+  start_endpoint = BASE_2023,
+  end_endpoint   = S2_endpoint_2030,
+  start_year     = 2023,
+  end_year       = 2030
+)
+
+S2_driver_2030_2035 <- build_scenario_driver(
+  start_endpoint = S2_endpoint_2030,
+  end_endpoint   = S2_endpoint_2035,
+  start_year     = 2030,
+  end_year       = 2035
+)
+
+S2_driver_2035_2040 <- build_scenario_driver(
+  start_endpoint = S2_endpoint_2035,
+  end_endpoint   = S2_endpoint_2040,
+  start_year     = 2035,
+  end_year       = 2040
+)
+
+
+# ===================================================================
+# SCENARIO 3: PIECEWISE EXOGENOUS PATH
+# 2023 -> 2030 -> 2035 -> 2040
+# ===================================================================
+
+S3_driver_2023_2030 <- build_scenario_driver(
+  start_endpoint = BASE_2023,
+  end_endpoint   = S3_endpoint_2030,
+  start_year     = 2023,
+  end_year       = 2030
+)
+
+S3_driver_2030_2035 <- build_scenario_driver(
+  start_endpoint = S3_endpoint_2030,
+  end_endpoint   = S3_endpoint_2035,
+  start_year     = 2030,
+  end_year       = 2035
+)
+
+S3_driver_2035_2040 <- build_scenario_driver(
+  start_endpoint = S3_endpoint_2035,
+  end_endpoint   = S3_endpoint_2040,
+  start_year     = 2035,
+  end_year       = 2040
+)
+
+
+# ===================================================================
+# COMBINE CONSECUTIVE SCENARIO-DRIVER SEGMENTS
+# ===================================================================
+
+combine_scenario_drivers <- function(...) {
+
+  drivers <- list(...)
+
+  if (length(drivers) == 0) {
+    stop("No scenario drivers supplied.")
+  }
+
+  out <- drivers[[1]]
+
+  if (length(drivers) == 1) {
+    return(out)
+  }
+
+  for (k in 2:length(drivers)) {
+
+    d <- drivers[[k]]
+
+    # Skip first observation because it duplicates
+    # the previous segment's endpoint
+    keep <- 2:length(d$years)
+
+    old_n <- length(out$years)
+    new_n <- length(keep)
+
+    combined_years <-
+      c(
+        out$years,
+        d$years[keep]
+      )
+
+
+    # ------------------------------------------------------------
+    # A_dom
+    # ------------------------------------------------------------
+
+    A_dom_new <-
+      array(
+        NA_real_,
+        dim = c(
+          old_n + new_n,
+          nIndustries,
+          nIndustries
+        )
+      )
+
+    A_dom_new[1:old_n, , ] <- out$A_dom
+
+    A_dom_new[
+      (old_n + 1):(old_n + new_n),
+      ,
+    ] <-
+      d$A_dom[keep, , , drop = FALSE]
+
+
+    # ------------------------------------------------------------
+    # A_imp
+    # ------------------------------------------------------------
+
+    A_imp_new <-
+      array(
+        NA_real_,
+        dim = c(
+          old_n + new_n,
+          nIndustries,
+          nIndustries
+        )
+      )
+
+    A_imp_new[1:old_n, , ] <- out$A_imp
+
+    A_imp_new[
+      (old_n + 1):(old_n + new_n),
+      ,
+    ] <-
+      d$A_imp[keep, , , drop = FALSE]
+
+
+    # ------------------------------------------------------------
+    # Remaining matrices
+    # ------------------------------------------------------------
+
+    out$X_bio <-
+      rbind(
+        out$X_bio,
+        d$X_bio[keep, , drop = FALSE]
+      )
+
+    out$Y_imp_FCE <-
+      rbind(
+        out$Y_imp_FCE,
+        d$Y_imp_FCE[keep, , drop = FALSE]
+      )
+
+    out$exports <-
+      rbind(
+        out$exports,
+        d$exports[keep, , drop = FALSE]
+      )
+
+    out$gate_fee_coeff <-
+      rbind(
+        out$gate_fee_coeff,
+        d$gate_fee_coeff[keep, , drop = FALSE]
+      )
+
+
+    out$years <- combined_years
+    out$A_dom <- A_dom_new
+    out$A_imp <- A_imp_new
+  }
+
+
+  # ------------------------------------------------------------
+  # Restore year names
+  # ------------------------------------------------------------
+
+  dimnames(out$A_dom) <- list(
+    year = as.character(out$years),
+    input_sector = NULL,
+    output_sector = NULL
+  )
+
+  dimnames(out$A_imp) <- list(
+    year = as.character(out$years),
+    input_sector = NULL,
+    output_sector = NULL
+  )
+
+  rownames(out$X_bio) <-
+    as.character(out$years)
+
+  rownames(out$Y_imp_FCE) <-
+    as.character(out$years)
+
+  rownames(out$exports) <-
+    as.character(out$years)
+
+  rownames(out$gate_fee_coeff) <-
+    as.character(out$years)
+
+
+  out
+}
+
+
+
++++++++++++++++++++++++++++++++++++++++++++++++
+### create one complete driver for each Scenario
++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+S1_driver_2023_2040 <-
+  combine_scenario_drivers(
+    S1_driver_2023_2030,
+    S1_driver_2030_2035,
+    S1_driver_2035_2040
+  )
+
+S2_driver_2023_2040 <-
+  combine_scenario_drivers(
+    S2_driver_2023_2030,
+    S2_driver_2030_2035,
+    S2_driver_2035_2040
+  )
+
+S3_driver_2023_2040 <-
+  combine_scenario_drivers(
+    S3_driver_2023_2030,
+    S3_driver_2030_2035,
+    S3_driver_2035_2040
+  )
+
+REF_driver_2023_2040 <-                  ### stationary base line scenario/ counterfactional
   build_scenario_driver(
     start_endpoint = BASE_2023,
     end_endpoint   = BASE_2023,
     start_year     = 2023,
-    end_year       = 2030
+    end_year       = 2040
   )
-
-
-# Scenario 1
-S1_driver_2023_2030 <-
-  build_scenario_driver(
-    start_endpoint = BASE_2023,
-    end_endpoint   = S1_endpoint_2030,
-    start_year     = 2023,
-    end_year       = 2030
-  )
-
-
-# Scenario 2
-S2_driver_2023_2030 <-
-  build_scenario_driver(
-    start_endpoint = BASE_2023,
-    end_endpoint   = S2_endpoint_2030,
-    start_year     = 2023,
-    end_year       = 2030
-  )
-
-S3_driver_2023_2030 <-
-  build_scenario_driver(
-    start_endpoint = BASE_2023,
-    end_endpoint   = S3_endpoint_2030,
-    start_year     = 2023,
-    end_year       = 2030
-  )
-
-
 ############################################################################################################################################################
 #### this is the ONE common annual simulatio used for all scenarios --> the scenario driver provides the exoegnous BIO assumptions, the model calculates the engoengousr esponse of NONBIO sectors
 ############################################################################################################################################################
@@ -4270,26 +4529,24 @@ gate_fee_revenue =
 # ===================================================================
 
 
-REF_dynamic_2023_2030 <-
+REF_dynamic_2023_2040 <-
   run_dynamic_scenario(
-    REF_driver_2023_2030
+    REF_driver_2023_2040
   )
 
-
-S1_dynamic_2023_2030 <-
+S1_dynamic_2023_2040 <-
   run_dynamic_scenario(
-    S1_driver_2023_2030
+    S1_driver_2023_2040
   )
 
-
-S2_dynamic_2023_2030 <-
+S2_dynamic_2023_2040 <-
   run_dynamic_scenario(
-    S2_driver_2023_2030
+    S2_driver_2023_2040
   )
 
-S3_dynamic_2023_2030 <-
+S3_dynamic_2023_2040 <-
   run_dynamic_scenario(
-    S3_driver_2023_2030
+    S3_driver_2023_2040
   )
 
 # ===================================================================
@@ -4429,6 +4686,17 @@ S1_dynamic_endpoint_2030 <-
     2030
   )
 
+S1_dynamic_endpoint_2035 <-
+  extract_dynamic_endpoint(
+    S1_dynamic_2023_2040,
+    2035
+  )
+
+S1_dynamic_endpoint_2040 <-
+  extract_dynamic_endpoint(
+    S1_dynamic_2023_2040,
+    2040
+  )
 
 S2_dynamic_endpoint_2030 <-
   extract_dynamic_endpoint(
@@ -4436,10 +4704,35 @@ S2_dynamic_endpoint_2030 <-
     2030
   )
 
+S2_dynamic_endpoint_2035 <-
+  extract_dynamic_endpoint(
+    S2_dynamic_2023_2040,
+    2035
+  )
+
+S2_dynamic_endpoint_2040 <-
+  extract_dynamic_endpoint(
+    S2_dynamic_2023_2040,
+    2040
+  )
+
+
 S3_dynamic_endpoint_2030 <-
   extract_dynamic_endpoint(
-    S3_dynamic_2023_2030,
+    S3_dynamic_2023_2040,
     2030
+  )
+
+S3_dynamic_endpoint_2035 <-
+  extract_dynamic_endpoint(
+    S3_dynamic_2023_2040,
+    2035
+  )
+
+S3_dynamic_endpoint_2040 <-
+  extract_dynamic_endpoint(
+    S3_dynamic_2023_2040,
+    2040
   )
 
 # ===================================================================

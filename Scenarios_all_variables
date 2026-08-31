@@ -3187,12 +3187,14 @@ S3_endpoint_2030 <- build_endpoint(
 #
 # S1_endpoint_2035 <- build_endpoint(
 #   scenario_cfg   = S1_2035,
-#   import_cfg_eur = S1_imports_2035
+#   import_cfg_eur = S1_imports_2035,
+    export_cfg_eur = S1_exports_2035
 # )
 #
 # S1_endpoint_2040 <- build_endpoint(
 #   scenario_cfg   = S1_2040,
-#   import_cfg_eur = S1_imports_2040
+#   import_cfg_eur = S1_imports_2040,
+#    export_cfg_eur = S1_exports_2035
 # )
 #
 # etc.

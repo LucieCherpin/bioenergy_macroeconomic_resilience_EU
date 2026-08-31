@@ -969,117 +969,230 @@ build_ivc_vector <- function(
 ## Technical coefficient vector for each final biofuel product
 ##############################################################################################
 
-## now technical coefficient vector for the final biofuel product
-## works for BASE_2023 as well as future scenarios.
-## Scenario-specific values (e.g. 2023 market values / CAPEX / OPEX distributions)
-## override IVC_TECH_LIBRARY; otherwise the technology library is used as fallback.
+## Builds the aggregated technical coefficient vector of one final biofuel sector.
+##
+## Scenario/year-specific:
+## - IVC weights
+## - production costs
+## - feed/CAPEX/OPEX cost shares (alpha)
+## - feedstock distributions
+##
+## Fixed by IVC in IVC_TECH_LIBRARY:
+## - market prices
+## - CAPEX component distributions
+## - OPEX component distributions
+##
+## For conventional IVCs, production costs and alpha may also fall back
+## to the constant values stored in IVC_TECH_LIBRARY.
 
 
 build_fuel_column <- function(
     fuel_cfg,
     sourcing_group
 ) {
-  
+
+  # ------------------------------------------------------------
+  # IVC WEIGHTS
+  # ------------------------------------------------------------
+
   weights <- fuel_cfg$weights
+
+  if (is.null(weights) || length(weights) == 0) {
+    stop("No IVC weights supplied.")
+  }
+
+  if (any(weights < 0)) {
+    stop("IVC weights must not be negative.")
+  }
+
+  # Normalize to avoid small deviations caused by rounding
+  weights <- weights / sum(weights)
+
   ivc_ids <- names(weights)
-  
+
+
+  # ------------------------------------------------------------
+  # INITIALISE AGGREGATED RESULTS
+  # ------------------------------------------------------------
+
   a_dom_agg <- NULL
   a_imp_agg <- NULL
   gate_fee_coeff_agg <- 0
-  
+
+
+  # ------------------------------------------------------------
+  # LOOP OVER ACTIVE IVCs
+  # ------------------------------------------------------------
+
   for (ivc_id in ivc_ids) {
-    
+
     w <- weights[[ivc_id]]
-    
+
+
+    # ----------------------------------------------------------
+    # TECHNOLOGY LIBRARY ENTRY
+    # ----------------------------------------------------------
+
     tech_base <- IVC_TECH_LIBRARY[[ivc_id]]
-    if (is.null(tech_base)) tech_base <- list()
-    
-# CAPEX and OPEX component distributions are IVC-specific
-# and constant across scenarios and years.
 
-ivc_dist_capex <-
-  tech_base$dist_capex
+    if (is.null(tech_base)) {
+      stop(
+        paste(
+          "No technology-library entry found for",
+          ivc_id
+        )
+      )
+    }
 
-ivc_dist_opex <-
-  tech_base$dist_opex
+
+    # ----------------------------------------------------------
+    # PRODUCTION COST
+    # Scenario/year-specific first;
+    # technology library used as fallback
+    # ----------------------------------------------------------
+
+    ivc_prod_cost <- NULL
+
+    if (!is.null(fuel_cfg$prod_cost)) {
+      ivc_prod_cost <- fuel_cfg$prod_cost[[ivc_id]]
+    }
+
+    if (is.null(ivc_prod_cost)) {
+      ivc_prod_cost <- tech_base$prod_cost
+    }
 
 
-    if (is.null(ivc_market_price)) ivc_market_price <- tech_base$market_price
-    
-   # Feed / CAPEX / OPEX cost shares:
-    # scenario-specific first, otherwise technology library
-      ivc_alpha <- NULL
-    
+    # ----------------------------------------------------------
+    # MARKET PRICE
+    # Fixed by IVC across scenarios and years
+    # ----------------------------------------------------------
+
+    ivc_market_price <- tech_base$market_price
+
+
+    # ----------------------------------------------------------
+    # FEED / CAPEX / OPEX COST SHARES
+    # Scenario/year-specific first;
+    # technology library used as fallback
+    # ----------------------------------------------------------
+
+    ivc_alpha <- NULL
+
     if (!is.null(fuel_cfg$alpha)) {
       ivc_alpha <- fuel_cfg$alpha[[ivc_id]]
     }
-    
+
     if (is.null(ivc_alpha)) {
       ivc_alpha <- tech_base$alpha
     }
 
-    # CAPEX distribution: scenario-specific first, otherwise technology library
-    ivc_dist_capex <- NULL
-    if (!is.null(fuel_cfg$dist_capex)) {
-      ivc_dist_capex <- fuel_cfg$dist_capex[[ivc_id]]
+
+    # ----------------------------------------------------------
+    # FEEDSTOCK DISTRIBUTION
+    # Scenario/year-specific
+    # ----------------------------------------------------------
+
+    ivc_dist_feed <- NULL
+
+    if (!is.null(fuel_cfg$dist_feed)) {
+      ivc_dist_feed <- fuel_cfg$dist_feed[[ivc_id]]
     }
-    if (is.null(ivc_dist_capex)) ivc_dist_capex <- tech_base$dist_capex
-    
-    # OPEX distribution: scenario-specific first, otherwise technology library
-    ivc_dist_opex <- NULL
-    if (!is.null(fuel_cfg$dist_opex)) {
-      ivc_dist_opex <- fuel_cfg$dist_opex[[ivc_id]]
+
+
+    # ----------------------------------------------------------
+    # CAPEX / OPEX COMPONENT DISTRIBUTIONS
+    # Fixed by IVC across scenarios and years
+    # ----------------------------------------------------------
+
+    ivc_dist_capex <- tech_base$dist_capex
+    ivc_dist_opex  <- tech_base$dist_opex
+
+
+    # ----------------------------------------------------------
+    # CHECK REQUIRED INPUTS
+    # ----------------------------------------------------------
+
+    if (
+      is.null(ivc_prod_cost) ||
+      is.null(ivc_market_price) ||
+      is.null(ivc_alpha) ||
+      is.null(ivc_dist_feed) ||
+      is.null(ivc_dist_capex) ||
+      is.null(ivc_dist_opex)
+    ) {
+
+      stop(
+        paste(
+          "Missing technology input for",
+          ivc_id
+        )
+      )
     }
-    if (is.null(ivc_dist_opex)) ivc_dist_opex <- tech_base$dist_opex
 
 
+    # ----------------------------------------------------------
+    # BUILD IVC-SPECIFIC TECHNICAL COEFFICIENT VECTOR
+    # ----------------------------------------------------------
 
-
-if (
-  is.null(ivc_prod_cost) ||
-  is.null(ivc_market_price) ||
-  is.null(ivc_alpha) ||
-  is.null(ivc_dist_capex) ||
-  is.null(ivc_dist_opex)
-) {
-
-  stop(
-    paste(
-      "Missing technology input for",
-      ivc_id
-    )
-  )
-}
-    
     ivc_res <- build_ivc_vector(
-      prod_cost    = ivc_prod_cost,
-      market_price = ivc_market_price,
-      alpha_cost   = ivc_alpha,
-      dist_feed    = fuel_cfg$dist_feed[[ivc_id]],
-      dist_capex   = ivc_dist_capex,
-      dist_opex    = ivc_dist_opex,
+      prod_cost      = ivc_prod_cost,
+      market_price   = ivc_market_price,
+      alpha_cost     = ivc_alpha,
+      dist_feed      = ivc_dist_feed,
+      dist_capex     = ivc_dist_capex,
+      dist_opex      = ivc_dist_opex,
       sourcing_group = sourcing_group
     )
-    
-    # Initialise aggregate vectors based on the first active IVC
-    if (is.null(a_dom_agg)) {
-      a_dom_agg <- setNames(numeric(length(ivc_res$a_dom)), names(ivc_res$a_dom))
-      a_imp_agg <- setNames(numeric(length(ivc_res$a_imp)), names(ivc_res$a_imp))
-    }
-    
-    # Weighted aggregation across IVCs
-    a_dom_agg <- a_dom_agg + w * ivc_res$a_dom
-    a_imp_agg <- a_imp_agg + w * ivc_res$a_imp
-   gate_fee_coeff_agg <- gate_fee_coeff_agg + w * ivc_res$gate_fee_coeff
-  }
-  
-  list(
-  a_dom = a_dom_agg,
-  a_imp = a_imp_agg,
-  gate_fee_coeff = gate_fee_coeff_agg
-)
-}
 
+
+    # ----------------------------------------------------------
+    # INITIALISE AGGREGATED VECTORS
+    # ----------------------------------------------------------
+
+    if (is.null(a_dom_agg)) {
+
+      a_dom_agg <-
+        setNames(
+          numeric(length(ivc_res$a_dom)),
+          names(ivc_res$a_dom)
+        )
+
+      a_imp_agg <-
+        setNames(
+          numeric(length(ivc_res$a_imp)),
+          names(ivc_res$a_imp)
+        )
+    }
+
+
+    # ----------------------------------------------------------
+    # WEIGHTED AGGREGATION ACROSS IVCs
+    # ----------------------------------------------------------
+
+    a_dom_agg <-
+      a_dom_agg +
+      w * ivc_res$a_dom
+
+    a_imp_agg <-
+      a_imp_agg +
+      w * ivc_res$a_imp
+
+    gate_fee_coeff_agg <-
+      gate_fee_coeff_agg +
+      w * ivc_res$gate_fee_coeff
+  }
+
+
+  # ------------------------------------------------------------
+  # RETURN
+  # ------------------------------------------------------------
+
+  list(
+    a_dom = a_dom_agg,
+    a_imp = a_imp_agg,
+    gate_fee_coeff = gate_fee_coeff_agg
+  )
+}
 
 
 #####################################################################################

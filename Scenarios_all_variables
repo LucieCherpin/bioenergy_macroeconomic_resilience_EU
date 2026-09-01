@@ -3109,7 +3109,197 @@ S2_2040 <- list(
  
 
 
-
+####################################################################################
+# SCENARIO 3 - 2040
+#####################################################################################
+ 
+# Derived from the "2040 costs Sc 3" sheet in Providing_sectors.xlsx.
+# Unlike the Sc1/Sc2 sheets, this sheet has NO #REF! errors - every total
+# below was cross-checked against the sheet's own TOTAL row and matches
+# exactly.
+#
+# NOTES:
+#  - adv_bio_hfo: IVC8b has zero production in this scenario (weight = 0),
+#    same treatment as "IVC6 has zero production in S3 2035" elsewhere in
+#    this script. Its cost structure is kept for reference.
+#  - conv_biodiesel/biogasoline/bio-kerosene: ALL conventional biofuel
+#    production is reported as zero in this scenario (matches "technical
+#    capacity = no limitations", i.e. fully advanced-technology buildout).
+#    This is a real zero in the sheet, not a broken formula.
+ 
+S3_2040 <- list(
+ 
+  adv_biodiesel = list(
+    abs_market_value = 18683142916.96,
+ 
+    weights = c(IVC2_HVO = 0.029966, IVC11a_road = 0.587171, IVC13a = 0.382863),
+ 
+    prod_cost = list(IVC2_HVO = 2429.568868, IVC11a_road = 2754.629822, IVC13a = 1616.860538),
+ 
+    alpha = list(
+      IVC2_HVO = c(feed = 0.722585, capex = 0.110719, opex = 0.166696),
+      IVC11a_road = c(feed = 0.128740, capex = 0.524571, opex = 0.346689),
+      IVC13a = c(feed = 0.142165, capex = 0.497878, opex = 0.359957)
+    ),
+ 
+    dist_feed = list(
+      IVC2_HVO = c(agriculture = 0.071728, adv_biodiesel = 0.394515, chemicals = 0.139241, adv_biogasoline = 0.394515),
+      IVC11a_road = c(agriculture = 0.595247, forestry = 0.113460, paper = 0.133678, food_bev = 0.010277, sewerage = 0.022231, adv_biodiesel = 0.062554, adv_biogasoline = 0.062554),
+      IVC13a = c(agriculture = 0.664934, forestry = 0.135759, paper = 0.164764, food_bev = 0.011454, sewerage = 0.023090)
+    )
+  ),
+ 
+  adv_biogasoline = list(
+    abs_market_value = 38064992894.91,
+ 
+    weights = c(IVC5 = 0.233274, IVC12 = 0.195078, IVC13a = 0.187918, IVC13b_road = 0.383730),
+ 
+    prod_cost = list(IVC5 = 1416.756944, IVC12 = 1264.600000, IVC13a = 1616.860538, IVC13b_road = 1758.650937),
+ 
+    alpha = list(
+      IVC5 = c(feed = 0.244048, capex = 0.391740, opex = 0.364212),
+      IVC12 = c(feed = 0.469397, capex = 0.219832, opex = 0.310770),
+      IVC13a = c(feed = 0.142165, capex = 0.497878, opex = 0.359957),
+      IVC13b_road = c(feed = 0.130868, capex = 0.389503, opex = 0.479629)
+    ),
+ 
+    dist_feed = list(
+      IVC5 = c(agriculture = 0.835477, paper = 0.164523),
+      IVC12 = c(adv_biogas = 1.000000),
+      IVC13a = c(agriculture = 0.664934, forestry = 0.135759, paper = 0.164764, food_bev = 0.011454, sewerage = 0.023090, adv_biogas = 0.000000),
+      IVC13b_road = c(agriculture = 0.669358, forestry = 0.133945, paper = 0.162603, food_bev = 0.011290, sewerage = 0.022804, adv_biogas = 0.000000)
+    )
+  ),
+ 
+  adv_biogas = list(
+    abs_market_value = 63252702090.26,
+ 
+    weights = c(IVC7 = 0.668291, IVC9a = 0.331709),
+ 
+    prod_cost = list(IVC7 = 1039.239005, IVC9a = 1399.493213),
+ 
+    alpha = list(
+      IVC7 = c(feed = -0.006025, capex = 0.582157, opex = 0.423868),
+      IVC9a = c(feed = 0.171129, capex = 0.571635, opex = 0.257236)
+    ),
+ 
+    dist_feed = list(
+      IVC7 = c(sewerage = 5.930618, chemicals = -0.256007, food_bev = -0.712993, agriculture = -3.961618),
+      IVC9a = c(agriculture = 0.658746, sewerage = 0.024575, food_bev = 0.011309, forestry = 0.125131, paper = 0.147515, chemicals = 0.000000, adv_biodiesel = 0.016362, adv_biogasoline = 0.016362)
+    )
+  ),
+ 
+  adv_bio_kerosene = list(
+    abs_market_value = 14897702174.79,
+ 
+    weights = c(IVC2_HEFA = 0.279719, IVC11a_SAF = 0.381502, IVC13b_SAF = 0.338779),
+ 
+    prod_cost = list(IVC2_HEFA = 2573.353820, IVC11a_SAF = 3024.905008, IVC13b_SAF = 2221.637832),
+ 
+    alpha = list(
+      IVC2_HEFA = c(feed = 0.633941, capex = 0.146113, opex = 0.219946),
+      IVC11a_SAF = c(feed = 0.206587, capex = 0.477701, opex = 0.315712),
+      IVC13b_SAF = c(feed = 0.311994, capex = 0.308331, opex = 0.379675)
+    ),
+ 
+    dist_feed = list(
+      IVC2_HEFA = c(agriculture = 0.331911, adv_biodiesel = 0.668089, chemicals = 0.211945),
+      IVC11a_SAF = c(agriculture = 0.675598, forestry = 0.128776, paper = 0.151723, sewerage = 0.025232, adv_biodiesel = 0.007008, food_bev = 0.011664, adv_biogasoline = 0.007008),
+      IVC13b_SAF = c(agriculture = 0.690241, forestry = 0.125038, paper = 0.151791, sewerage = 0.021288, food_bev = 0.011642)
+    )
+  ),
+ 
+  adv_bio_hfo = list(
+    abs_market_value = 29319426048.03,
+ 
+    weights = c(IVC8a = 0.916823, IVC8b = 0.000000, IVC13b_mar = 0.083177),
+ 
+    prod_cost = list(IVC8a = 604.827800, IVC8b = 936.000000, IVC13b_mar = 2221.637832),
+ 
+    alpha = list(
+      IVC8a = c(feed = 0.227879, capex = 0.464595, opex = 0.307526),
+      IVC8b = c(feed = 0.459319, capex = 0.270340, opex = 0.098291),
+      IVC13b_mar = c(feed = 0.311994, capex = 0.308331, opex = 0.379675)
+    ),
+ 
+    dist_feed = list(
+      IVC8a = c(agriculture = 0.642308, forestry = 0.122009, paper = 0.143834, sewerage = 0.023961, adv_biodiesel = 0.056862, food_bev = 0.011026, adv_biogasoline = 0.000000),
+      IVC8b = c(adv_biogas = 1.000000),
+      IVC13b_mar = c(agriculture = 0.690241, forestry = 0.125038, paper = 0.151791, food_bev = 0.011642, sewerage = 0.021288)
+    )
+  ),
+ 
+  RFNBOs = list(
+    abs_market_value = 26331716057.67,
+ 
+    weights = c(IVC8c = 0.577244, IVC9b = 0.422756),
+ 
+    prod_cost = list(IVC8c = 377.869686, IVC9b = 1975.564918),
+ 
+    alpha = list(
+      IVC8c = c(feed = 0.772408, capex = 0.150846, opex = 0.076746),
+      IVC9b = c(feed = 0.858775, capex = 0.064792, opex = 0.076434)
+    ),
+ 
+    dist_feed = list(
+      IVC8c = c(chemicals = 1.000000),
+      IVC9b = c(chemicals = 1.000000)
+    )
+  ),
+ 
+  # ========================================================
+  # CONVENTIONAL BIOFUELS
+  # ========================================================
+ 
+  # No conventional biofuel production of any kind is reported in the
+  # "2040 costs Sc 3" workbook (all cells legitimately zero/blank - this is
+  # the "no technical capacity limitations" scenario, i.e. fully advanced).
+ 
+  conv_biodiesel = list(
+    abs_market_value = 0,
+    weights = c(IVC_T_FF = 1.000000),
+    dist_feed = list(IVC_T_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446))
+  ),
+ 
+  conv_biogasoline = list(
+    abs_market_value = 0,
+    weights = c(IVC_EF_FF = 1.000000),
+    dist_feed = list(IVC_EF_FF = c(agriculture = 1.000000))
+  ),
+ 
+  conv_bio_kerosene = list(
+    abs_market_value = 0,
+    weights = c(IVC_HT_CC_road = 1.000000),
+    dist_feed = list(IVC_HT_CC_road = c(agriculture = 1.000000))
+  )
+ 
+)
+ 
+ 
+# ==========================================================
+# FINISHED BIOFUEL IMPORTS / EXPORTS - S3 2040
+# TODO: not present in Providing_sectors.xlsx - fill in from
+# the same source used for S3_imports_2030 / S3_imports_2035.
+# ==========================================================
+ 
+# S3_imports_2040 <- c(
+#   conv_biodiesel    = 0,
+#   adv_biodiesel     = 0,
+#   conv_biogasoline  = 0,
+#   adv_biogasoline   = 0,
+#   conv_bio_kerosene = 0,
+#   adv_bio_kerosene  = 0,
+#   adv_bio_hfo       = 0,
+#   RFNBOs            = 0,
+#   adv_biogas        = 0
+# )
+#
+# S3_exports_2040 <-
+#   setNames(
+#     rep(0, length(BIOFUEL_SECTORS)),
+#     names(BIOFUEL_SECTORS)
+#   )
+ 
 
 
 

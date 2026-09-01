@@ -2565,6 +2565,7 @@ S3_2035 <- list(
 
     alpha = list(
       IVC2_HEFA  = c(feed = 0.6228, capex = 0.1505, opex = 0.2266),
+      IVC6       = c(feed = 0.2466, capex = 0.4240, opex = 0.3294),
       IVC11a_SAF = c(feed = 0.2066, capex = 0.4777, opex = 0.3157),
       IVC13b_SAF = c(feed = 0.3105, capex = 0.3090, opex = 0.3805)
     ),
@@ -2575,7 +2576,7 @@ S3_2035 <- list(
         agriculture = 0.4309, adv_biogasoline = 0.1423,
         chemicals = 0.2845, adv_biodiesel = 0.1423
       ),
-
+      IVC6 = c(adv_bio_hfo = 1.0000),
       IVC11a_SAF = c(
         sewerage = 0.0254, food_bev = 0.0138,
         agriculture = 0.6523, forestry = 0.1410,
@@ -3058,7 +3059,7 @@ conv_biodiesel = list(
   ),
  
   conv_bio_kerosene = list(
-    abs_market_value =  2 586377873.39,
+    abs_market_value =  2586377873.39,
     weights = c(IVC_HT_CC_SAF = 1),
     dist_feed = list(IVC_HT_CC_SAF = c(agriculture = 1.000000))
   )
@@ -3252,8 +3253,8 @@ S3_2040 <- list(
  
   conv_bio_kerosene = list(
     abs_market_value = 0,
-    weights = c(IVC_HT_CC_road = 1.000000),
-    dist_feed = list(IVC_HT_CC_road = c(agriculture = 1.000000))
+    weights = c(IVC_HT_CC_SAF = 1.000000),
+    dist_feed = list(IVC_HT_CC_SAF = c(agriculture = 1.000000))
   )
  
 )
@@ -5390,13 +5391,6 @@ check_accounting_identity <- function(endpoint) {
   )
 }
 
-invisible(
-  lapply(
-    endpoints_to_check,
-    check_accounting_identity
-  )
-)
-
 # -------------------------------------------------------------------
 # IO coefficient consistency: Z = A %*% diag(X)
 # -------------------------------------------------------------------
@@ -5443,6 +5437,13 @@ endpoints_to_check <- list(
   S3_2030 = S3_dynamic_endpoint_2030,
   S3_2035 = S3_dynamic_endpoint_2035,
   S3_2040 = S3_dynamic_endpoint_2040
+)
+
+invisible(
+  lapply(
+    endpoints_to_check,
+    check_accounting_identity
+  )
 )
 
 invisible(

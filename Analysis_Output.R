@@ -499,6 +499,7 @@ rownames(sector_output_changes_all) <- NULL
 # ===================================================================
 # 11. ANNUAL OUTPUT PATH: 2023-2040
 #     SCENARIO VS SAME-YEAR REFERENCE
+# --> relative change (with REF scenario as baseline)
 # ===================================================================
 
 calculate_annual_output_path <- function(
@@ -575,6 +576,7 @@ rownames(annual_output_path) <- NULL
 
 # ===================================================================
 # 12. ANNUAL ABSOLUTE OUTPUT PATH
+# --> absolute change
 # ===================================================================
 
 annual_absolute_output <- data.frame(

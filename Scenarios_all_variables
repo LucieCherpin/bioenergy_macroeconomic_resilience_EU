@@ -2418,8 +2418,6 @@ S2_2035 <- list(
     abs_market_value = 15987016701.4600,
     weights = c(IVC_T_FF = 0.2007, IVC_HT_FF = 0.2766,
                 IVC_HT_CC = 0.0486, IVC_T_lipids = 0.4740),
-    prod_cost = list(IVC_T_FF = 629.0000, IVC_HT_FF = 665.8248,
-                     IVC_HT_CC = 1218.0000, IVC_T_lipids = 1253.0000),
     dist_feed = list(
       IVC_T_FF     = c(food_bev = 0.8006, food_bev_imp = 0.1994),
       IVC_HT_FF    = c(food_bev = 0.8006, food_bev_imp = 0.1994),
@@ -2429,8 +2427,6 @@ S2_2035 <- list(
   ),
 
 
-  # No conventional biogasoline production is reported
-  # in the S2 2035 workbook.
   conv_biogasoline = list(
     abs_market_value = 0,
     weights = c(IVC_EF_FF = 1.0000),
@@ -2439,9 +2435,6 @@ S2_2035 <- list(
 
 
   conv_bio_kerosene = list(
-
-    # Market value derived from reported output:
-    # 2,905,420.248872 t * EUR 2,100/t
     abs_market_value = 6101382522.6300,
     weights = c(IVC_HT_lipids_SAF = 1.0000),
     dist_feed = list(
@@ -3011,7 +3004,7 @@ S2_2040 <- list(
  
     alpha = list(
       IVC8a = c(feed = 0.227879, capex = 0.464595, opex = 0.307526),
-      IVC8b = c(feed = 0.459319, capex = 0.270340, opex = 0.098291),
+      IVC8b = c(feed = 0.459319, capex = 0.270340, opex = 0.2703),
       IVC13b_mar = c(feed = 0.311994, capex = 0.308331, opex = 0.379675)
     ),
  

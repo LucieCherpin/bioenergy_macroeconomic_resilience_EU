@@ -2883,23 +2883,23 @@ S1_2040 <- list(
 # the same source used for S1_imports_2030 / S1_imports_2035.
 # ==========================================================
  
-# S1_imports_2040 <- c(
-#   conv_biodiesel    = NA,
-#   adv_biodiesel     = NA,
-#   conv_biogasoline  = NA,
-#   adv_biogasoline   = NA,
-#   conv_bio_kerosene = NA,
-#   adv_bio_kerosene  = NA,
-#   adv_bio_hfo       = NA,
-#   RFNBOs            = NA,
-#   adv_biogas        = NA
-# )
-#
-# S1_exports_2040 <-
-#   setNames(
-#     rep(0, length(BIOFUEL_SECTORS)),
-#     names(BIOFUEL_SECTORS)
-#   )
+ S1_imports_2040 <- c(
+   conv_biodiesel    = 0,
+   adv_biodiesel     = 20096053598.94,
+   conv_biogasoline  = 0,
+   adv_biogasoline   = 955687153.39,
+   conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 11040737556.26,
+   adv_bio_hfo       = 11067382314.28,
+   RFNBOs            =  29197359699.92,
+   adv_biogas        = 0
+ )
+
+ S1_exports_2040 <-
+   setNames(
+     rep(0, length(BIOFUEL_SECTORS)),
+     names(BIOFUEL_SECTORS)
+   )
  
  
 #####################################################################################
@@ -3047,15 +3047,10 @@ S2_2040 <- list(
   # workbook ("2040 Sc 2" sheet) - almost every cell in these two sections
   # reads #REF! (broken formula references). Left as NA below rather than
   # guessing. Please fix the source formulas and re-extract.
-  conv_biodiesel = list(
-    abs_market_value = NA,
-    weights = c(IVC_T_FF = NA, IVC_HT_FF = NA, IVC_T_CC = NA),
-    prod_cost = list(IVC_T_FF = 629.000000, IVC_HT_FF = 665.824762, IVC_T_CC = 1226.000000),
-    alpha = list(
-      IVC_T_FF = c(feed = 0.750000, capex = 0.065000, opex = 0.185000),
-      IVC_HT_FF = c(feed = 0.700000, capex = 0.100000, opex = 0.200000),
-      IVC_T_CC = c(feed = 0.700000, capex = 0.070000, opex = 0.230000)
-    ),
+
+conv_biodiesel = list(
+    abs_market_value = 0,
+    weights = c(IVC_T_FF = 0, IVC_HT_FF = 0, IVC_T_CC = 0),
     dist_feed = list(
       IVC_T_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
@@ -3063,8 +3058,6 @@ S2_2040 <- list(
     )
   ),
  
-  # No conventional biogasoline production is reported in the 2040 Sc2
-  # workbook (all cells legitimately zero, not broken).
   conv_biogasoline = list(
     abs_market_value = 0,
     weights = c(IVC_EF_FF = 1.000000),
@@ -3072,11 +3065,8 @@ S2_2040 <- list(
   ),
  
   conv_bio_kerosene = list(
-    # BROKEN in source workbook - see note above.
-    abs_market_value = NA,
+    abs_market_value = 0,
     weights = c(IVC_HT_CC_road = NA),
-    prod_cost = list(IVC_HT_CC_road = 1218.000000),
-    alpha = list(IVC_HT_CC_road = c(feed = 0.640000, capex = 0.140000, opex = 0.220000)),
     dist_feed = list(IVC_HT_CC_road = c(agriculture = 1.000000))
   )
  
@@ -3089,23 +3079,23 @@ S2_2040 <- list(
 # the same source used for S2_imports_2030 / S2_imports_2035.
 # ==========================================================
  
-# S2_imports_2040 <- c(
-#   conv_biodiesel    = NA,
-#   adv_biodiesel     = NA,
-#   conv_biogasoline  = NA,
-#   adv_biogasoline   = NA,
-#   conv_bio_kerosene = NA,
-#   adv_bio_kerosene  = NA,
-#   adv_bio_hfo       = NA,
-#   RFNBOs            = NA,
-#   adv_biogas        = NA
-# )
-#
-# S2_exports_2040 <-
-#   setNames(
-#     rep(0, length(BIOFUEL_SECTORS)),
-#     names(BIOFUEL_SECTORS)
-#   )
+ S2_imports_2040 <- c(
+   conv_biodiesel    = 0,
+   adv_biodiesel     = 0,
+   conv_biogasoline  = 0,
+   adv_biogasoline   = 0,
+   conv_bio_kerosene = 0,
+   adv_bio_kerosene  = 0,
+   adv_bio_hfo       = 0,
+   RFNBOs            = 0,
+   adv_biogas        = 0
+ )
+
+ S2_exports_2040 <-
+   setNames(
+     rep(0, length(BIOFUEL_SECTORS)),
+     names(BIOFUEL_SECTORS)
+   )
  
 
 
@@ -3282,26 +3272,24 @@ S3_2040 <- list(
 # the same source used for S3_imports_2030 / S3_imports_2035.
 # ==========================================================
  
-# S3_imports_2040 <- c(
-#   conv_biodiesel    = 0,
-#   adv_biodiesel     = 0,
-#   conv_biogasoline  = 0,
-#   adv_biogasoline   = 0,
-#   conv_bio_kerosene = 0,
-#   adv_bio_kerosene  = 0,
-#   adv_bio_hfo       = 0,
-#   RFNBOs            = 0,
-#   adv_biogas        = 0
-# )
-#
-# S3_exports_2040 <-
-#   setNames(
-#     rep(0, length(BIOFUEL_SECTORS)),
-#     names(BIOFUEL_SECTORS)
-#   )
+ S3_imports_2040 <- c(
+   conv_biodiesel    = 0,
+   adv_biodiesel     = 0,
+   conv_biogasoline  = 0,
+   adv_biogasoline   = 0,
+   conv_bio_kerosene = 0,
+   adv_bio_kerosene  = 0,
+   adv_bio_hfo       = 0,
+   RFNBOs            = 0,
+  adv_biogas        = 0
+ )
+
+ S3_exports_2040 <-
+   setNames(
+     rep(0, length(BIOFUEL_SECTORS)),
+     names(BIOFUEL_SECTORS)
+   )
  
-
-
 
 # ===================================================================
 # BUILD IMPORTED FINAL CONSUMPTION EXPENDITURE VECTOR
@@ -5422,48 +5410,83 @@ stopifnot(
     )
   )
 
+  isTRUE(
+    all.equal(
+      S1_dynamic_endpoint_2035$X,
+      rowSums(S1_dynamic_endpoint_2035$Z_dom) +
+        S1_dynamic_endpoint_2035$Y_dom
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      S2_dynamic_endpoint_2035$X,
+      rowSums(S2_dynamic_endpoint_2035$Z_dom) +
+        S2_dynamic_endpoint_2035$Y_dom
+    )
+  ),
+
+ isTRUE(
+    all.equal(
+      S3_dynamic_endpoint_2035$X,
+      rowSums(S3_dynamic_endpoint_2035$Z_dom) +
+        S3_dynamic_endpoint_2035$Y_dom
+    )
+  )
+
+  isTRUE(
+    all.equal(
+      S1_dynamic_endpoint_2040$X,
+      rowSums(S1_dynamic_endpoint_2040$Z_dom) +
+        S1_dynamic_endpoint_2040$Y_dom
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      S2_dynamic_endpoint_2040$X,
+      rowSums(S2_dynamic_endpoint_2040$Z_dom) +
+        S2_dynamic_endpoint_2040$Y_dom
+    )
+  ),
+
+ isTRUE(
+    all.equal(
+      S3_dynamic_endpoint_2040$X,
+      rowSums(S3_dynamic_endpoint_2040$Z_dom) +
+        S3_dynamic_endpoint_2040$Y_dom
+    )
+  )
+
 )
 
 # -------------------------------------------------------------------
 # IO coefficient consistency: Z = A %*% diag(X)
 # -------------------------------------------------------------------
 
-stopifnot(
+endpoints_to_check <- list(
 
-  isTRUE(
-    all.equal(
-      S1_dynamic_endpoint_2030$Z_dom,
-      S1_dynamic_endpoint_2030$A_dom %*%
-        base::diag(S1_dynamic_endpoint_2030$X),
-      tolerance = 1e-10
-    )
-  ),
+  REF_2030 = REF_dynamic_endpoint_2030,
+  REF_2035 = REF_dynamic_endpoint_2035,
+  REF_2040 = REF_dynamic_endpoint_2040,
 
-  isTRUE(
-    all.equal(
-      S1_dynamic_endpoint_2030$Z_imp,
-      S1_dynamic_endpoint_2030$A_imp %*%
-        base::diag(S1_dynamic_endpoint_2030$X),
-      tolerance = 1e-10
-    )
-  ),
+  S1_2030 = S1_dynamic_endpoint_2030,
+  S1_2035 = S1_dynamic_endpoint_2035,
+  S1_2040 = S1_dynamic_endpoint_2040,
 
-  isTRUE(
-    all.equal(
-      S2_dynamic_endpoint_2030$Z_dom,
-      S2_dynamic_endpoint_2030$A_dom %*%
-        base::diag(S2_dynamic_endpoint_2030$X),
-      tolerance = 1e-10
-    )
-  ),
+  S2_2030 = S2_dynamic_endpoint_2030,
+  S2_2035 = S2_dynamic_endpoint_2035,
+  S2_2040 = S2_dynamic_endpoint_2040,
 
-  isTRUE(
-    all.equal(
-      S2_dynamic_endpoint_2030$Z_imp,
-      S2_dynamic_endpoint_2030$A_imp %*%
-        base::diag(S2_dynamic_endpoint_2030$X),
-      tolerance = 1e-10
-    )
+  S3_2030 = S3_dynamic_endpoint_2030,
+  S3_2035 = S3_dynamic_endpoint_2035,
+  S3_2040 = S3_dynamic_endpoint_2040
+)
+
+invisible(
+  lapply(
+    endpoints_to_check,
+    check_io_consistency
   )
 )
 

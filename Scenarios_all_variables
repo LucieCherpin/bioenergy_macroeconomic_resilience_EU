@@ -2560,15 +2560,13 @@ S3_2035 <- list(
 
   adv_bio_kerosene = list(
 
-    abs_market_value = 11916464377.2835,
-
-    # IVC6 has zero production in S3 2035 and is therefore omitted
-    # from the active technology mix.
-    weights = c(IVC2_HEFA = 0.2708, IVC11a_SAF = 0.3910,
-                IVC13b_SAF = 0.3381),
+    abs_market_value =  15122013649.63,
+    weights = c(IVC2_HEFA = 0.2134, IVC6 = 0.212, IVC11a_SAF = 0.3081,
+                IVC13b_SAF = 0.2664),
 
     prod_cost = list(
       IVC2_HEFA  = 2497.6028,
+      IVC6 = 4313.8298,
       IVC11a_SAF = 3025.0055,
       IVC13b_SAF = 2216.7661
     ),

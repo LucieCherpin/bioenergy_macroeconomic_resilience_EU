@@ -683,6 +683,16 @@ IVC_HT_CC = list(
   dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
 ),
 
+
+## revise: should be differnet price and costs taht HT_CC (road)
+IVC_HT_CC_SAF = list(
+  prod_cost = 1218,
+  market_price = 1165.6261363636365,
+  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
+  dist_capex = c(fab_metal = 0.07, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+),
+
 IVC_T_lipids = list(
   prod_cost = 1253,
   market_price = 1165.6261363636365,
@@ -697,7 +707,7 @@ IVC_HT_lipids_road = list(
   alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
   dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
   dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
-), # not present in Scenario 2 table -> current values retained
+), 
 
 IVC_HT_lipids_SAF = list(
   prod_cost = 2903,
@@ -2862,16 +2872,9 @@ S1_2040 <- list(
   ),
  
   conv_bio_kerosene = list(
-    # NOTE: 2040 Sc1 conventional kerosene route is "hydrotreatment of cover
-    # crops from marginal lands (non-aviation part)(road)" - a DIFFERENT
-    # feedstock than the UCO/animal-fats route used for conv_bio_kerosene in
-    # 2030/2035 (IVC_HT_lipids_SAF). Named IVC_HT_CC_road here - please confirm
-    # this naming is consistent with the rest of your pipeline.
     abs_market_value = 4238566319.66,
-    weights = c(IVC_HT_CC_road = 1.000000),
-    prod_cost = list(IVC_HT_CC_road = 1218.000000),
-    alpha = list(IVC_HT_CC_road = c(feed = 0.640000, capex = 0.140000, opex = 0.220000)),
-    dist_feed = list(IVC_HT_CC_road = c(agriculture = 1.000000))
+    weights = c(IVC_HT_CC_SAF = 1.000000),
+    dist_feed = list(IVC_HT_CC_SAF = c(agriculture = 1.000000))
   )
  
 )
@@ -3049,8 +3052,8 @@ S2_2040 <- list(
   # guessing. Please fix the source formulas and re-extract.
 
 conv_biodiesel = list(
-    abs_market_value = 0,
-    weights = c(IVC_T_FF = 0, IVC_HT_FF = 0, IVC_T_CC = 0),
+    abs_market_value =  13777273858.11,
+    weights = c(IVC_T_FF = 0.1582, IVC_HT_FF = 0.1877, IVC_T_CC = 0.0895, IVC_T_lipids = 0.5647),
     dist_feed = list(
       IVC_T_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
@@ -3065,9 +3068,9 @@ conv_biodiesel = list(
   ),
  
   conv_bio_kerosene = list(
-    abs_market_value = 0,
-    weights = c(IVC_HT_CC_road = NA),
-    dist_feed = list(IVC_HT_CC_road = c(agriculture = 1.000000))
+    abs_market_value =  2 586377873.39,
+    weights = c(IVC_HT_CC_SAF = 1),
+    dist_feed = list(IVC_HT_CC_SAF = c(agriculture = 1.000000))
   )
  
 )
@@ -5384,85 +5387,54 @@ saveRDS(
 # 15. BASIC DYNAMIC ENDPOINT CONSISTENCY CHECKS - checks whether X = Z^dom *1 + Y^dom
 # ===================================================================
 
-stopifnot(
+check_accounting_identity <- function(endpoint) {
 
-  isTRUE(
-    all.equal(
-      S1_dynamic_endpoint_2030$X,
-      rowSums(S1_dynamic_endpoint_2030$Z_dom) +
-        S1_dynamic_endpoint_2030$Y_dom
-    )
-  ),
-
-  isTRUE(
-    all.equal(
-      S2_dynamic_endpoint_2030$X,
-      rowSums(S2_dynamic_endpoint_2030$Z_dom) +
-        S2_dynamic_endpoint_2030$Y_dom
-    )
-  ),
-
- isTRUE(
-    all.equal(
-      S3_dynamic_endpoint_2030$X,
-      rowSums(S3_dynamic_endpoint_2030$Z_dom) +
-        S3_dynamic_endpoint_2030$Y_dom
+  stopifnot(
+    isTRUE(
+      all.equal(
+        endpoint$X,
+        rowSums(endpoint$Z_dom) +
+          endpoint$Y_dom
+      )
     )
   )
+}
 
-  isTRUE(
-    all.equal(
-      S1_dynamic_endpoint_2035$X,
-      rowSums(S1_dynamic_endpoint_2035$Z_dom) +
-        S1_dynamic_endpoint_2035$Y_dom
-    )
-  ),
-
-  isTRUE(
-    all.equal(
-      S2_dynamic_endpoint_2035$X,
-      rowSums(S2_dynamic_endpoint_2035$Z_dom) +
-        S2_dynamic_endpoint_2035$Y_dom
-    )
-  ),
-
- isTRUE(
-    all.equal(
-      S3_dynamic_endpoint_2035$X,
-      rowSums(S3_dynamic_endpoint_2035$Z_dom) +
-        S3_dynamic_endpoint_2035$Y_dom
-    )
+invisible(
+  lapply(
+    endpoints_to_check,
+    check_accounting_identity
   )
-
-  isTRUE(
-    all.equal(
-      S1_dynamic_endpoint_2040$X,
-      rowSums(S1_dynamic_endpoint_2040$Z_dom) +
-        S1_dynamic_endpoint_2040$Y_dom
-    )
-  ),
-
-  isTRUE(
-    all.equal(
-      S2_dynamic_endpoint_2040$X,
-      rowSums(S2_dynamic_endpoint_2040$Z_dom) +
-        S2_dynamic_endpoint_2040$Y_dom
-    )
-  ),
-
- isTRUE(
-    all.equal(
-      S3_dynamic_endpoint_2040$X,
-      rowSums(S3_dynamic_endpoint_2040$Z_dom) +
-        S3_dynamic_endpoint_2040$Y_dom
-    )
-  )
-
 )
 
 # -------------------------------------------------------------------
 # IO coefficient consistency: Z = A %*% diag(X)
 # -------------------------------------------------------------------
+
+
+check_io_consistency <- function(endpoint) {
+
+  stopifnot(
+
+    isTRUE(
+      all.equal(
+        endpoint$Z_dom,
+        endpoint$A_dom %*%
+          base::diag(endpoint$X),
+        tolerance = 1e-10
+      )
+    ),
+
+    isTRUE(
+      all.equal(
+        endpoint$Z_imp,
+        endpoint$A_imp %*%
+          base::diag(endpoint$X),
+        tolerance = 1e-10
+      )
+    )
+  )
+}
 
 endpoints_to_check <- list(
 

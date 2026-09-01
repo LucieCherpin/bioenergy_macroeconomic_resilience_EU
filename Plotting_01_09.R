@@ -84,11 +84,11 @@ p1 <- ggplot(
     yintercept = 0,
     linewidth = 0.4
   ) +
-  facet_wrap(
-    ~ year,
-    nrow = 1,
-    scales = "free_y"
-  ) +
+facet_wrap(
+  ~ year,
+  nrow = 1,
+  scales = "fixed"
+) +
   labs(
     title =
       "Advanced biofuel production and associated upstream output effects",

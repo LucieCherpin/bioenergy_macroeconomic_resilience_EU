@@ -636,7 +636,6 @@ rownames(annual_output_path) <- NULL
 
 # ===================================================================
 # 12. ANNUAL ABSOLUTE OUTPUT PATH
-# --> absolute change
 # ===================================================================
 
 annual_absolute_output <- data.frame(
@@ -1184,7 +1183,34 @@ names(
     "total_NONBIO_contribution"
 ] <- "advanced_total_NONBIO"
 
+# -------------------------------------------------------------------
+# Add advanced-specific contribution share for each advanced biofuel
+# -------------------------------------------------------------------
 
+advanced_biofuel_contributions_all <-
+  merge(
+    advanced_biofuel_contributions_all,
+    advanced_NONBIO_decomposition_all[
+      ,
+      c(
+        "year",
+        "scenario",
+        "advanced_total_NONBIO"
+      )
+    ],
+    by = c(
+      "year",
+      "scenario"
+    )
+  )
+
+ -------------------------------------------------------------------
+# Aggregate advanced-biofuel output summary
+# -------------------------------------------------------------------
+
+advanced_biofuel_contributions_all$advanced_contribution_share <-
+  advanced_biofuel_contributions_all$total_NONBIO_contribution /
+  advanced_biofuel_contributions_all$advanced_total_NONBIO
 
 advanced_output_summary_all <-
   merge(
@@ -1435,6 +1461,8 @@ get_top_advanced_NONBIO_sectors <- function(
     x,
     n
   )
+  }
+
 
 
 # ===================================================================

@@ -22,6 +22,11 @@ sector_names <- results$metadata$sector_names
 benchmark_years <- c("2030", "2035", "2040")
 scenario_names <- c("S1", "S2", "S3")
 
+# Complete annual dynamic paths: 2023-2040
+dynamic_results <- results$dynamic
+
+annual_years <- dynamic_results$REF$years
+
 
 # ===================================================================
 # 3. BASIC CHECKS
@@ -49,6 +54,54 @@ for (year in benchmark_years) {
     !anyNA(year_results$S3$X)
   )
 }
+
+# ===================================================================
+# CHECK COMPLETE ANNUAL DYNAMIC PATHS
+# ===================================================================
+
+stopifnot(
+  "dynamic" %in% names(results),
+
+  all(
+    c("REF", "S1", "S2", "S3") %in%
+      names(dynamic_results)
+  ),
+
+  identical(
+    dynamic_results$REF$years,
+    2023:2040
+  ),
+
+  identical(
+    dynamic_results$S1$years,
+    dynamic_results$REF$years
+  ),
+
+  identical(
+    dynamic_results$S2$years,
+    dynamic_results$REF$years
+  ),
+
+  identical(
+    dynamic_results$S3$years,
+    dynamic_results$REF$years
+  ),
+
+  nrow(dynamic_results$REF$X) == length(2023:2040),
+  nrow(dynamic_results$S1$X) == length(2023:2040),
+  nrow(dynamic_results$S2$X) == length(2023:2040),
+  nrow(dynamic_results$S3$X) == length(2023:2040),
+
+  ncol(dynamic_results$REF$X) == length(sector_names),
+  ncol(dynamic_results$S1$X) == length(sector_names),
+  ncol(dynamic_results$S2$X) == length(sector_names),
+  ncol(dynamic_results$S3$X) == length(sector_names),
+
+  !anyNA(dynamic_results$REF$X),
+  !anyNA(dynamic_results$S1$X),
+  !anyNA(dynamic_results$S2$X),
+  !anyNA(dynamic_results$S3$X)
+)
 
 
 # ===================================================================
@@ -444,7 +497,148 @@ rownames(sector_output_changes_all) <- NULL
 
 
 # ===================================================================
-# 11. SHOW MAIN RESULTS
+# 11. ANNUAL OUTPUT PATH: 2023-2040
+#     SCENARIO VS SAME-YEAR REFERENCE
+# ===================================================================
+
+calculate_annual_output_path <- function(
+    dynamic_results,
+    BIO,
+    NONBIO
+) {
+
+  REF <- dynamic_results$REF
+
+  annual_results <- lapply(
+    scenario_names,
+    function(scenario_name) {
+
+      scenario <-
+        dynamic_results[[scenario_name]]
+
+      delta_X <-
+        scenario$X -
+        REF$X
+
+
+      data.frame(
+
+        year =
+          scenario$years,
+
+        scenario =
+          scenario_name,
+
+        bio_output_change =
+          rowSums(
+            delta_X[
+              ,
+              BIO,
+              drop = FALSE
+            ]
+          ),
+
+        nonbio_output_change =
+          rowSums(
+            delta_X[
+              ,
+              NONBIO,
+              drop = FALSE
+            ]
+          ),
+
+        total_output_change =
+          rowSums(
+            delta_X
+          )
+      )
+    }
+  )
+
+
+  do.call(
+    rbind,
+    annual_results
+  )
+}
+
+
+annual_output_path <-
+  calculate_annual_output_path(
+    dynamic_results = dynamic_results,
+    BIO = BIO,
+    NONBIO = NONBIO
+  )
+
+rownames(annual_output_path) <- NULL
+
+
+# ===================================================================
+# 12. ANNUAL ABSOLUTE OUTPUT PATH
+# ===================================================================
+
+annual_absolute_output <- data.frame(
+
+  year =
+    dynamic_results$REF$years,
+
+  REF_total_output =
+    rowSums(
+      dynamic_results$REF$X
+    ),
+
+  S1_total_output =
+    rowSums(
+      dynamic_results$S1$X
+    ),
+
+  S2_total_output =
+    rowSums(
+      dynamic_results$S2$X
+    ),
+
+  S3_total_output =
+    rowSums(
+      dynamic_results$S3$X
+    )
+)
+
+
+# ===================================================================
+# 13. CHECK:
+#     DYNAMIC PATH MUST MATCH STORED BENCHMARK RESULTS
+# ===================================================================
+
+
+for (year in as.integer(benchmark_years)) {
+
+  for (
+    scenario_name in
+    c("REF", "S1", "S2", "S3")
+  ) {
+
+    annual_idx <-
+      which(
+        dynamic_results[[scenario_name]]$years ==
+          year
+      )
+
+    stopifnot(
+      isTRUE(
+        all.equal(
+          dynamic_results[[scenario_name]]$X[
+            annual_idx,
+          ],
+          results[[as.character(year)]][[
+            scenario_name
+          ]]$X
+        )
+      )
+    )
+  }
+}
+# ===================================================================
+# 14. SHOW MAIN RESULTS
 # ===================================================================
 
 print(
@@ -459,9 +653,12 @@ print(
   pairwise_output_comparison_all
 )
 
+print(
+  annual_output_path
+)
 
 # ===================================================================
-# 12. OPTIONAL: SAVE ANALYSIS TABLES
+# 15. OPTIONAL: SAVE ANALYSIS TABLES
 # ===================================================================
 
 write.csv(
@@ -485,5 +682,17 @@ write.csv(
 write.csv(
   sector_output_changes_all,
   "sector_output_changes_2030_2040.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  annual_output_path,
+  "annual_output_path_2023_2040.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  annual_absolute_output,
+  "annual_absolute_output_2023_2040.csv",
   row.names = FALSE
 )

@@ -2796,7 +2796,7 @@ S1_2040 <- list(
     ),
  
     dist_feed = list(
-      IVC2_HEFA = c(agriculture = 0.269808, adv_biodiesel = 0.730192, chemicals = 0.204772),
+      IVC2_HEFA = c(agriculture = 0.27, adv_biodiesel = 0.31, chemicals = 0.11, adv_biogasoline = 0.31),
       IVC11a_SAF = c(agriculture = 0.642601, forestry = 0.159155, paper = 0.153645, sewerage = 0.026202, adv_biodiesel = 0.007041, food_bev = 0.011356, adv_biogasoline = 0.007041),
       IVC13b_SAF = c(agriculture = 0.657475, forestry = 0.154729, paper = 0.154244, sewerage = 0.022164, food_bev = 0.011388)
     )

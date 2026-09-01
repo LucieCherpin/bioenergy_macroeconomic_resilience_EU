@@ -1204,9 +1204,9 @@ advanced_biofuel_contributions_all <-
     )
   )
 
- -------------------------------------------------------------------
+-------------------------------------------------------------------
 # Aggregate advanced-biofuel output summary
-# -------------------------------------------------------------------
+-------------------------------------------------------------------
 
 advanced_biofuel_contributions_all$advanced_contribution_share <-
   advanced_biofuel_contributions_all$total_NONBIO_contribution /

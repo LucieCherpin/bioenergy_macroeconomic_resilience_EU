@@ -22,6 +22,66 @@ sector_names <- results$metadata$sector_names
 benchmark_years <- c("2030", "2035", "2040")
 scenario_names <- c("S1", "S2", "S3")
 
+
+
+# FUEL GROUPS FOR ANALYSIS
+# The full model contains conventional biofuels, advanced biofuels
+# and RFNBOs. The main empirical analysis focuses on advanced biofuels.
+# Conventional biofuels and RFNBOs remain part of the full model
+# but are reported separately.
+
+BIOFUEL_SECTORS <- c(
+  conv_biodiesel    = 12,
+  adv_biodiesel     = 13,
+  conv_biogasoline  = 14,
+  adv_biogasoline   = 15,
+  conv_bio_kerosene = 16,
+  adv_bio_kerosene  = 17,
+  adv_bio_hfo       = 18,
+  RFNBOs             = 19,
+  adv_biogas         = 33
+)
+
+ADV_BIO <- unname(
+  BIOFUEL_SECTORS[
+    c(
+      "adv_biodiesel",
+      "adv_biogasoline",
+      "adv_bio_kerosene",
+      "adv_bio_hfo",
+      "adv_biogas"
+    )
+  ]
+)
+
+CONV_BIO <- unname(
+  BIOFUEL_SECTORS[
+    c(
+      "conv_biodiesel",
+      "conv_biogasoline",
+      "conv_bio_kerosene"
+    )
+  ]
+)
+
+RFNBO_SECTOR <- unname(
+  BIOFUEL_SECTORS["RFNBOs"]
+)
+
+# Named labels for output tables
+biofuel_names <- setNames(
+  names(BIOFUEL_SECTORS),
+  as.character(BIOFUEL_SECTORS)
+)
+
+# Consistency check
+stopifnot(
+  setequal(
+    BIO,
+    unname(BIOFUEL_SECTORS)
+  )
+)
+
 # Complete annual dynamic paths: 2023-2040
 dynamic_results <- results$dynamic
 
@@ -772,6 +832,25 @@ biofuel_input_intensity_all <-
 
 rownames(biofuel_input_intensity_all) <- NULL
 
+
+
+
+# Advanced-biofuel-specific direct input intensities
+
+
+advanced_biofuel_input_intensity_all <-
+  biofuel_input_intensity_all[
+    biofuel_input_intensity_all$bio_sector_id %in% ADV_BIO,
+  ]
+
+
+advanced_biofuel_input_intensity_all$biofuel_name <-
+  biofuel_names[
+    as.character(
+      advanced_biofuel_input_intensity_all$bio_sector_id
+    )
+  ]
+
 # ===================================================================
 # 16. BIOFUEL-SPECIFIC CONTRIBUTION TO NONBIO OUTPUT
 #     INCLUDING HIGHER-ORDER EFFECTS
@@ -978,7 +1057,173 @@ stopifnot(
 )
 
 # ===================================================================
-# 17. NONBIO SECTORAL OUTPUT EFFECTS
+# 17. ADVANCED BIOFUEL FOCUS:
+#     OUTPUT AND ATTRIBUTABLE NONBIO EFFECTS
+# ===================================================================
+
+
+# -------------------------------------------------------------------
+# 17.1 Advanced, conventional and RFNBO output changes
+# -------------------------------------------------------------------
+
+calculate_fuel_group_output_summary <- function(
+    year_results,
+    year,
+    ADV_BIO,
+    CONV_BIO,
+    RFNBO_SECTOR
+) {
+
+  REF <- year_results$REF
+
+  scenario_results <- lapply(
+    scenario_names,
+    function(scenario_name) {
+
+      scenario <- year_results[[scenario_name]]
+
+      delta_X <-
+        scenario$X -
+        REF$X
+
+      data.frame(
+        year = as.integer(year),
+        scenario = scenario_name,
+
+        advanced_biofuel_output_change =
+          sum(delta_X[ADV_BIO]),
+
+        conventional_biofuel_output_change =
+          sum(delta_X[CONV_BIO]),
+
+        rfnbo_output_change =
+          sum(delta_X[RFNBO_SECTOR])
+      )
+    }
+  )
+
+  do.call(
+    rbind,
+    scenario_results
+  )
+}
+
+
+fuel_group_output_summary_all <-
+  do.call(
+    rbind,
+    lapply(
+      benchmark_years,
+      function(year) {
+
+        calculate_fuel_group_output_summary(
+          year_results = results[[year]],
+          year = year,
+          ADV_BIO = ADV_BIO,
+          CONV_BIO = CONV_BIO,
+          RFNBO_SECTOR = RFNBO_SECTOR
+        )
+      }
+    )
+  )
+
+rownames(fuel_group_output_summary_all) <- NULL
+
+
+# -------------------------------------------------------------------
+# 17.2 NONBIO output attributable specifically to advanced biofuels
+# -------------------------------------------------------------------
+
+advanced_biofuel_contributions_all <-
+  biofuel_NONBIO_contributions_all[
+    biofuel_NONBIO_contributions_all$bio_sector_id %in% ADV_BIO,
+  ]
+
+
+# Add readable fuel names
+advanced_biofuel_contributions_all$biofuel_name <-
+  biofuel_names[
+    as.character(
+      advanced_biofuel_contributions_all$bio_sector_id
+    )
+  ]
+
+
+advanced_NONBIO_decomposition_all <-
+  aggregate(
+    cbind(
+      first_order_contribution,
+      higher_order_contribution,
+      total_NONBIO_contribution
+    ) ~ year + scenario,
+    data = advanced_biofuel_contributions_all,
+    FUN = sum
+  )
+
+
+names(
+  advanced_NONBIO_decomposition_all
+)[
+  names(advanced_NONBIO_decomposition_all) ==
+    "first_order_contribution"
+] <- "advanced_first_order_NONBIO"
+
+
+names(
+  advanced_NONBIO_decomposition_all
+)[
+  names(advanced_NONBIO_decomposition_all) ==
+    "higher_order_contribution"
+] <- "advanced_higher_order_NONBIO"
+
+
+names(
+  advanced_NONBIO_decomposition_all
+)[
+  names(advanced_NONBIO_decomposition_all) ==
+    "total_NONBIO_contribution"
+] <- "advanced_total_NONBIO"
+
+
+
+advanced_output_summary_all <-
+  merge(
+    fuel_group_output_summary_all,
+    advanced_NONBIO_decomposition_all,
+    by = c(
+      "year",
+      "scenario"
+    )
+  )
+
+
+advanced_output_summary_all$NONBIO_per_eur_advanced_biofuel <-
+  advanced_output_summary_all$advanced_total_NONBIO /
+  advanced_output_summary_all$advanced_biofuel_output_change
+
+
+advanced_output_summary_all$first_order_per_eur_advanced_biofuel <-
+  advanced_output_summary_all$advanced_first_order_NONBIO /
+  advanced_output_summary_all$advanced_biofuel_output_change
+
+
+advanced_output_summary_all$higher_order_per_eur_advanced_biofuel <-
+  advanced_output_summary_all$advanced_higher_order_NONBIO /
+  advanced_output_summary_all$advanced_biofuel_output_change
+
+
+advanced_output_summary_all$first_order_share <-
+  advanced_output_summary_all$advanced_first_order_NONBIO /
+  advanced_output_summary_all$advanced_total_NONBIO
+
+
+advanced_output_summary_all$higher_order_share <-
+  advanced_output_summary_all$advanced_higher_order_NONBIO /
+  advanced_output_summary_all$advanced_total_NONBIO
+
+
+# ===================================================================
+# 18. NONBIO SECTORAL OUTPUT EFFECTS
 #     WHICH NONBIO SECTORS GAIN THE MOST?
 # ===================================================================
 
@@ -1045,6 +1290,151 @@ top_NONBIO_sectors_all <-
   )
 
 rownames(top_NONBIO_sectors_all) <- NULL
+
+# ===================================================================
+# 18. NONBIO SECTOR EFFECTS ATTRIBUTABLE TO ADVANCED BIOFUELS
+# ===================================================================
+
+calculate_advanced_NONBIO_sector_effects <- function(
+    year_results,
+    year,
+    ADV_BIO,
+    NONBIO,
+    sector_names
+) {
+
+  REF <- year_results$REF
+
+
+  A_NN <-
+    REF$A_dom_tech[
+      NONBIO,
+      NONBIO,
+      drop = FALSE
+    ]
+
+
+  L_NN <-
+    solve(
+      base::diag(length(NONBIO)) -
+        A_NN
+    )
+
+
+  scenario_results <- lapply(
+    scenario_names,
+    function(scenario_name) {
+
+      scenario <-
+        year_results[[scenario_name]]
+
+
+      direct_ADV_scenario <-
+        scenario$A_dom_tech[
+          NONBIO,
+          ADV_BIO,
+          drop = FALSE
+        ] %*%
+        scenario$X_bio[ADV_BIO]
+
+
+      direct_ADV_ref <-
+        REF$A_dom_tech[
+          NONBIO,
+          ADV_BIO,
+          drop = FALSE
+        ] %*%
+        REF$X_bio[ADV_BIO]
+
+
+      direct_shock <-
+        direct_ADV_scenario -
+        direct_ADV_ref
+
+
+      total_effect <-
+        as.numeric(
+          L_NN %*%
+            direct_shock
+        )
+
+
+      data.frame(
+        year = as.integer(year),
+        scenario = scenario_name,
+        sector_id = NONBIO,
+        sector = sector_names[NONBIO],
+
+        advanced_first_order_effect =
+          as.numeric(direct_shock),
+
+        advanced_total_output_effect =
+          total_effect,
+
+        advanced_higher_order_effect =
+          total_effect -
+          as.numeric(direct_shock)
+      )
+    }
+  )
+
+
+  do.call(
+    rbind,
+    scenario_results
+  )
+}
+
+
+advanced_NONBIO_sector_effects_all <-
+  do.call(
+    rbind,
+    lapply(
+      benchmark_years,
+      function(year) {
+
+        calculate_advanced_NONBIO_sector_effects(
+          year_results = results[[year]],
+          year = year,
+          ADV_BIO = ADV_BIO,
+          NONBIO = NONBIO,
+          sector_names = sector_names
+        )
+      }
+    )
+  )
+
+rownames(advanced_NONBIO_sector_effects_all) <- NULL
+
+
+get_top_advanced_NONBIO_sectors <- function(
+    year,
+    scenario,
+    n = 10
+) {
+
+  x <-
+    advanced_NONBIO_sector_effects_all[
+      advanced_NONBIO_sector_effects_all$year == year &
+        advanced_NONBIO_sector_effects_all$scenario == scenario,
+    ]
+
+
+  x <-
+    x[
+      order(
+        x$advanced_total_output_effect,
+        decreasing = TRUE
+      ),
+    ]
+
+
+  x$rank <- seq_len(nrow(x))
+
+  head(
+    x,
+    n
+  )
 
 
 # ===================================================================
@@ -1251,6 +1641,27 @@ print(
   annual_output_path
 )
 
+  print(
+  fuel_group_output_summary_all
+)
+
+print(
+  advanced_output_summary_all
+)
+
+print(
+  advanced_biofuel_contributions_all
+)
+
+
+  print(
+  get_top_advanced_NONBIO_sectors(
+    year = 2030,
+    scenario = "S2",
+    n = 10
+  )
+)
+  
 # ===================================================================
 # 20. OPTIONAL: SAVE ANALYSIS TABLES
 # ===================================================================
@@ -1282,5 +1693,36 @@ write.csv(
 write.csv(
   S2_S3_scale_technology_all,
   "S2_S3_scale_technology_2030_2040.csv",
+  row.names = FALSE
+)
+
+
+  write.csv(
+  fuel_group_output_summary_all,
+  "fuel_group_output_summary_2030_2040.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  advanced_output_summary_all,
+  "advanced_biofuel_output_summary_2030_2040.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  advanced_biofuel_contributions_all,
+  "advanced_biofuel_NONBIO_contributions_2030_2040.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  advanced_biofuel_input_intensity_all,
+  "advanced_biofuel_input_intensity_2030_2040.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  advanced_NONBIO_sector_effects_all,
+  "advanced_biofuel_NONBIO_sector_effects_2030_2040.csv",
   row.names = FALSE
 )

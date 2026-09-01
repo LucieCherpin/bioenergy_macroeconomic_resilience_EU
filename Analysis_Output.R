@@ -6,81 +6,140 @@ rm(list = ls())
 
 options(scipen = 999)
 
-results_2030 <-
-  readRDS(
-    "model_results_2030.rds"
+results <- readRDS(
+  "model_results.rds"
+)
+
+
+# ===================================================================
+# 2. BASIC SETTINGS
+# ===================================================================
+
+BIO <- results$metadata$BIO
+NONBIO <- results$metadata$NONBIO
+sector_names <- results$metadata$sector_names
+
+benchmark_years <- c("2030", "2035", "2040")
+scenario_names <- c("S1", "S2", "S3")
+
+
+# ===================================================================
+# 3. BASIC CHECKS
+# ===================================================================
+
+stopifnot(
+  length(BIO) + length(NONBIO) == length(sector_names),
+  all(benchmark_years %in% names(results))
+)
+
+for (year in benchmark_years) {
+
+  year_results <- results[[year]]
+
+  stopifnot(
+    all(c("REF", "S1", "S2", "S3") %in% names(year_results)),
+    length(year_results$REF$X) == length(sector_names),
+    length(year_results$S1$X) == length(sector_names),
+    length(year_results$S2$X) == length(sector_names),
+    length(year_results$S3$X) == length(sector_names),
+
+    !anyNA(year_results$REF$X),
+    !anyNA(year_results$S1$X),
+    !anyNA(year_results$S2$X),
+    !anyNA(year_results$S3$X)
+  )
+}
+
+
+# ===================================================================
+# 4. AGGREGATE OUTPUT EFFECTS:
+#    SCENARIO VS SAME-YEAR REFERENCE
+# ===================================================================
+
+calculate_output_summary <- function(
+    year_results,
+    year,
+    BIO,
+    NONBIO
+) {
+
+  REF <- year_results$REF
+
+  scenario_results <- lapply(
+    scenario_names,
+    function(scenario_name) {
+
+      scenario <- year_results[[scenario_name]]
+
+      delta_X <- scenario$X - REF$X
+
+      data.frame(
+        year = as.integer(year),
+        scenario = scenario_name,
+
+        bio_output_change =
+          sum(delta_X[BIO]),
+
+        nonbio_output_change =
+          sum(delta_X[NONBIO]),
+
+        total_output_change =
+          sum(delta_X)
+      )
+    }
   )
 
-REF <- results_2030$REF
-S1  <- results_2030$S1
-S2  <- results_2030$S2
-S3  <- results_2030$S3
-
-BIO <-
-  results_2030$metadata$BIO
-
-NONBIO <-
-  results_2030$metadata$NONBIO
-
-sector_names <-
-  results_2030$metadata$sector_names
+  do.call(
+    rbind,
+    scenario_results
+  )
+}
 
 
-# ===================================================================
-# 2. BASIC CHECKS
-# ===================================================================
+output_summary_all <- do.call(
+  rbind,
+  lapply(
+    benchmark_years,
+    function(year) {
 
-
-length(BIO)
-length(NONBIO)
-length(sector_names)
-
-length(REF$X)
-
-length(REF$X)
-length(S1$X)
-length(S2$X)
-length(S3$X)
-
-sum(is.na(S1$X))
-sum(is.na(S1$GVA))
-sum(is.na(S1$Z_imp))
-
-# ===================================================================
-# 3. AGGREGATE OUTPUT EFFECTS: BIO VS NONBIO
-# ===================================================================
-
-delta_X_S1 <- S1$X - REF$X
-delta_X_S2 <- S2$X - REF$X
-delta_X_S3 <- S3$X - REF$X
-
-output_summary_2030 <- data.frame(
-
-  scenario = c("S1", "S2", "S3"),
-
-  bio_output_change = c(
-    sum(delta_X_S1[BIO]),
-    sum(delta_X_S2[BIO]),
-    sum(delta_X_S3[BIO])
-  ),
-
-  nonbio_output_change = c(
-    sum(delta_X_S1[NONBIO]),
-    sum(delta_X_S2[NONBIO]),
-    sum(delta_X_S3[NONBIO])
-  ),
-
-  total_output_change = c(
-    sum(delta_X_S1),
-    sum(delta_X_S2),
-    sum(delta_X_S3)
+      calculate_output_summary(
+        year_results = results[[year]],
+        year = year,
+        BIO = BIO,
+        NONBIO = NONBIO
+      )
+    }
   )
 )
 
-output_summary_2030
+rownames(output_summary_all) <- NULL
+
 
 # ===================================================================
-# $. DECOMPOSE NONBIO OUTPUT:
+# 5. YEAR-SPECIFIC OUTPUT TABLES
+# ===================================================================
+
+output_summary_2030 <-
+  subset(
+    output_summary_all,
+    year == 2030
+  )
+
+output_summary_2035 <-
+  subset(
+    output_summary_all,
+    year == 2035
+  )
+
+output_summary_2040 <-
+  subset(
+    output_summary_all,
+    year == 2040
+  )
+
+
+# ===================================================================
+# 6. DECOMPOSE NONBIO OUTPUT:
 #    FIRST-ORDER VS HIGHER-ORDER EFFECTS
 # ===================================================================
 
@@ -93,8 +152,9 @@ decompose_NONBIO_output <- function(
 
   # ---------------------------------------------------------------
   # First-order upstream effect
-  # Additional demand placed directly by BIO sectors on NONBIO
-  # domestic suppliers
+  #
+  # Additional demand placed directly by BIO sectors
+  # on domestic NONBIO suppliers
   # ---------------------------------------------------------------
 
   first_order_scenario <-
@@ -132,8 +192,9 @@ decompose_NONBIO_output <- function(
 
 
   # ---------------------------------------------------------------
-  # Higher-order effect
-  # Suppliers of suppliers and subsequent production rounds
+  # Higher-order upstream effect
+  #
+  # Suppliers of suppliers and subsequent Leontief rounds
   # ---------------------------------------------------------------
 
   higher_order_change <-
@@ -142,11 +203,10 @@ decompose_NONBIO_output <- function(
 
 
   # ---------------------------------------------------------------
-  # Return aggregated results
+  # Return
   # ---------------------------------------------------------------
 
   data.frame(
-
     first_order_output =
       first_order_change,
 
@@ -158,68 +218,272 @@ decompose_NONBIO_output <- function(
   )
 }
 
- # ---------------------------------------------------------------
-  # Application: Run the function once for each scenario
-  # ---------------------------------------------------------------
 
+# ===================================================================
+# 7. APPLY NONBIO DECOMPOSITION TO ALL YEARS AND SCENARIOS
+# ===================================================================
 
-NONBIO_decomposition_S1 <-
-  decompose_NONBIO_output(
-    S1,
-    REF,
+calculate_NONBIO_decomposition <- function(
+    year_results,
+    year,
     BIO,
     NONBIO
+) {
+
+  REF <- year_results$REF
+
+  decomposition_results <- lapply(
+    scenario_names,
+    function(scenario_name) {
+
+      scenario <- year_results[[scenario_name]]
+
+      decomposition <-
+        decompose_NONBIO_output(
+          scenario = scenario,
+          ref = REF,
+          BIO = BIO,
+          NONBIO = NONBIO
+        )
+
+      data.frame(
+        year = as.integer(year),
+        scenario = scenario_name,
+        decomposition
+      )
+    }
   )
 
-NONBIO_decomposition_S2 <-
-  decompose_NONBIO_output(
-    S2,
-    REF,
-    BIO,
-    NONBIO
+  do.call(
+    rbind,
+    decomposition_results
   )
+}
 
-NONBIO_decomposition_S3 <-
-  decompose_NONBIO_output(
-    S3,
-    REF,
-    BIO,
-    NONBIO
-  )
 
-# ---------------------------------------------------------------
-  # Combine the scenarios (putting the 3 separate scenario result objects into once comparison table
-  # ---------------------------------------------------------------
+NONBIO_output_decomposition_all <- do.call(
+  rbind,
+  lapply(
+    benchmark_years,
+    function(year) {
 
-NONBIO_output_decomposition_2030 <- data.frame(
-
-  scenario =
-    c("S1", "S2", "S3"),
-
-  first_order_output = c(
-    NONBIO_decomposition_S1$first_order_output,
-    NONBIO_decomposition_S2$first_order_output,
-    NONBIO_decomposition_S3$first_order_output
-  ),
-
-  higher_order_output = c(
-    NONBIO_decomposition_S1$higher_order_output,
-    NONBIO_decomposition_S2$higher_order_output,
-    NONBIO_decomposition_S3$higher_order_output
-  ),
-
-  total_NONBIO_output = c(
-    NONBIO_decomposition_S1$total_NONBIO_output,
-    NONBIO_decomposition_S2$total_NONBIO_output,
-    NONBIO_decomposition_S3$total_NONBIO_output
+      calculate_NONBIO_decomposition(
+        year_results = results[[year]],
+        year = year,
+        BIO = BIO,
+        NONBIO = NONBIO
+      )
+    }
   )
 )
 
-NONBIO_output_decomposition_2030
- ---------------------------------------------------------------
-  # show the results
-  # ---------------------------------------------------------------
+rownames(NONBIO_output_decomposition_all) <- NULL
 
 
-print(output_summary_2030)
-print(NONBIO_output_decomposition_2030)
+# ===================================================================
+# 8. YEAR-SPECIFIC NONBIO DECOMPOSITION TABLES
+# ===================================================================
+
+NONBIO_output_decomposition_2030 <-
+  subset(
+    NONBIO_output_decomposition_all,
+    year == 2030
+  )
+
+NONBIO_output_decomposition_2035 <-
+  subset(
+    NONBIO_output_decomposition_all,
+    year == 2035
+  )
+
+NONBIO_output_decomposition_2040 <-
+  subset(
+    NONBIO_output_decomposition_all,
+    year == 2040
+  )
+
+
+# ===================================================================
+# 9. SCENARIO-TO-SCENARIO OUTPUT COMPARISONS
+# ===================================================================
+#
+# In addition to S1/S2/S3 vs REF, compare scenarios directly
+# within the same benchmark year.
+#
+# S2 - S1
+# S3 - S1
+# S3 - S2
+# ===================================================================
+
+calculate_pairwise_output <- function(
+    year_results,
+    year,
+    BIO,
+    NONBIO
+) {
+
+  comparisons <- list(
+    "S2-S1" = c("S2", "S1"),
+    "S3-S1" = c("S3", "S1"),
+    "S3-S2" = c("S3", "S2")
+  )
+
+  comparison_results <- lapply(
+    names(comparisons),
+    function(comparison_name) {
+
+      scenario_high <-
+        year_results[[
+          comparisons[[comparison_name]][1]
+        ]]
+
+      scenario_low <-
+        year_results[[
+          comparisons[[comparison_name]][2]
+        ]]
+
+      delta_X <-
+        scenario_high$X -
+        scenario_low$X
+
+      data.frame(
+        year = as.integer(year),
+        comparison = comparison_name,
+
+        bio_output_difference =
+          sum(delta_X[BIO]),
+
+        nonbio_output_difference =
+          sum(delta_X[NONBIO]),
+
+        total_output_difference =
+          sum(delta_X)
+      )
+    }
+  )
+
+  do.call(
+    rbind,
+    comparison_results
+  )
+}
+
+
+pairwise_output_comparison_all <- do.call(
+  rbind,
+  lapply(
+    benchmark_years,
+    function(year) {
+
+      calculate_pairwise_output(
+        year_results = results[[year]],
+        year = year,
+        BIO = BIO,
+        NONBIO = NONBIO
+      )
+    }
+  )
+)
+
+rownames(pairwise_output_comparison_all) <- NULL
+
+
+# ===================================================================
+# 10. SECTOR-LEVEL OUTPUT EFFECTS
+# ===================================================================
+
+calculate_sector_output_changes <- function(
+    year_results,
+    year,
+    sector_names
+) {
+
+  REF <- year_results$REF
+
+  sector_results <- lapply(
+    scenario_names,
+    function(scenario_name) {
+
+      scenario <- year_results[[scenario_name]]
+
+      data.frame(
+        year = as.integer(year),
+        scenario = scenario_name,
+        sector_id = seq_along(sector_names),
+        sector = sector_names,
+        output_REF = REF$X,
+        output_scenario = scenario$X,
+        output_change = scenario$X - REF$X
+      )
+    }
+  )
+
+  do.call(
+    rbind,
+    sector_results
+  )
+}
+
+
+sector_output_changes_all <- do.call(
+  rbind,
+  lapply(
+    benchmark_years,
+    function(year) {
+
+      calculate_sector_output_changes(
+        year_results = results[[year]],
+        year = year,
+        sector_names = sector_names
+      )
+    }
+  )
+)
+
+rownames(sector_output_changes_all) <- NULL
+
+
+# ===================================================================
+# 11. SHOW MAIN RESULTS
+# ===================================================================
+
+print(
+  output_summary_all
+)
+
+print(
+  NONBIO_output_decomposition_all
+)
+
+print(
+  pairwise_output_comparison_all
+)
+
+
+# ===================================================================
+# 12. OPTIONAL: SAVE ANALYSIS TABLES
+# ===================================================================
+
+write.csv(
+  output_summary_all,
+  "output_summary_2030_2040.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  NONBIO_output_decomposition_all,
+  "NONBIO_output_decomposition_2030_2040.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  pairwise_output_comparison_all,
+  "pairwise_output_comparison_2030_2040.csv",
+  row.names = FALSE
+)
+
+write.csv(
+  sector_output_changes_all,
+  "sector_output_changes_2030_2040.csv",
+  row.names = FALSE
+)

@@ -12,7 +12,6 @@ library(dplyr)
 #Clear plots
 if(!is.null(dev.list())) dev.off()
 
-
 #Clear console
 cat("\014")
 

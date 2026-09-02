@@ -2,10 +2,6 @@
 ### STANDALONE MODEL: CAPEX SEPARATED FROM INTERMEDIATE CONSUMPTION
 #####################################################################
 #
-# This model is a standalone version of the scenario model.
-# The key methodological change is that CAPEX is NOT included in the
-# technical coefficient matrices A_dom and A_imp.
-#
 # Biofuel-sector intermediate-input coefficients contain only:
 #   - purchased feedstock inputs; and
 #   - recurrent OPEX inputs.
@@ -13,7 +9,7 @@
 # CAPEX assumptions and distributions remain documented in the
 # technology/scenario data, but CAPEX does not enter intermediate
 # consumption in this version. No alternative CAPEX investment/GFCF
-# treatment is implemented yet.
+# treatment yet.
 #
 #####################################################################
 
@@ -455,7 +451,6 @@ IMP_INPUT_NAMES <-
     DOM_INPUT_NAMES,
     "_imp"
   )
-
 
 BIO <-
   unname(BIOFUEL_SECTORS)

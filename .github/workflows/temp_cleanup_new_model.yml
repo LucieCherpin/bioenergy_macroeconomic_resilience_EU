@@ -17,8 +17,9 @@ jobs:
           fetch-depth: 0
 
       - name: Remove unused legacy initialization code
-        shell: python
+        shell: bash
         run: |
+          python <<'PY'
           from pathlib import Path
           import re
 
@@ -114,10 +115,9 @@ consumption_dom <-
 
           text = text[:start] + replacement + text[end + len(end_marker):]
 
-          # Remove the obsolete preliminary Leontief inverse, commented legacy
-          # consistency checks and inactive extension placeholders. The model
-          # constructs the relevant Leontief inverses later from the finalized
-          # baseline and annual IO matrices.
+          # Remove obsolete preliminary Leontief inverse, commented legacy checks,
+          # and inactive extension placeholders. The relevant Leontief inverses
+          # are constructed later from the finalized baseline and annual IO matrices.
           legacy_start = 'diag <- diag(1, nrow = nIndustries, ncol = nIndustries)'
           basic_marker = '############################################################\n# 1. BASIC SETTINGS\n############################################################'
 
@@ -126,8 +126,10 @@ consumption_dom <-
           text = text[:start2] + basic_marker + text[end2 + len(basic_marker):]
 
           path.write_text(text, encoding='utf-8')
+          PY
 
       - name: Commit cleaned standalone model
+        shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

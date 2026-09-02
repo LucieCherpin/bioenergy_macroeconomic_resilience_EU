@@ -1,1 +1,5560 @@
+#####################################################################
+### STANDALONE MODEL: CAPEX SEPARATED FROM INTERMEDIATE CONSUMPTION
+#####################################################################
+#
+# This model is a standalone version of the scenario model.
+# The key methodological change is that CAPEX is NOT included in the
+# technical coefficient matrices A_dom and A_imp.
+#
+# Biofuel-sector intermediate-input coefficients contain only:
+#   - purchased feedstock inputs; and
+#   - recurrent OPEX inputs.
+#
+# CAPEX assumptions and distributions remain documented in the
+# technology/scenario data, but CAPEX does not enter intermediate
+# consumption in this version. No alternative CAPEX investment/GFCF
+# treatment is implemented yet.
+#
+#####################################################################
 
+#####################################################################
+###STEP 1: Prepare Working Space and Data
+#####################################################################
+
+#Clear working environment
+rm(list=ls()) 
+
+#Install packages
+library(readxl)
+library(dplyr)
+
+#Clear plots
+if(!is.null(dev.list())) dev.off()
+
+#Clear console
+cat("\014")
+
+#Prevent scientific notation
+options(scipen = 999)
+
+##########################################
+###Import Data
+##########################################
+
+#Input-Output Table EU27 (Eurostat)
+
+IO_EU_domestic <- read_xlsx("domestic_iot.xlsx", sheet= "Sheet_1", range = "A2:CP104", col_names = T)
+IO_EU_domestic <- as.data.frame(IO_EU_domestic)
+
+IO_EU_imports <- read_xlsx("imports_iot.xlsx", sheet= "Sheet_1", range = "A2:CP104", col_names = T)
+IO_EU_imports <- as.data.frame(IO_EU_imports)
+
+#National Accounts
+national_accounts <- read_xlsx("nama_10_gdp__EU27.xlsx", sheet = "Sheet 1", range = "A10:B48", col_names = F)
+
+#Here Integrate Extensions
+### maybe don't use that one if I us ethe exiosbase extensions
+#Employment E.G:
+#employment <- read_xlsx("nama_10_a64_EU27.xlsx", sheet = "Sheet 1", range = "A11:X77", col_names = T)
+
+#####################################################################
+###STEP 2: Defining Coefficients (Exogenous Variables and Parameters)
+#####################################################################
+
+##########################################
+###General Parameters
+##########################################
+
+nYears <- length(2023:2040)            #Number of years 
+nIndustries = 73        #Industries of Eurostat input-output table
+
+
+#Initialisation
+
+#P3 - Final expenditure
+final_expenditure <- as.numeric(national_accounts[3,2])       #P3 - Total final expenditure (C + G)
+
+
+###P3 - Total final expenditure (C + G) by industry
+
+t_f_e_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries+1), nIndustries+3]))                  
+t_f_e_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries+1), nIndustries+3]))
+
+#Total Final Expenditure - Do we need this?
+#D_dom = matrix(rep(t_f_e_dom, times = nYears), nrow = nYears, byrow = TRUE)
+#D_imp = matrix(rep(t_f_e_imp, times = nYears), nrow = nYears, byrow = TRUE)
+
+### D21X31 - Taxes less subsidies on products as part of final expenditure
+#expenditure_tax_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 8, nIndustries + 3]))    ### column nIndustries + 3 is "final consumotion expenditure"
+
+
+#D_tax_dom = matrix(rep(expenditure_tax_dom, times = nYears), nrow = nYears, byrow = TRUE)   #D21X31 - Taxes less subsidies on products as part of final expenditure by industry matrix
+
+
+
+final_use_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 18]))    #TFU - Total final use by industry
+final_use_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 18]))
+
+f_dom = matrix(rep(final_use_dom, times = nYears), nrow = nYears, byrow = TRUE)      #TFU - Total final use by industry matrix
+f_imp = matrix(rep(final_use_imp, times = nYears), nrow = nYears, byrow = TRUE)
+
+#Production and sales, only looking at domestic
+#gva_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 2, 3:(nIndustries + 2)])) #B1G - Gross value added by industry
+#gva_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 2, 3:(nIndustries + 2)]))
+#GVA_dom = matrix(rep(gva_dom, times = nYears), nrow = nYears, byrow = TRUE)   #B1G - Gross value added by industry matrix  
+#GVA_imp = matrix(rep(gva_imp, times = nYears), nrow = nYears, byrow = TRUE)
+
+## only measuring doemstic EU output generation by industry, 
+#sales_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 10, 3:(nIndustries + 2)]))  #P1 - Total sales (output) by industry
+#sales_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 10, 3:(nIndustries + 2)]))
+
+#SALES_dom = matrix(rep(sales_dom, times = nYears), nrow = nYears, byrow = TRUE)    #P1 - Total sales (output) by industry matrix
+#SALES_imp = matrix(rep(sales_imp, times = nYears), nrow = nYears, byrow = TRUE)
+
+q_s_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 19, 3:(nIndustries + 2)]))  #TS_BP - Total supply by industry
+#q_s_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 19, 3:(nIndustries + 2)]))
+
+## changed: because 1e-6 is only needed to avoid division by zero when calculating A;  should not become part of the actual output vector.
+q_s_dom_safe <- q_s_dom
+q_s_dom_safe[q_s_dom_safe == 0] <- 1e-6                                                             #Necessary for calculations
+#q_s_imp[q_s_imp == 0] <- 1e-6                                                                
+Q_s_dom_i = matrix(rep(q_s_dom, times = nYears), nrow = nYears, byrow = TRUE)   #TS_BP - Total supply by industry matrix
+#Q_s_imp_i = matrix(rep(q_s_imp, times = nYears), nrow = nYears, byrow = TRUE)
+
+
+
+
+##########################################
+###Final Expenditure
+##########################################
+
+#Total consumption shares by industry
+beta_bar_dom <- as.matrix(
+  (as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 4])) +
+     as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 5])) +
+     as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 6])))
+  /
+    (as.numeric(unlist(IO_EU_domestic[1, nIndustries + 4])) +
+       as.numeric(unlist(IO_EU_domestic[1, nIndustries + 5])) +
+       as.numeric(unlist(IO_EU_domestic[1, nIndustries + 6])))
+)
+
+beta_bar_imp <- as.matrix(
+  (as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 4])) +
+     as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 5])) +
+     as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 6])))
+  /
+    (as.numeric(unlist(IO_EU_imports[1, nIndustries + 4])) +
+       as.numeric(unlist(IO_EU_imports[1, nIndustries + 5])) +
+       as.numeric(unlist(IO_EU_imports[1, nIndustries + 6])))
+)
+
+# Household consumption shares by industry (HH + NPISH)
+beta_c_bar_dom <- as.matrix(
+  (as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 5])) +
+     as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 6])))
+  /
+    (as.numeric(unlist(IO_EU_domestic[1, nIndustries + 5])) +
+       as.numeric(unlist(IO_EU_domestic[1, nIndustries + 6])))
+)
+
+beta_c_bar_imp <- as.matrix(
+  (as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 5])) +
+     as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 6])))
+  /
+    (as.numeric(unlist(IO_EU_imports[1, nIndustries + 5])) +
+       as.numeric(unlist(IO_EU_imports[1, nIndustries + 6])))
+)
+
+#Household consumption shares by industry (HH + NPISH) Matrix
+beta_C_dom = matrix(rep(beta_c_bar_dom, times = nYears), nrow = nYears, byrow = TRUE)   # Household Consumption Shares Matrix (Domestic)
+beta_C_imp = matrix(rep(beta_c_bar_imp, times = nYears), nrow = nYears, byrow = TRUE)   # Household Consumption Shares Matrix (imports)
+
+# Government expenditure shares by industry
+beta_g_bar_dom <- as.matrix(
+  as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 4])) /
+    as.numeric(unlist(IO_EU_domestic[1, nIndustries + 4]))
+)
+
+beta_g_bar_imp <- as.matrix(
+  as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 4])) /
+    as.numeric(unlist(IO_EU_imports[1, nIndustries + 4]))
+)
+
+#Real government expenditure composition
+beta_G_dom = matrix(rep(beta_g_bar_dom, times = nYears), nrow = nYears, byrow = TRUE)   # Government Expenditure Shares Matrix (Domestic)
+beta_G_imp = matrix(rep(beta_g_bar_imp, times = nYears), nrow = nYears, byrow = TRUE)   # Government Expenditure Shares Matrix (imports)
+
+#P3_S13 - Government expenditure
+g <- as.numeric(national_accounts[4,2])                                               #P3_S13 - Government expenditure
+g_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 4]))    #P3_S13 - Government expenditure by industry
+g_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 4]))
+g_cons_tax_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 8, nIndustries + 4]))   #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure
+#g_cons_tax_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 8, nIndustries + 4]))
+g_cons_tax_i_dom <- beta_g_bar_dom * g_cons_tax_dom                 #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure by industry
+#g_cons_tax_i_imp <- beta_g_bar_imp * g_cons_tax_imp
+
+G_dom = matrix(data = sum(g_dom), ncol = nYears)              #P3_S13 - Government expenditure matrix
+G_imp = matrix(data = sum(g_imp), ncol = nYears)
+#G_tax = matrix(data = sum(g_cons_tax_dom), ncol = nYears)         #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure matrix
+#G_tax = matrix(data = sum(g_cons_tax_imp), ncol = nYears)
+
+G_i_dom = matrix(rep(g_dom, times = nYears), nrow = nYears, byrow = TRUE)                #P3_S13 - Government expenditure by industry matrix
+#G_i_tax_dom = matrix(rep(g_cons_tax_i_dom, times = nYears), nrow = nYears, byrow = TRUE)   #D21X31_S13 - Taxes less subsidies on products as part of final government expenditure by indusrty matrix
+G_i_imp = matrix(rep(g_imp, times = nYears), nrow = nYears, byrow = TRUE)                
+#G_i_tax_dom = matrix(rep(g_cons_tax_i_imp, times = nYears), nrow = nYears, byrow = TRUE)
+
+#P3_S14_S15 - Household consumption
+cons <- as.numeric(national_accounts[7,2])                    #P3_S14_S15 - Household and NPISH consumption
+hh_cons_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 5]))
+hh_cons_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 5]))                       #P3_S14 - Household consumption by industry
+
+npish_cons_dom <- as.numeric(unlist(IO_EU_domestic[2:(nIndustries + 1), nIndustries + 6]))
+npish_cons_imp <- as.numeric(unlist(IO_EU_imports[2:(nIndustries + 1), nIndustries + 6]))                    #P3_S15 - NPISH consumption by industry
+
+consumption_dom = hh_cons_dom + npish_cons_dom
+consumption_imp = hh_cons_imp + npish_cons_imp                         #P3_S14_S15 - Household and NPISH consumption by industry
+
+consumption_tax_dom <- as.numeric(unlist(IO_EU_domestic[nIndustries + 8, nIndustries + 5]))
+#consumption_tax_imp <- as.numeric(unlist(IO_EU_imports[nIndustries + 8, nIndustries + 5]))             #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption#
+
+consumption_tax_i_dom <- beta_c_bar_dom * consumption_tax_dom                                                      #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption by industry
+#consumption_tax_i_imp <- beta_c_bar_imp * consumption_tax_imp     
+
+C_dom = matrix(data = sum(consumption_dom), ncol = nYears)            #P3_S14_S15 - Household and NPISH consumption matrix
+C_imp = matrix(data = sum(consumption_imp), ncol = nYears)           
+
+C_tax_dom = matrix(data = sum(consumption_tax_dom), ncol = nYears)    #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption matrix
+#C_tax_imp = matrix(data = sum(consumption_tax_imp), ncol = nYears) 
+
+C_i_dom = matrix(rep(consumption_dom, times = nYears), nrow = nYears, byrow = TRUE)            #P3_S14_S15 - Household and NPISH consumption by industry matrix
+C_i_tax_dom <- matrix(rep(consumption_tax_i_dom, times = nYears),nrow = nYears, byrow = TRUE)  #D21X31_S14_S15 - Taxes less subsidies on products as part of final household and NPISH consumption by industry matrix
+C_i_imp = matrix(rep(consumption_imp, times = nYears), nrow = nYears, byrow = TRUE)    
+#C_i_tax_imp <- matrix(rep(consumption_tax_i_imp, times = nYears),nrow = nYears, byrow = TRUE)
+
+
+D_dom <- matrix(0, nrow = nYears, ncol = nIndustries)
+D_imp <- matrix(0, nrow = nYears, ncol = nIndustries)
+f_dom = matrix(rep(final_use_dom, times = nYears), nrow = nYears, byrow = TRUE)
+f_imp = matrix(rep(final_use_imp, times = nYears), nrow = nYears, byrow = TRUE)
+
+##########################################
+###Technical coefficients matrix (A matrix)
+##########################################
+
+# Goods x goods matrix Z (Domestic)
+Z_dom <- matrix(
+  as.numeric(as.character(unlist(IO_EU_domestic[2:(nIndustries + 1), 3:(nIndustries + 2)]))),
+  nrow = nIndustries, ncol = nIndustries
+)
+Z_dom[is.na(Z_dom)] <- 0
+# Goods x goods matrix Z (Imports)
+Z_imp <- matrix(
+  as.numeric(as.character(unlist(IO_EU_imports[2:(nIndustries + 1), 3:(nIndustries + 2)]))),
+  nrow = nIndustries, ncol = nIndustries
+)
+Z_imp[is.na(Z_imp)] <- 0
+
+# ===================================================================
+# sector-specific taxes less subsidies on product
+# ===================================================================
+
+# D21X31 - Taxes less subsidies on products by industry
+tax_products_2023 <- as.numeric(
+  unlist(
+    IO_EU_domestic[
+      nIndustries + 8,
+      3:(nIndustries + 2)
+    ]
+  )
+)
+
+# Intermediate inputs represented by the domestic + imported Z matrices
+intermediate_inputs_2023 <-
+  colSums(Z_dom) +
+  colSums(Z_imp)
+
+
+# Sector-specific effective tax/subsidy rate in 2023
+# This rate will be kept constant over time.
+p2_tax_rate_2023 <- numeric(nIndustries)
+
+nonzero_intermediate <-
+  abs(intermediate_inputs_2023) > 1e-12
+
+p2_tax_rate_2023[nonzero_intermediate] <-
+  tax_products_2023[nonzero_intermediate] /
+  intermediate_inputs_2023[nonzero_intermediate]
+
+
+# Check for sectors in which intermediate inputs are zero
+# but D21X31 is not zero
+if (
+  any(
+    !nonzero_intermediate &
+      abs(tax_products_2023) > 1e-8
+  )
+) {
+  warning(
+    "At least one sector has zero intermediate inputs but non-zero D21X31."
+  )
+}
+
+# Technical coefficients matrices Domestic
+## use the q_s_dom_safe vector here
+A_dom <- as.matrix(sweep(Z_dom, 2, q_s_dom_safe, FUN = '/'))  # Domestic technical coefficients    
+
+na_pos <- which(is.na(A_dom), arr.ind = TRUE)
+if (nrow(na_pos) > 0) {
+  message("Replacing ", nrow(na_pos), " NA(s) in A_dom with 0.")
+  print(head(na_pos, 20))
+}
+A_dom[is.na(A_dom)] <- 0
+
+A_imp <- as.matrix(sweep(Z_imp, 2, q_s_dom_safe, FUN = '/'))  # Import technical coefficients
+na_pos <- which(is.na(A_imp), arr.ind = TRUE)
+if (nrow(na_pos) > 0) {
+  message("Replacing ", nrow(na_pos), " NA(s) in A_imp with 0.")
+  print(head(na_pos, 20))
+}
+A_imp[is.na(A_imp)] <- 0
+
+
+diag <- diag(1, nrow = nIndustries, ncol = nIndustries)                        #Create diagonal matrix
+L_dom <- solve(diag-A_dom)                                                  #Leontief inverse         
+I_n <- diag(nrow(A_imp))
+#L_imp <- solve(I_n - A_imp)
+
+
+
+#L_imp <- solve(diag-A_imp)
+
+# ---- Consistency checks separated by domestic / imports ----
+#TotalFinalUse_dom  <- total_use_dom - (A_dom %*% x_dom)
+#TotalFinalUseCheck_dom <- (I_n - A_dom) %*% x_dom
+#isTRUE(all.equal(TotalFinalUse_dom, TotalFinalUseCheck_dom, f_tol = 1e-3))
+
+#TotalFinalUse_imp  <- total_use_imp - (A_imp %*% x_imp)
+#TotalFinalUseCheck_imp <- (I_n - A_imp) %*% x_imp
+#isTRUE(all.equal(TotalFinalUse_imp, TotalFinalUseCheck_imp, f_tol = 1e-3))
+
+# Total use checks (domestic and imports)
+#TotalUse_dom  <- (A_dom %*% q_s_dom) + final_use_dom
+#TotalUseCheck_dom <- L_dom %*% final_use_dom
+#isTRUE(all.equal(TotalUse_dom, TotalUseCheck_dom, f_tol = 1e-3))
+
+#TotalUse_imp  <- (A_imp %*% q_s_imp) + final_use_imp
+#TotalUseCheck_imp <- L_imp %*% final_use_impisTRUE(all.equal(TotalUse_imp, TotalUseCheck_imp, f_tol = 1e-3))
+
+
+##########################################
+###Extensions
+##########################################
+
+#Employment Intensity
+#EMPL_IN[i,] = EMPL_IN / X_i [i,] # gives us employment per output of sector
+
+#Emission Intensity
+#EM_IN[i,] = EM_IN[i,] / X_i[i,] # gives us emissions per output of sector
+
+#Energy Intensity
+#EN_IN[i,] = EN_IN[i,] / X_i[i,] # gives us energy per output of sector
+
+#Land-Use Intensity
+#LU_IN[i,] = LU_IN[i,] / X_i[i,] # gives us land-use per output of sector
+
+#Deforestation Intensity
+#DEF_IN[i,] = DEF_IN[i,] / X_i[i,] # gives us deforestation per output of sector
+
+
+
+
+
+############################################################
+# 1. BASIC SETTINGS
+############################################################
+
+nIndustries <- 73
+
+BIOFUEL_SECTORS <- c(
+  conv_biodiesel    = 12,
+  adv_biodiesel     = 13,
+  conv_biogasoline  = 14,
+  adv_biogasoline   = 15,
+  conv_bio_kerosene = 16,
+  adv_bio_kerosene  = 17,
+  adv_bio_hfo       = 18,
+  RFNBOs            = 19,
+  adv_biogas        = 33
+)
+
+FUEL_TECH_GROUP <- c(
+
+  conv_biodiesel =
+    "conventional",
+
+  conv_biogasoline =
+    "conventional",
+
+  conv_bio_kerosene =
+    "conventional",
+
+  adv_biodiesel =
+    "advanced",
+
+  adv_biogasoline =
+    "advanced",
+
+  adv_bio_kerosene =
+    "advanced",
+
+  adv_bio_hfo =
+    "advanced",
+
+  RFNBOs =
+    "advanced",
+
+  adv_biogas =
+    "advanced"
+)
+
+
+INPUT_SECTORS <- c(
+  agriculture      = 1,
+  forestry         = 2,
+  food_bev         = 5,
+  paper            = 8,
+  chemicals        = 11,
+
+  adv_biodiesel    = 13,
+  adv_biogasoline  = 15,
+  adv_bio_hfo      = 18,
+  adv_biogas       = 33,
+
+  fab_metal        = 24,
+  computer_el      = 25,
+  elec_equip       = 26,
+  machinery        = 27,
+  repair_inst      = 31,
+
+  electricity      = 32,
+  sewerage         = 35,
+  construction     = 36,
+  land_transp      = 40,
+
+  legal_acc        = 54,
+  architecture     = 55
+)
+
+#### make all sectors also exist as XY_import sector
+
+DOM_INPUT_NAMES <- names(INPUT_SECTORS)
+
+IMP_INPUT_NAMES <-
+  paste0(
+    DOM_INPUT_NAMES,
+    "_imp"
+  )
+
+
+BIO <-
+  unname(BIOFUEL_SECTORS)
+
+NONBIO <-
+  setdiff(
+    seq_len(nIndustries),
+    BIO
+  )
+
+sector_names <-
+  as.character(
+    IO_EU_domestic[[1]][
+      2:(nIndustries + 1)
+    ]
+  )
+
+# ================================================================
+# DOMESTIC / IMPORT SOURCING OF CAPEX AND OPEX
+# ================================================================
+
+CAPEX_IMPORT_SHARES <- list(
+
+  conventional = c(
+    machinery    = 0.10,
+    fab_metal    = 0.05,
+    computer_el  = 0.40,
+    elec_equip   = 0.00,
+    construction = 0.00,
+    architecture = 0.00
+  ),
+
+  advanced = c(
+    machinery    = 0.40,
+    fab_metal    = 0.50,
+    computer_el  = 0.70,
+    elec_equip   = 0.10,
+    construction = 0.00,
+    architecture = 0.00
+  )
+)
+
+
+OPEX_IMPORT_SHARES <- list(
+
+  conventional = c(
+    chemicals    = 0.10,
+    electricity  = 0.00,
+    legal_acc    = 0.00,
+    repair_inst  = 0.00,
+    land_transp  = 0.00,
+    sewerage     = 0.00
+  ),
+
+  advanced = c(
+    chemicals    = 0.60,
+    electricity  = 0.00,
+    legal_acc    = 0.00,
+    repair_inst  = 0.00,
+    land_transp  = 0.00,
+    sewerage     = 0.00
+  )
+)
+
+
+
+
+
+############################################################
+# 2. TECHNOLOGY LIBRARY
+############################################################
+
+IVC_TECH_LIBRARY <- list(
+  IVC1 = list(
+    market_price = 1450,
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.15, land_transp = 0.05)
+  ),
+  
+  IVC2_HVO = list(
+    market_price = 1750,
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.15, land_transp = 0.05)
+  ),
+  
+  IVC2_HEFA = list(
+    market_price = 2380,
+    dist_capex   = c(fab_metal = 0.05, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.35, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.15, land_transp = 0.05)
+  ),
+  
+  IVC5 = list(
+    market_price = 1000,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.50,
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.50, legal_acc = 0.15,
+                     repair_inst = 0.10, land_transp = 0.05)
+  ),
+  IVC6 = list(
+    market_price = 2380,
+    dist_capex   = c(fab_metal    = 0.00, elec_equip   = 0.02, machinery    = 0.50, construction = 0.15, architecture = 0.30, computer_el  = 0.03),
+    dist_opex    = c(electricity = 0.20, chemicals   = 0.50, legal_acc   = 0.15, repair_inst = 0.10, land_transp = 0.05)
+  ),
+  
+  IVC7 = list(
+    market_price = 1275,
+    dist_capex   = c( fab_metal    = 0.05, elec_equip   = 0.02, machinery    = 0.40, construction = 0.30, architecture = 0.20, computer_el  = 0.03),
+    dist_opex    = c(electricity = 0.20, chemicals   = 0.50, legal_acc   = 0.15, repair_inst = 0.10, land_transp = 0.05)
+  ),
+  
+  IVC8a = list(
+    market_price = 935,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
+                     construction = 0.10, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
+                     repair_inst = 0.30, land_transp = 0.00)
+  ),
+  
+  IVC8b = list(
+    market_price = 935,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
+                     construction = 0.10, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
+                     repair_inst = 0.30, land_transp = 0.00)
+  ),
+  
+  IVC8c = list(
+  market_price = 935,
+  dist_capex = c(fab_metal = 0.20, elec_equip = 0.07, machinery = 0.40, construction = 0.15, architecture = 0.15, computer_el = 0.03),
+  dist_opex = c(electricity = 0.35, chemicals = 0.15, legal_acc = 0.12, repair_inst = 0.30, land_transp = 0.08)
+),
+  
+  
+  IVC9a = list(
+    market_price = 1275,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
+                     construction = 0.10, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
+                     repair_inst = 0.30, land_transp = 0.00)
+  ),
+  
+ IVC9b = list(
+  market_price = 1275,
+  dist_capex = c(fab_metal = 0.20, elec_equip = 0.07, machinery = 0.40, construction = 0.15, architecture = 0.15, computer_el = 0.03),
+  dist_opex = c(electricity = 0.35, chemicals = 0.15, legal_acc = 0.12, repair_inst = 0.30, land_transp = 0.08)
+),
+  
+  IVC11a_road = list(
+    market_price = 1750,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
+                     construction = 0.10, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
+                     repair_inst = 0.30, land_transp = 0.00)
+  ),
+  
+  IVC11a_SAF = list(
+    market_price = 2380,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.55,
+                     construction = 0.10, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.25, chemicals = 0.15, legal_acc = 0.30,
+                     repair_inst = 0.30, land_transp = 0.00)
+  ),
+  
+  IVC12 = list(
+    market_price = 1000,
+    dist_capex   = c(fab_metal = 0.00, elec_equip = 0.02, machinery = 0.50,
+                     construction = 0.15, architecture = 0.30, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.20, chemicals = 0.50, legal_acc = 0.15,
+                     repair_inst = 0.10, land_transp = 0.05)
+  ),
+  
+  IVC13a = list(
+    market_price = 1750,
+    dist_capex   = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.10, architecture = 0.25, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.30, land_transp = 0.10)
+  ),
+  
+  IVC13b_road = list(
+    market_price = 1150,
+    dist_capex   = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.10, architecture = 0.25, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.30, land_transp = 0.10)
+  ),
+  
+  IVC13b_mar = list(
+    market_price = 1150,
+    dist_capex   = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45,
+                     construction = 0.10, architecture = 0.25, computer_el = 0.03),
+    dist_opex    = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20,
+                     repair_inst = 0.30, land_transp = 0.10)
+  ),
+  
+  IVC13b_SAF = list(
+  market_price = 2380,
+  dist_capex = c(fab_metal = 0.15, elec_equip = 0.02, machinery = 0.45, construction = 0.10, architecture = 0.25,  computer_el = 0.03),
+  dist_opex = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20, repair_inst = 0.30, land_transp = 0.10)
+),
+  
+  # ==========================================================
+  # CONVENTIONAL BIOFUEL TECHNOLOGIES
+  # Here, more stays the same, hence TECH LIBRARY is longer: production costs stay constant, as well as feed/ CAPEX/ OPEX shares
+  # ==========================================================
+  
+
+IVC_T_FF = list(
+  prod_cost = 629,
+  market_price = 1165.6261363636365,
+  alpha = c(feed = 0.75, capex = 0.065, opex = 0.185),
+  dist_capex = c(fab_metal = 0.07, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.25, repair_inst = 0.15, land_transp = 0.10, sewerage = 0.0)
+),
+
+IVC_HT_FF = list(
+  prod_cost = 665.824761904762,
+  market_price = 1165.6261363636365,
+  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
+  dist_capex = c(fab_metal = 0.07, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+),
+
+IVC_T_CC = list(
+  prod_cost = 1598.13,
+  market_price =  1165.6261363636365,
+  alpha = c(feed = 0.74, capex = 0.07, opex = 0.19),
+  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.25, repair_inst = 0.15, land_transp = 0.10)
+), # not present in Scenario 2 table -> current values retained
+
+IVC_HT_CC = list(
+  prod_cost = 1218,
+  market_price = 1165.6261363636365,
+  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
+  dist_capex = c(fab_metal = 0.07, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+),
+
+
+## revise: should be differnet price and costs taht HT_CC (road)
+IVC_HT_CC_SAF = list(
+  prod_cost = 1218,
+  market_price = 1165.6261363636365,
+  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
+  dist_capex = c(fab_metal = 0.07, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+),
+
+IVC_T_lipids = list(
+  prod_cost = 1253,
+  market_price = 1165.6261363636365,
+  alpha = c(feed = 0.74, capex = 0.04, opex = 0.22),
+  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.25, repair_inst = 0.15, land_transp = 0.10)
+),
+
+IVC_HT_lipids_road = list(
+  prod_cost = 1598.13,
+  market_price =  1165.6261363636365,
+  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
+  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+), 
+
+IVC_HT_lipids_SAF = list(
+  prod_cost = 2903,
+  market_price = 2100,
+  alpha = c(feed = 0.68, capex = 0.13, opex = 0.19),
+  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+),
+
+IVC_EF_FF = list(
+  prod_cost = 903.57,
+  market_price = 1018.96958174905,
+  alpha = c(feed = 0.70, capex = 0.10, opex = 0.20),
+  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, construction = 0.15, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.10)
+) 
+)
+
+############################################################
+# 3. HELPER FUNCTIONS
+############################################################
+
+get_v <- function(vec, k) {
+  if (k %in% names(vec)) unname(vec[k]) else 0
+}
+    ############################################################
+    # Distribute the CAPEX/ OPEX shares onto domestic vs imported
+    ############################################################
+
+
+apply_import_shares <- function(
+    distribution,
+    import_shares
+) {
+
+  if (is.null(distribution)) {
+    return(numeric(0))
+  }
+
+  out <- numeric(0)
+
+  for (sector in names(distribution)) {
+
+    total_share <-
+      distribution[[sector]]
+
+    import_share <-
+      if (sector %in% names(import_shares)) {
+        import_shares[[sector]]
+      } else {
+        0
+      }
+
+    if (
+      import_share < 0 ||
+      import_share > 1
+    ) {
+      stop(
+        paste(
+          "Invalid import share for",
+          sector
+        )
+      )
+    }
+
+    domestic_value <-
+      total_share *
+      (1 - import_share)
+
+    imported_value <-
+      total_share *
+      import_share
+
+    if (domestic_value != 0) {
+      out[sector] <-
+        domestic_value
+    }
+
+    if (imported_value != 0) {
+      out[
+        paste0(
+          sector,
+          "_imp"
+        )
+      ] <-
+        imported_value
+    }
+  }
+
+  out
+}
+
+split_dom_imp <- function(x) {
+
+  # Sum duplicate entries, e.g. chemicals from feed + OPEX
+  x <-
+    tapply(
+      x,
+      names(x),
+      sum
+    )
+
+  a_dom <-
+    setNames(
+      numeric(length(DOM_INPUT_NAMES)),
+      DOM_INPUT_NAMES
+    )
+
+  a_imp <-
+    setNames(
+      numeric(length(IMP_INPUT_NAMES)),
+      IMP_INPUT_NAMES
+    )
+
+  dom_names <-
+    intersect(
+      names(x),
+      DOM_INPUT_NAMES
+    )
+
+  imp_names <-
+    intersect(
+      names(x),
+      IMP_INPUT_NAMES
+    )
+
+  a_dom[dom_names] <-
+    x[dom_names]
+
+  a_imp[imp_names] <-
+    x[imp_names]
+
+  list(
+    dom = a_dom,
+    imp = a_imp
+  )
+}
+
+
+
+
+##############################################################################################
+## Technical coefficient vector for each IVC
+##############################################################################################
+
+build_ivc_vector <- function(
+    prod_cost,
+    market_price,
+    alpha_cost,
+    dist_feed,
+    dist_capex,
+    dist_opex,
+    sourcing_group
+) {
+
+  # ------------------------------------------------------------
+  # Cost intensity per EUR of biofuel output
+  # ------------------------------------------------------------
+
+  r_k <- prod_cost / market_price
+
+  s_feed  <- r_k * alpha_cost[["feed"]]
+  s_capex <- r_k * alpha_cost[["capex"]]
+  s_opex  <- r_k * alpha_cost[["opex"]]
+
+
+  # ------------------------------------------------------------
+  # FEEDSTOCK
+  # Domestic/import split is already explicitly contained
+  # in dist_feed, e.g. food_bev / food_bev_imp
+  # ------------------------------------------------------------
+
+  # Raw monetary feedstock components
+  a_feed_raw <-
+    s_feed *
+    dist_feed
+
+  # Negative values represent revenues / gate-fee credits,
+  # not purchases of intermediate inputs
+  gate_fee_coeff <-
+    -sum(
+      pmin(
+        a_feed_raw,
+        0
+      )
+    )
+
+  # Only positive purchased feedstock inputs enter A
+  a_feed <-
+    pmax(
+      a_feed_raw,
+      0
+    )
+
+
+  # ------------------------------------------------------------
+  # CAPEX
+  # ------------------------------------------------------------
+  # CAPEX is deliberately kept OUTSIDE intermediate consumption.
+  # s_capex and the CAPEX distribution remain available in the
+  # model data for a later separate investment treatment, but no
+  # a_capex term is added to a_dom or a_imp in this model version.
+  # ------------------------------------------------------------
+
+
+  # ------------------------------------------------------------
+  # OPEX
+  # Apply domestic/import sourcing assumptions
+  # ------------------------------------------------------------
+
+  dist_opex_sourced <-
+    apply_import_shares(
+      distribution = dist_opex,
+      import_shares =
+        OPEX_IMPORT_SHARES[[sourcing_group]]
+    )
+
+  a_opex <-
+    s_opex *
+    dist_opex_sourced
+
+
+  # ------------------------------------------------------------
+  # COMBINE RECURRENT INTERMEDIATE INPUTS ONLY
+  # ------------------------------------------------------------
+  # Feedstock and OPEX remain intermediate inputs.
+  # CAPEX is not included and the remaining components are NOT
+  # renormalized.
+  # ------------------------------------------------------------
+
+  operating_inputs <-
+    c(
+      a_feed,
+      a_opex
+    )
+
+
+  # ------------------------------------------------------------
+  # SPLIT INTO DOMESTIC AND IMPORTED INPUT VECTORS
+  # ------------------------------------------------------------
+
+  input_split <-
+    split_dom_imp(
+      operating_inputs
+    )
+
+
+  # ------------------------------------------------------------
+  # RETURN
+  # ------------------------------------------------------------
+
+  list(
+    a_dom =
+      input_split$dom,
+
+    a_imp =
+      input_split$imp,
+
+    gate_fee_coeff =
+      gate_fee_coeff
+  )
+}
+
+##############################################################################################
+## Technical coefficient vector for each final biofuel product
+##############################################################################################
+
+## Builds the aggregated technical coefficient vector of one final biofuel sector.
+##
+## Scenario/year-specific:
+## - IVC weights
+## - production costs
+## - feed/CAPEX/OPEX cost shares (alpha)
+## - feedstock distributions
+##
+## Fixed by IVC in IVC_TECH_LIBRARY:
+## - market prices
+## - CAPEX component distributions
+## - OPEX component distributions
+##
+## CAPEX information is retained in the model inputs but excluded from
+## the technical coefficient matrices in build_ivc_vector().
+##
+## For conventional IVCs, production costs and alpha may also fall back
+## to the constant values stored in IVC_TECH_LIBRARY.
+
+
+build_fuel_column <- function(
+    fuel_cfg,
+    sourcing_group
+) {
+
+  # ------------------------------------------------------------
+  # IVC WEIGHTS
+  # ------------------------------------------------------------
+
+  weights <- fuel_cfg$weights
+
+  if (is.null(weights) || length(weights) == 0) {
+    stop("No IVC weights supplied.")
+  }
+
+  if (any(weights < 0)) {
+    stop("IVC weights must not be negative.")
+  }
+
+  # Normalize to avoid small deviations caused by rounding
+  weights <- weights / sum(weights)
+
+  ivc_ids <- names(weights)
+
+
+  # ------------------------------------------------------------
+  # INITIALISE AGGREGATED RESULTS
+  # ------------------------------------------------------------
+
+  a_dom_agg <- NULL
+  a_imp_agg <- NULL
+  gate_fee_coeff_agg <- 0
+
+
+  # ------------------------------------------------------------
+  # LOOP OVER ACTIVE IVCs
+  # ------------------------------------------------------------
+
+  for (ivc_id in ivc_ids) {
+
+    w <- weights[[ivc_id]]
+
+
+    # ----------------------------------------------------------
+    # TECHNOLOGY LIBRARY ENTRY
+    # ----------------------------------------------------------
+
+    tech_base <- IVC_TECH_LIBRARY[[ivc_id]]
+
+    if (is.null(tech_base)) {
+      stop(
+        paste(
+          "No technology-library entry found for",
+          ivc_id
+        )
+      )
+    }
+
+
+    # ----------------------------------------------------------
+    # PRODUCTION COST
+    # Scenario/year-specific first;
+    # technology library used as fallback
+    # ----------------------------------------------------------
+
+    ivc_prod_cost <- NULL
+
+    if (!is.null(fuel_cfg$prod_cost)) {
+      ivc_prod_cost <- fuel_cfg$prod_cost[[ivc_id]]
+    }
+
+    if (is.null(ivc_prod_cost)) {
+      ivc_prod_cost <- tech_base$prod_cost
+    }
+
+
+    # ----------------------------------------------------------
+    # MARKET PRICE
+    # Fixed by IVC across scenarios and years
+    # ----------------------------------------------------------
+
+    ivc_market_price <- tech_base$market_price
+
+
+    # ----------------------------------------------------------
+    # FEED / CAPEX / OPEX COST SHARES
+    # Scenario/year-specific first;
+    # technology library used as fallback
+    # ----------------------------------------------------------
+
+    ivc_alpha <- NULL
+
+    if (!is.null(fuel_cfg$alpha)) {
+      ivc_alpha <- fuel_cfg$alpha[[ivc_id]]
+    }
+
+    if (is.null(ivc_alpha)) {
+      ivc_alpha <- tech_base$alpha
+    }
+
+
+    # ----------------------------------------------------------
+    # FEEDSTOCK DISTRIBUTION
+    # Scenario/year-specific
+    # ----------------------------------------------------------
+
+    ivc_dist_feed <- NULL
+
+    if (!is.null(fuel_cfg$dist_feed)) {
+      ivc_dist_feed <- fuel_cfg$dist_feed[[ivc_id]]
+    }
+
+
+    # ----------------------------------------------------------
+    # CAPEX / OPEX COMPONENT DISTRIBUTIONS
+    # Fixed by IVC in the technology library.
+    # CAPEX distribution is retained for later separate treatment.
+    # ----------------------------------------------------------
+
+    ivc_dist_capex <- tech_base$dist_capex
+    ivc_dist_opex  <- tech_base$dist_opex
+
+
+    # ----------------------------------------------------------
+    # CHECK REQUIRED INPUTS
+    # ----------------------------------------------------------
+
+    if (
+      is.null(ivc_prod_cost) ||
+      is.null(ivc_market_price) ||
+      is.null(ivc_alpha) ||
+      is.null(ivc_dist_feed) ||
+      is.null(ivc_dist_capex) ||
+      is.null(ivc_dist_opex)
+    ) {
+
+      stop(
+        paste(
+          "Missing technology input for",
+          ivc_id
+        )
+      )
+    }
+
+
+    # ----------------------------------------------------------
+    # BUILD IVC-SPECIFIC OPERATING TECHNICAL COEFFICIENT VECTOR
+    # ----------------------------------------------------------
+
+    ivc_res <- build_ivc_vector(
+      prod_cost      = ivc_prod_cost,
+      market_price   = ivc_market_price,
+      alpha_cost     = ivc_alpha,
+      dist_feed      = ivc_dist_feed,
+      dist_capex     = ivc_dist_capex,
+      dist_opex      = ivc_dist_opex,
+      sourcing_group = sourcing_group
+    )
+
+
+    # ----------------------------------------------------------
+    # INITIALISE AGGREGATED VECTORS
+    # ----------------------------------------------------------
+
+    if (is.null(a_dom_agg)) {
+
+      a_dom_agg <-
+        setNames(
+          numeric(length(ivc_res$a_dom)),
+          names(ivc_res$a_dom)
+        )
+
+      a_imp_agg <-
+        setNames(
+          numeric(length(ivc_res$a_imp)),
+          names(ivc_res$a_imp)
+        )
+    }
+
+
+    # ----------------------------------------------------------
+    # WEIGHTED AGGREGATION ACROSS IVCs
+    # ----------------------------------------------------------
+
+    a_dom_agg <-
+      a_dom_agg +
+      w * ivc_res$a_dom
+
+    a_imp_agg <-
+      a_imp_agg +
+      w * ivc_res$a_imp
+
+    gate_fee_coeff_agg <-
+      gate_fee_coeff_agg +
+      w * ivc_res$gate_fee_coeff
+  }
+
+
+  # ------------------------------------------------------------
+  # RETURN
+  # ------------------------------------------------------------
+
+  list(
+    a_dom = a_dom_agg,
+    a_imp = a_imp_agg,
+    gate_fee_coeff = gate_fee_coeff_agg
+  )
+}
+
+
+#####################################################################################
+# 4. SCENARIO 1
+#####################################################################################
+
+
+S1_2030 <- list(
+  
+  adv_biodiesel = list(
+    abs_market_value = 3061593167.53,
+    weights = c(IVC1 = 0.805141, IVC2_HVO = 0.160045, IVC13a = 0.034814),
+    prod_cost = list(
+      IVC1 = 1350,
+      IVC2_HVO = 1287.68,
+      IVC13a = 1598.13),
+    alpha = list(
+     IVC1 = c(feed  = 0.7407407, capex = 0.0614815, opex  = 0.1977778),
+      IVC2_HVO = c(feed = 0.476579435, capex = 0.208902273, opex = 0.314518292),
+      IVC13a = c(feed = 0.132113077, capex = 0.50371231, opex = 0.364174614)
+    ),
+    dist_feed = list(
+      IVC1 = c(food_bev_imp = 1.0),
+      IVC2_HVO = c(agriculture = 0.14497, adv_biodiesel = 0.72677, chemicals = 0.12825),
+      IVC13a = c(agriculture = 0.55703, forestry = 0.22890, paper = 0.20022, food_bev = 0.01387)
+    )
+  ),
+  
+  adv_biogasoline = list(
+    abs_market_value = 615780000,
+    weights = c(IVC5 = 0.3663, IVC12 = 0.3663, IVC13a = 0.2234, IVC13b_road = 0.0440),
+    prod_cost = list(
+      IVC5 = 1385.43,
+      IVC12 = 988.04,
+      IVC13a = 1598.13,
+      IVC13b_road = 1740.45),
+    alpha = list(
+      IVC5 = c(feed = 0.2270, capex = 0.4006, opex = 0.3724),
+      IVC12 = c(feed = 0.6200, capex = 0.1000, opex = 0.2800),
+      IVC13a = c(feed = 0.5500, capex = 0.1500, opex = 0.3000),
+      IVC13b_road = c(feed = 0.5800, capex = 0.1200, opex = 0.3000)
+    ),
+    dist_feed = list(
+      IVC5 = c(agriculture = 0.0, paper = 1.0),
+      IVC12 = c(adv_biogas = 1.0),
+      IVC13a = c(agriculture = 0.515152, forestry = 0.262022, paper = 0.208388, food_bev = 0.014438, sewerage = 0.0),
+      IVC13b_road = c(agriculture = 0.609576, forestry = 0.195602, paper = 0.180971, food_bev = 0.013851, sewerage = 0.0)
+    )
+  ),
+  
+  adv_bio_kerosene = list(
+    abs_market_value = 2094400000,
+    weights = c(IVC2_HEFA = 0.9418605, IVC11a_SAF = 0.0581395),
+    prod_cost = list(
+      IVC2_HEFA = 1811.29,
+      IVC11a_SAF = 2967.02
+    ),
+    alpha = list(
+      IVC2_HEFA = c(feed = 0.48000000, capex = 0.20800000, opex = 0.31200000),
+      IVC11a_SAF = c(feed = 0.19110682, capex = 0.48702100, opex = 0.32187200)
+    ),
+    dist_feed = list(
+      IVC2_HEFA = c(agriculture = 0.2698, adv_biodiesel = 0.3103, chemicals = 0.1095, adv_biogasoline = 0.3103),
+      IVC11a_SAF = c(agriculture = 0.572754, forestry = 0.219387, paper = 0.191936, food_bev = 0.014264, adv_biodiesel = 0.001660)
+    )
+  ),
+  
+  adv_bio_hfo = list(
+    abs_market_value = 888186832.47,
+    weights = c(IVC8a = 0.473718, IVC8b = 0.473718, IVC13b_mar = 0.052564),
+   prod_cost = list(
+  IVC8a = 586.20,
+  IVC8b = 936.00,
+  IVC13b_mar = 2160.57),
+    alpha = list(
+      IVC8a = c(feed = 0.20333994, capex = 0.47936076, opex = 0.31729929),
+      IVC8b = c(feed = 0.75641026, capex = 0.14529915, opex = 0.09829060),
+      IVC13b_mar = c(feed = 0.292548, capex = 0.317046, opex = 0.390406)
+    ),
+    dist_feed = list(
+      IVC8a = c(agriculture = 0.555604, forestry = 0.212818, paper = 0.186189, adv_biodiesel = 0.031552, food_bev = 0.013837),
+      IVC8b = c(adv_biogas = 1.0),
+      IVC13b_mar = c(agriculture = 0.590480, forestry = 0.210894, paper = 0.184505, food_bev = 0.014121)
+    )
+  ),
+
+
+  adv_biogas = list(
+  abs_market_value = 4159802158.27,
+
+  weights = c(
+    IVC7  = 0.96168688,
+    IVC9a = 0.03831312
+  ),
+
+  prod_cost = list(
+    IVC7  = 1024.42,
+    IVC9a = 1369.48
+  ),
+
+  alpha = list(
+    IVC7 = c(
+      feed  = -0.020579023,
+      capex = 0.590578966,
+      opex  = 0.430000057
+    ),
+
+    IVC9a = c(
+      feed  = 0.152963116,
+      capex = 0.584163369,
+      opex  = 0.262873516
+    )
+  ),
+
+  dist_feed = list(
+    IVC7 = c(
+      food_bev    = -0.18588,
+      agriculture = -0.78770,
+      chemicals   = -0.03363,
+      sewerage    = 2.00721
+    ),
+
+    IVC9a = c(
+      agriculture   = 0.563405804,
+      forestry      = 0.215806435,
+      paper         = 0.188803181,
+      food_bev      = 0.014031109,
+      adv_biodiesel = 0.017953472
+    )
+  )
+),
+
+
+  RFNBOs = list(
+    abs_market_value = 201190000,
+    weights = c(IVC8c = 0.8019559, IVC9b = 0.1980441),
+    prod_cost = list(
+      IVC8c = 377.87,
+      IVC9b = 1975.56
+    ),
+    alpha = list(
+      IVC8c = c(feed = 0.7724, capex = 0.1508, opex = 0.0767),
+      IVC9b = c(feed = 0.8588, capex = 0.0648, opex = 0.0764)
+    ),
+    dist_feed = list(
+      IVC8c = c(chemicals = 1.0),
+      IVC9b = c(chemicals = 1.0)
+    )
+  ),
+  
+
+  
+  conv_biodiesel = list(
+    abs_market_value =  20642403242.71 ,
+    weights = c(
+      IVC_T_FF = 0.2458,
+      IVC_HT_FF = 0.2821,
+      IVC_T_CC = 0.1807,
+      IVC_HT_CC = 0.0909,
+      IVC_T_lipids = 0.1412,
+      IVC_HT_lipids_road = 0.0593
+    ),
+
+    dist_feed = list(
+      IVC_T_FF = c(food_bev = 0.80056, food_bev_imp = 0.19944),
+      IVC_HT_FF = c(food_bev = 0.8005538423, food_bev_imp = 0.1994461577),
+      IVC_T_CC = c(agriculture = 1.0),
+      IVC_HT_CC = c(agriculture = 1.0),
+      IVC_T_lipids = c(food_bev = 0.72, food_bev_imp = 0.28),
+      IVC_HT_lipids_road = c(food_bev = 0.72, food_bev_imp = 0.28)
+    )
+  ), 
+  
+  
+  conv_biogasoline = list(
+    abs_market_value = 4436260000,
+    weights = c(IVC_EF_FF = 1.0),
+
+    dist_feed = list(
+      IVC_EF_FF = c(agriculture = 1.0)
+    )
+  ),
+  
+  conv_bio_kerosene = list(
+    abs_market_value = 966980000,
+    weights = c(IVC_HT_lipids_SAF = 1.0),
+
+    dist_feed = list(
+      IVC_HT_lipids_SAF = c(food_bev = 0.61, food_bev_imp = 0.39)
+    )
+  )
+)
+
+# ==========================================================
+# SCENARIO 2 - 2030
+# ==========================================================
+
+S2_2030 <- list(
+  
+  adv_biodiesel = list(
+    
+   abs_market_value = 9549675242.82,
+    
+    weights = c(
+  IVC2_HVO = 0.054414,
+  IVC11a_road = 0.713142,
+  IVC13a = 0.232444
+),
+    
+    prod_cost = list(
+      IVC2_HVO    = 1281.931518319912,
+      IVC11a_road = 2696.2989825009467,
+      IVC13a      = 1597.3359772734975
+    ),
+    
+    alpha = list(
+      
+      IVC2_HVO = c(
+        feed  = 0.47423088490457077,
+        capex = 0.20983960231553478,
+        opex  = 0.3159295127798944
+      ),
+      
+      IVC11a_road = c(
+        feed  = 0.10989099666763039,
+        capex = 0.5359197957563642,
+        opex  = 0.3541892075760054
+      ),
+      
+      IVC13a = c(
+        feed  = 0.13167923359024397,
+        capex = 0.5039641073971547,
+        opex  = 0.3643566590126013
+      )
+),
+      
+    
+    dist_feed = list(
+      
+      IVC2_HVO = c(
+        agriculture     = 0.21075508846848423,
+        adv_biodiesel   = 0.33542908740089417,
+        chemicals       = 0.11838673672972734,
+        adv_biogasoline = 0.33542908740089417
+      ),
+      
+      IVC11a_road = c(
+        agriculture     = 0.6219637224628082,
+        forestry        = 0.1487034007372005,
+        paper           = 0.18227673609670508,
+        food_bev        = 0.014502396500953602,
+        sewerage        = 0,
+        adv_biodiesel   = 0.016276872101166396,
+        chemicals       = 0,
+        adv_biogasoline = 0.016276872101166396
+      ),
+      
+      IVC13a = c(
+        agriculture   = 0.627304530134164,
+        forestry      = 0.1608737318124704,
+        paper         = 0.19719480935272266,
+        food_bev      = 0.014626928700643058,
+        sewerage      = 0
+      )
+    )
+  ),
+  
+  adv_biogasoline = list(
+    
+    abs_market_value = 10469280187.844357,
+    
+    weights = c(
+      IVC5        = 0.3475427957928554,
+      IVC12       = 0.3475427957928554,
+      IVC13a      = 0.21202657538741962,
+      IVC13b_road = 0.09288783302686955
+    ),
+    
+    prod_cost = list(
+      IVC5        = 1387.0526477152616,
+      IVC12       = 988.0381418666667,
+      IVC13a      = 1597.3359772734975,
+      IVC13b_road = 1739.8201054276026
+    ),
+    
+    alpha = list(
+      
+      IVC5 = c(
+        feed  = 0.2278591574990755,
+        capex = 0.40012900801868634,
+        opex  = 0.37201183448223807
+      ),
+      
+      IVC12 = c(
+        feed  = 0.32087642008201966,
+        capex = 0.2813656560613987,
+        opex  = 0.3977579238565816
+      ),
+      
+      IVC13a = c(
+        feed  = 0.13167923359024397,
+        capex = 0.5039641073971547,
+        opex  = 0.3643566590126013
+      ),
+      
+      IVC13b_road = c(
+        feed  = 0.12146089401332999,
+        capex = 0.39371886660181155,
+        opex  = 0.48482023938485846
+      )
+    ),
+    
+    dist_feed = list(
+      
+      IVC5 = c(
+        agriculture = 0.7988241355718428,
+        paper       = 0.20117586442815738
+      ),
+      
+      IVC12 = c(
+        adv_biogas = 1.0
+      ),
+      
+      IVC13a = c(
+        agriculture = 0.627304530134164,
+        forestry    = 0.1608737318124704,
+        paper       = 0.19719480935272266,
+        food_bev    = 0.014626928700643058,
+        sewerage    = 0
+      ),
+      
+      IVC13b_road = c(
+        agriculture = 0.6373275986485376,
+        forestry    = 0.1565472814891009,
+        paper       = 0.19189155979744174,
+        food_bev    = 0.014233560064919687,
+        sewerage    = 0
+      )
+    )
+  ),
+  
+  
+  adv_biogas = list(
+  
+  abs_market_value = 26710403622.80,
+  
+  weights = c(
+    IVC7  = 0.403075195,
+    IVC9a = 0.596924805
+  ),
+  
+  prod_cost = list(
+    IVC7  = 1029.703482,
+    IVC9a = 1372.151249
+  ),
+  
+  alpha = list(
+    
+    IVC7 = c(
+      feed  = -0.015340841,
+      capex = 0.587547785,
+      opex  = 0.427793056
+    ),
+    
+    IVC9a = c(
+      feed  = 0.154612146,
+      capex = 0.583026106,
+      opex  = 0.262361748
+    )
+  ),
+  
+  dist_feed = list(
+    
+    IVC7 = c(
+      food_bev    = -0.270658498,
+      agriculture = -1.230008438,
+      chemicals   = -0.032776531,
+      sewerage    = 2.533443466
+    ),
+    
+    IVC9a = c(
+      food_bev        = 0.014721565,
+      agriculture     = 0.631363174,
+      forestry        = 0.150950687,
+      paper           = 0.185031401,
+      sewerage        = 0,
+      adv_biodiesel   = 0.008966587,
+      adv_biogasoline = 0.008966587
+    )
+  )
+),
+  
+  adv_bio_kerosene = list(
+    
+    abs_market_value = 5039024672.710369,
+    
+    weights = c(
+      IVC2_HEFA  = 0.18804032399597803,
+      IVC6       = 0.27172687907523124,
+      IVC11a_SAF = 0.5402327969287909
+    ),
+    
+    prod_cost = list(
+      IVC2_HEFA  = 1896.9094630842587,
+      IVC6       = 2366.191489361702,
+      IVC11a_SAF = 2974.2587443951556
+    ),
+    
+    alpha = list(
+      
+      IVC2_HEFA = c(
+        feed  = 0.5034027620546709,
+        capex = 0.19821715654718017,
+        opex  = 0.29838008139814887
+      ),
+      
+      IVC6 = c(
+        feed  = 0.08671804048160704,
+        capex = 0.5312334211543822,
+        opex  = 0.38204853836401076
+      ),
+      
+      IVC11a_SAF = c(
+        feed  = 0.19307625655545874,
+        capex = 0.4858353371989009,
+        opex  = 0.3210884062456404
+      )
+    ),
+    
+    dist_feed = list(
+      
+      IVC2_HEFA = c(
+        agriculture   = 0.43,
+        adv_biodiesel = 0.24,
+        chemicals     = 0.09, 
+        adv_biogasoline = 0.24
+      ),
+      
+      IVC6 = c(
+        adv_bio_hfo = 1.0
+      ),
+      
+      IVC11a_SAF = c(
+        agriculture     = 0.6418264237746482,
+        forestry        = 0.15345231313550278,
+        paper           = 0.18809782860488178,
+        food_bev        = 0.01496553729132589,
+        sewerage        = 0,
+        adv_biodiesel   = 0.0008289485968207271,
+        adv_biogasoline = 0.0008289485968207271
+      )
+    )
+  ),
+  
+  adv_bio_hfo = list(
+abs_market_value = 3498457026.30,
+
+weights = c(
+  IVC8a = 0.222029,
+  IVC8b = 0.222029,
+  IVC13b_mar = 0.555942
+),
+    prod_cost = list(IVC8a = 587.7154729470917, IVC8b = 936, IVC13b_mar = 2163.117208),
+    
+    alpha = list(
+      IVC8a = c(feed  = 0.20539781323395415, capex = 0.4781225149491626, opex  = 0.3164796718168834),
+      IVC8b = c(feed  = 0.7564102564102564, capex = 0.1452991452991453, opex  = 0.09829059829059829),
+      IVC13b_mar = c(feed = 0.293381, capex = 0.316673, opex = 0.389946)
+    ),
+    
+    dist_feed = list(
+      IVC8a = c(
+        food_bev        = 0.014517943198727606,
+        agriculture     = 0.6226304730939115,
+        forestry        = 0.14886281210269964,
+        paper           = 0.1824721383757105,
+        sewerage        = 0,
+        adv_biodiesel   = 0.01575831661447534,
+        adv_biogasoline = 0.01575831661447534
+      ),
+      IVC8b = c(adv_biogas = 1.0),
+      IVC13b_mar = c(agriculture = 0.659084, forestry = 0.146554, paper = 0.179642, food_bev = 0.014720, sewerage = 0)
+    )
+  ),
+  
+  RFNBOs = list(
+    
+    abs_market_value = 679812591.4521649,
+    
+    weights = c(
+      IVC8c = 0.2373338073285326,
+      IVC9b = 0.7626661926714674
+    ),
+    
+    prod_cost = list(
+      IVC8c = 377.87,
+      IVC9b = 1975.56
+    ),
+    alpha = list(
+      IVC8c = c(feed = 0.7724, capex = 0.1508, opex = 0.0767),
+      IVC9b = c(feed = 0.8588, capex = 0.0648, opex = 0.0764)
+    ),
+    
+    dist_feed = list(
+      IVC8c = c(chemicals = 1.0),
+      IVC9b = c(chemicals = 1.0)
+    )
+  ),
+
+conv_biodiesel = list(
+  abs_market_value = 15867820045.058933,
+  weights = c(
+    IVC_T_FF = 0.2671212912279528,
+    IVC_HT_FF = 0.31548833578698177,
+    IVC_T_lipids = 0.3888093145422895,
+    IVC_HT_CC = 0.028581058442776
+  ),
+  dist_feed = list(
+    IVC_T_FF = c(food_bev = 0.8005538422808232, food_bev_imp = 0.1994461577191768),
+    IVC_HT_FF = c(food_bev = 0.8005538422808232, food_bev_imp = 0.1994461577191768),
+    IVC_T_lipids = c(food_bev = 0.72, food_bev_imp = 0.28),
+    IVC_HT_CC = c(agriculture = 1.0)
+  )
+),
+
+conv_biogasoline = list(
+  abs_market_value = 79556645.65899728,
+  weights = c(IVC_EF_FF = 1.0),
+  dist_feed = list(
+    IVC_EF_FF = c(agriculture = 1.0)
+  )
+),
+
+conv_bio_kerosene = list(
+  abs_market_value = 0,
+  weights = c(IVC_HT_lipids_SAF = 1.0),
+  dist_feed = list(
+    IVC_HT_lipids_SAF = c(food_bev = 0.61, food_bev_imp = 0.39)
+  )
+)
+)
+
+# ==========================================================
+# SCENARIO 3 - 2030
+# ==========================================================
+
+
+S3_2030 <- list(
+
+  adv_biodiesel = list(
+   abs_market_value = 17002531753.19,
+
+    weights = c(
+  IVC2_HVO = 0.046149,
+  IVC11a_road = 0.572578,
+  IVC13a = 0.381273
+),
+
+    prod_cost = list(
+      IVC2_HVO = 1281.931518,
+      IVC11a_road = 2696.298983,
+      IVC13a = 1597.335977
+    ),
+
+    alpha = list(
+      IVC2_HVO = c(feed = 0.474231, capex = 0.209840, opex = 0.315929),
+      IVC11a_road = c(feed = 0.109891, capex = 0.535920, opex = 0.354189),
+      IVC13a = c(feed = 0.131679, capex = 0.503964, opex = 0.364357)
+    ),
+
+    dist_feed = list(
+      IVC2_HVO = c(agriculture = 0.210755, adv_biodiesel = 0.670858, chemicals = 0.118387),
+      IVC11a_road = c(agriculture = 0.621964, forestry = 0.148703, paper = 0.182277, food_bev = 0.014502, sewerage = 0, adv_biodiesel = 0.032554),
+      IVC13a = c(agriculture = 0.627305, forestry = 0.160874, paper = 0.197195, food_bev = 0.014626, sewerage = 0)
+    )
+  ),
+
+
+  adv_biogasoline = list(
+    abs_market_value = 37929669293.50,
+
+    weights = c(
+      IVC5 = 0.208236,
+      IVC12 = 0.391548,
+      IVC13a = 0.170911,
+      IVC13b_road = 0.229305
+    ),
+
+    prod_cost = list(
+      IVC5 = 1387.052648,
+      IVC12 = 988.038142,
+      IVC13a = 1597.335977,
+      IVC13b_road = 1739.820105
+    ),
+
+    alpha = list(
+      IVC5 = c(feed = 0.227859, capex = 0.400129, opex = 0.372012),
+      IVC12 = c(feed = 0.320876, capex = 0.281366, opex = 0.397758),
+      IVC13a = c(feed = 0.131679, capex = 0.503964, opex = 0.364357),
+      IVC13b_road = c(feed = 0.121461, capex = 0.393719, opex = 0.484820)
+    ),
+
+    dist_feed = list(
+      IVC5 = c(agriculture = 0.798824, paper = 0.201176),
+      IVC12 = c(adv_biogas = 1.0),
+      IVC13a = c(agriculture = 0.627305, forestry = 0.160874, paper = 0.197195, food_bev = 0.014626, sewerage = 0),
+      IVC13b_road = c(agriculture = 0.637328, forestry = 0.156547, paper = 0.191892, food_bev = 0.014233, sewerage = 0)
+    )
+  ),
+
+
+  adv_biogas = list(
+    abs_market_value = 51658113888.37,
+
+    weights = c(
+      IVC7 = 0.804945,
+      IVC9a = 0.195055
+    ),
+
+    prod_cost = list(
+      IVC7 = 1029.703482,
+      IVC9a = 1372.151249
+    ),
+
+    alpha = list(
+      IVC7 = c(feed = -0.015341, capex = 0.587548, opex = 0.427793),
+      IVC9a = c(feed = 0.154612, capex = 0.583026, opex = 0.262362)
+    ),
+
+    dist_feed = list(
+      IVC7 = c(food_bev = -0.270658, agriculture = -1.230008, chemicals = -0.032777, sewerage = 2.533443),
+      IVC9a = c(food_bev = 0.014722, agriculture = 0.631363, forestry = 0.150951, paper = 0.185031, sewerage = 0, adv_biodiesel = 0.017933)
+    )
+  ),
+
+
+  adv_bio_kerosene = list(
+    abs_market_value = 5923879343.84,
+
+    weights = c(
+      IVC2_HEFA = 0.386211,
+      IVC11a_SAF = 0.613789
+    ),
+
+    prod_cost = list(
+      IVC2_HEFA = 1896.909463,
+      IVC11a_SAF = 2974.258744
+    ),
+
+    alpha = list(
+      IVC2_HEFA = c(feed = 0.503403, capex = 0.198217, opex = 0.298380),
+      IVC11a_SAF = c(feed = 0.193076, capex = 0.485835, opex = 0.321089)
+    ),
+
+    dist_feed = list(
+      IVC2_HEFA = c(agriculture = 0.4039, adv_biodiesel = 0.2419, chemicals = 0.0854, adv_biogasoline = 0.2419),
+      IVC11a_SAF = c(agriculture = 0.641826, forestry = 0.153452, paper = 0.188098, food_bev = 0.014966, sewerage = 0, adv_biodiesel = 0.001658)
+    )
+  ),
+
+adv_bio_hfo = list(
+ abs_market_value =  59067164755.86,
+
+weights = c(
+  IVC8a = 0.427610911,
+  IVC8b = 0.523121014, 
+  IVC13b_mar = 0.049268075
+),
+
+   prod_cost = list(
+  IVC8a = 587.715473,
+  IVC8b =  936.00,
+  IVC13b_mar = 2163.117208
+),
+
+    alpha = list(
+  IVC8a = c(feed = 0.205398, capex = 0.478123, opex = 0.316479),
+  IVC8b = c(feed  = 0.7564102564102564, capex = 0.1452991452991453, opex  = 0.09829059829059829),
+  IVC13b_mar = c(feed = 0.293381, capex = 0.316673, opex = 0.389946)
+),
+    dist_feed = list(
+  IVC8a = c(food_bev = 0.014518, agriculture = 0.622630, forestry = 0.148863, paper = 0.182472, sewerage = 0, adv_biodiesel = 0.031517),
+  IVC8b = c(adv_biogas = 1.0),
+  IVC13b_mar = c(agriculture = 0.659084, forestry = 0.146554, paper = 0.179642, food_bev = 0.014720, sewerage = 0)
+)
+  ),
+
+  RFNBOs = list(
+    abs_market_value = 17729895555.06,
+
+    weights = c(
+      IVC8c = 0.577244,
+      IVC9b = 0.422756
+    ),
+ prod_cost = list(
+  IVC8c = 377.87,
+  IVC9b = 1975.56),
+
+    alpha = list(
+      IVC8c = c(feed = 0.7724, capex = 0.1508, opex = 0.0767),
+      IVC9b = c(feed = 0.8588, capex = 0.0648, opex = 0.0764)
+),
+
+    dist_feed = list(
+      IVC8c = c(chemicals = 1.0),
+      IVC9b = c(chemicals = 1.0)
+    )
+  ),
+
+
+  # ========================================================
+  # CONVENTIONAL BIOFUELS
+  # ========================================================
+
+  conv_biodiesel = list(
+    abs_market_value = 15711337439.48,
+
+    weights = c(
+      IVC_T_FF = 0.269782,
+      IVC_HT_FF = 0.318631,
+      IVC_T_CC = 0.018906,
+      IVC_T_lipids = 0.392681
+    ),
+
+    dist_feed = list(
+      IVC_T_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
+      IVC_HT_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
+      IVC_T_CC = c(agriculture = 1.0),
+      IVC_T_lipids = c(food_bev = 0.72, food_bev_imp = 0.28)
+    )
+  ),
+
+
+  conv_biogasoline = list(
+    abs_market_value = 7189551400.75,
+    weights = c(IVC_EF_FF = 1.0),
+    dist_feed = list(
+      IVC_EF_FF = c(agriculture = 1.0)
+    )
+  ),
+
+
+  conv_bio_kerosene = list(
+    abs_market_value = 0,
+    weights = c(IVC_HT_lipids_SAF = 1.0),
+    dist_feed = list(
+      IVC_HT_lipids_SAF = c(food_bev = 0.61, food_bev_imp = 0.39)
+    )
+  )
+)
+
+
+# ==========================================================
+# FINISHED BIOFUEL IMPORTS - 2030
+# Monetary value in EUR, at market value
+# All imported finished fuels go to final consumption expenditure
+# ==========================================================
+## note: so far only an exogenous scenario vraiavle, stored in each endpoint, but not yet inegrated into annual SFC dynamics
+
+
+S1_imports_2030 <- c(
+  conv_biodiesel    = 687626520.93,
+  adv_biodiesel     = 14428717943.19,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 4661504967.96,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 1865379175.15,
+  adv_bio_hfo       = 1741730959.95,
+  RFNBOs            = 359095080.85,
+  adv_biogas        = 0
+)
+
+S2_imports_2030 <- c(
+  conv_biodiesel    =  7885863786.04,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 0,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 0,
+  adv_bio_hfo       = 0,
+  RFNBOs            = 0,
+  adv_biogas        = 0
+)
+
+
+S3_imports_2030 <- c(
+  conv_biodiesel    =  2640822799.72,     ## discuss with Dina
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 0,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 0,
+  adv_bio_hfo       = 0,
+  RFNBOs            = 0,
+  adv_biogas        = 0
+)
+
+## Conversion from scenario values (stored in EUR) into the monetary unit
+## of the Eurostat IO tables. Keep 1 if the IO tables are in EUR;
+## use 1e6 if the IO tables are in million EUR, etc.
+
+SCENARIO_EUR_TO_IO_UNIT <- 1e6
+
+
+# ==========================================================
+# BIOFUEL EXPORTS - 2030
+# Monetary values in EUR
+# ==========================================================
+
+S1_exports_2030 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))        ## vector with all zero, because in S1 and S2 there are NO exports
+S2_exports_2030 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
+
+S3_exports_2030 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 30137468584.173,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 892829381.237,
+  adv_bio_hfo       = 25347018903.397,
+  RFNBOs            = 17050082963.604,
+  adv_biogas        = 20790959910.667
+
+)
+######################################################################################################
+### YEAR 2035 ###
+######################################################################################################
+
+
+#####################################################################################
+# SCENARIO 1 - 2035
+#####################################################################################
+
+S1_2035 <- list(
+
+  adv_biodiesel = list(
+    abs_market_value = 4083938421.66,
+    weights = c(IVC1 = 0.707429542, IVC2_HVO = 0.254043987, IVC13a = 0.038526471),
+    prod_cost = list(IVC1 = 1350, IVC2_HVO = 1287.683451, IVC13a = 1598.134460),
+    alpha = list(
+      IVC1 = c(feed = 0.740740741, capex = 0.061481481, opex = 0.197777778),
+      IVC2_HVO = c(feed = 0.476579435, capex = 0.208902273, opex = 0.314518292),
+      IVC13a = c(feed = 0.132113077, capex = 0.503712310, opex = 0.364174614)
+    ),
+    dist_feed = list(
+      IVC1 = c(food_bev_imp = 1),
+      IVC2_HVO = c(food_bev_imp = 1),
+      IVC13a = c(agriculture = 0.557036508, forestry = 0.228864061, paper = 0.200226943, food_bev = 0.013872488, sewerage = 0)
+    )
+  ),
+
+  adv_biogasoline = list(
+    abs_market_value = 936805946.66,
+    weights = c(IVC5 = 0.381234618, IVC12 = 0.431586360, IVC13a = 0.167953390, IVC13b_road = 0.019225632),
+    prod_cost = list(IVC5 = 1385.425240, IVC12 = 988.038142, IVC13a = 1598.134460, IVC13b_road = 1740.446428),
+    alpha = list(
+      IVC5 = c(feed = 0.226952152, capex = 0.400599025, opex = 0.372448823),
+      IVC12 = c(feed = 0.320876420, capex = 0.281365656, opex = 0.397757924),
+      IVC13a = c(feed = 0.132113077, capex = 0.503712310, opex = 0.364174614),
+      IVC13b_road = c(feed = 0.121777048, capex = 0.393577182, opex = 0.484645770)
+    ),
+    dist_feed = list(
+      IVC5 = c(agriculture = 0.775488968, paper = 0.224511032),
+      IVC12 = c(adv_biogas = 1),
+      IVC13a = c(agriculture = 0.557036508, forestry = 0.228864061, paper = 0.200226943, food_bev = 0.013872488, sewerage = 0, adv_biogas = 0),
+      IVC13b_road = c(agriculture = 0.554902499, forestry = 0.227987282, paper = 0.199459872, food_bev = 0.013819342, sewerage = 0, adv_biogas = 0)
+    )
+  ),
+
+  adv_biogas = list(
+    abs_market_value = 7525799946.30,
+    weights = c(IVC7 = 1),
+    prod_cost = list(IVC7 = 1024.418468),
+    alpha = list(IVC7 = c(feed = -0.020579023, capex = 0.590578966, opex = 0.430000057)),
+    dist_feed = list(IVC7 = c(food_bev = -0.185878558, agriculture = -0.787700158, chemicals = -0.033628027, sewerage = 2.007206743))
+  ),
+
+  adv_bio_kerosene = list(
+    abs_market_value = 3213661588.91,
+    weights = c(IVC2_HEFA = 0.896382425, IVC11a_SAF = 0.064955248, IVC13b_SAF = 0.038662327),
+    prod_cost = list(IVC2_HEFA = 1811.294399, IVC11a_SAF = 2967.017241, IVC13b_SAF = 2160.571682),
+    alpha = list(
+      IVC2_HEFA = c(feed = 0.479929933, capex = 0.207586354, opex = 0.312483713),
+      IVC11a_SAF = c(feed = 0.191106824, capex = 0.487021100, opex = 0.321872076),
+      IVC13b_SAF = c(feed = 0.292548351, capex = 0.317045718, opex = 0.390405932)
+    ),
+    dist_feed = list(
+      IVC2_HEFA = c(agriculture = 0.2987, adv_biodiesel = 0.2980, chemicals = 0.1052, adv_biogasoline = 0.2980),
+      IVC11a_SAF = c(agriculture = 0.572753575, forestry = 0.219386997, paper = 0.191935717, food_bev = 0.014263907, adv_biodiesel = 0.001659805, sewerage = 0),
+      IVC13b_SAF = c(agriculture = 0.590479798, forestry = 0.210893874, paper = 0.184505315, food_bev = 0.014121013, sewerage = 0)
+    )
+  ),
+
+  adv_bio_hfo = list(
+    abs_market_value = 1483794935.51,
+    weights = c(IVC8a = 0.485838698, IVC8b = 0.485838698, IVC13b_mar = 0.028322603),
+    prod_cost = list(IVC8a = 586.197332, IVC8b = 936, IVC13b_mar = 2160.571682),
+    alpha = list(
+      IVC8a = c(feed = 0.203339942, capex = 0.479360763, opex = 0.317299295),
+      IVC8b = c(feed = 0.756410256, capex = 0.145299145, opex = 0.098290598),
+      IVC13b_mar = c(feed = 0.292548351, capex = 0.317045718, opex = 0.390405932)
+    ),
+    dist_feed = list(
+      IVC8a = c(agriculture = 0.555604357, forestry = 0.212818176, paper = 0.186188834, food_bev = 0.013836821, adv_biodiesel = 0.031551811, sewerage = 0),
+      IVC8b = c(adv_biogas = 1),
+      IVC13b_mar = c(agriculture = 0.590479798, forestry = 0.210893874, paper = 0.184505315, food_bev = 0.014121013, sewerage = 0)
+    )
+  ),
+
+  RFNBOs = list(
+    abs_market_value = 994008214.29,
+    weights = c(IVC8c = 0.725230425, IVC9b = 0.274769575),
+    prod_cost = list(IVC8c = 377.869686, IVC9b = 1975.564918),
+    alpha = list(
+      IVC8c = c(feed = 0.772408311, capex = 0.150845654, opex = 0.076746035),
+      IVC9b = c(feed = 0.858774573, capex = 0.064791594, opex = 0.076433833)
+    ),
+    dist_feed = list(IVC8c = c(chemicals = 1), IVC9b = c(chemicals = 1))
+  ),
+
+  conv_biodiesel = list(
+    abs_market_value =  15648464562.73,
+    weights = c(IVC_T_FF = 0.25, IVC_HT_FF = 0.25, IVC_T_CC = 0.25, IVC_HT_CC = 0.25),
+    dist_feed = list(
+      IVC_T_FF = c(food_bev = 0.800553842, food_bev_imp = 0.199446158),
+      IVC_HT_FF = c(food_bev = 0.800553842, food_bev_imp = 0.199446158),
+      IVC_T_CC = c(agriculture = 1),
+      IVC_HT_CC = c(agriculture = 1)
+    )
+  ),
+
+  conv_biogasoline = list(
+    abs_market_value = 4038618047.10,
+    weights = c(IVC_EF_FF = 1),
+    dist_feed = list(IVC_EF_FF = c(agriculture = 1))
+  ),
+
+  conv_bio_kerosene = list(
+    abs_market_value = 3226744186.05,
+    weights = c(IVC_HT_lipids_SAF = 1),
+    dist_feed = list(IVC_HT_lipids_SAF = c(food_bev = 0.61, food_bev_imp = 0.39))
+  )
+)
+
+
+# ==========================================================
+# FINISHED BIOFUEL IMPORTS - 2035
+# ==========================================================
+
+S1_imports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 11609442472.0000,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 2658381657.0000,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 8222014081.0000,
+  adv_bio_hfo       = 762619367.7000,
+  RFNBOs            = 17801918753.0000,
+  adv_biogas        = 0
+)
+
+S2_imports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 0,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 0,
+  adv_bio_hfo       = 0,
+  RFNBOs            = 0,
+  adv_biogas        = 0
+)
+
+S3_imports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 0,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 0,
+  adv_bio_hfo       = 0,
+  RFNBOs            = 0,
+  adv_biogas        = 0
+)
+
+# ==========================================================
+# FINISHED BIOFUEL EXPORTS - 2035
+# S1 assumes no finished biofuel exports
+# ==========================================================
+
+S1_exports_2035 <-
+  setNames(
+    rep(0, length(BIOFUEL_SECTORS)),
+    names(BIOFUEL_SECTORS)
+  )
+
+S2_exports_2035 <-
+  setNames(
+    rep(0, length(BIOFUEL_SECTORS)),
+    names(BIOFUEL_SECTORS)
+  )
+
+S3_exports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 27271757981.279,   
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 12712433934.555,   
+  adv_bio_hfo       = 45041564760.057,   
+  RFNBOs            = 4871514959.822,   
+  adv_biogas        = 19447282892.296    
+)
+
+
+#####################################################################################
+# SCENARIO 2 - 2035
+#####################################################################################
+
+S2_2035 <- list(
+
+  # ========================================================
+  # ADVANCED BIOFUELS
+  # ========================================================
+
+  adv_biodiesel = list(
+
+    abs_market_value = 17066996781.4600,
+
+    weights = c(IVC2_HVO = 0.0427, IVC11a_road = 0.7220, IVC13a = 0.2353),
+
+    prod_cost = list(IVC2_HVO = 2294.6802, IVC11a_road = 2741.0271, IVC13a = 1615.3897),
+
+    alpha = list(
+      IVC2_HVO    = c(feed = 0.7063, capex = 0.1172, opex = 0.1765),
+      IVC11a_road = c(feed = 0.1244, capex = 0.5272, opex = 0.3484),
+      IVC13a      = c(feed = 0.1414, capex = 0.4983, opex = 0.3603)
+    ),
+
+    dist_feed = list(
+      IVC2_HVO = c(agriculture = 1.0000),
+
+      IVC11a_road = c(
+        agriculture = 0.5977, forestry = 0.1292, paper = 0.1492,
+        food_bev = 0.0126, sewerage = 0.0233,
+        adv_biodiesel = 0.0440, adv_biogasoline = 0.0440
+      ),
+
+      IVC13a = c(
+        agriculture = 0.6390, forestry = 0.1482, paper = 0.1762,
+        food_bev = 0.0135, sewerage = 0.0232
+      )
+    )
+  ),
+
+
+  adv_biogasoline = list(
+
+    abs_market_value = 8266616718.0900,
+
+    weights = c(IVC5 = 0.2283, IVC12 = 0.2283, IVC13a = 0.4477, IVC13b_road = 0.0958),
+
+    prod_cost = list(IVC5 = 1413.2295, IVC12 = 1264.6000,
+                     IVC13a = 1615.3897, IVC13b_road = 1757.4705),
+
+    alpha = list(
+      IVC5        = c(feed = 0.2422, capex = 0.3927, opex = 0.3651),
+      IVC12       = c(feed = 0.4694, capex = 0.2198, opex = 0.3108),
+      IVC13a      = c(feed = 0.1414, capex = 0.4983, opex = 0.3603),
+      IVC13b_road = c(feed = 0.1303, capex = 0.3898, opex = 0.4800)
+    ),
+
+    dist_feed = list(
+      IVC5  = c(agriculture = 0.8198, paper = 0.1802),
+      IVC12 = c(adv_biogas = 1.0000),
+
+      IVC13a = c(
+        agriculture = 0.6390, forestry = 0.1482, paper = 0.1762,
+        food_bev = 0.0135, sewerage = 0.0232
+      ),
+
+      IVC13b_road = c(
+        agriculture = 0.6374, forestry = 0.1478, paper = 0.1757,
+        food_bev = 0.0134, sewerage = 0.0231
+      )
+    )
+  ),
+
+
+  adv_biogas = list(
+
+    abs_market_value =  44887169427.93,
+
+    weights = c(IVC7 = 0.3568, IVC9a = 0.6432),
+
+    prod_cost = list(IVC7 = 1032.8576, IVC9a = 1397.8934),
+
+    alpha = list(
+      IVC7  = c(feed = -0.0122, capex = 0.5858, opex = 0.4265),
+      IVC9a = c(feed = 0.1702, capex = 0.5723, opex = 0.2575)
+    ),
+
+    dist_feed = list(
+      IVC7 = c(
+        agriculture = -1.6999, sewerage = 3.1655, food_bev = -0.3382,
+        forestry = 0, paper = 0, chemicals = -0.1274, adv_biodiesel = 0
+      ),
+
+      IVC9a = c(
+        agriculture = 0.6228, sewerage = 0.0243, food_bev = 0.0131,
+        forestry = 0.1346, paper = 0.1554, chemicals = 0,
+        adv_biodiesel = 0.0249, adv_biogasoline = 0.0249
+      )
+    )
+  ),
+
+
+  adv_bio_kerosene = list(
+
+    abs_market_value = 8244827779.8000,
+
+    weights = c(IVC2_HEFA = 0.1970, IVC6 = 0.0562,
+                IVC11a_SAF = 0.0843, IVC13b_SAF = 0.6625),
+
+    prod_cost = list(IVC2_HEFA = 2497.6028, IVC6 = 4313.8298,
+                     IVC11a_SAF = 3025.0055, IVC13b_SAF = 2216.7661),
+
+    alpha = list(
+      IVC2_HEFA  = c(feed = 0.6228, capex = 0.1505, opex = 0.2266),
+      IVC6       = c(feed = 0.2466, capex = 0.4240, opex = 0.3294),
+      IVC11a_SAF = c(feed = 0.2066, capex = 0.4777, opex = 0.3157),
+      IVC13b_SAF = c(feed = 0.3105, capex = 0.3090, opex = 0.3805)
+    ),
+
+    dist_feed = list(
+      IVC2_HEFA = c(
+        agriculture = 0.4309, adv_biogasoline = 0.1423, chemicals = 0.2845, adv_biodiesel = 0.1423
+      ),
+
+      IVC6 = c(adv_bio_hfo = 1.0000),
+
+      IVC11a_SAF = c(
+        sewerage = 0.0254, food_bev = 0.0138, agriculture = 0.6523,
+        forestry = 0.1410, paper = 0.1628,
+        adv_biodiesel = 0.0024, adv_biogasoline = 0.0024
+      ),
+
+      IVC13b_SAF = c(
+        food_bev = 0.0136, agriculture = 0.6695, forestry = 0.1351,
+        paper = 0.1607, sewerage = 0.0211, adv_biodiesel = 0
+      )
+    )
+  ),
+
+
+  adv_bio_hfo = list(
+
+    abs_market_value = 6218872086.0200,
+
+    weights = c(IVC8a = 0.3515, IVC8b = 0.3515, IVC13b_mar = 0.2971),
+
+    prod_cost = list(IVC8a = 605.6846, IVC8b = 936.0000, IVC13b_mar = 2216.7661),
+
+    alpha = list(
+      IVC8a      = c(feed = 0.2290, capex = 0.4639, opex = 0.3071),
+      IVC8b      = c(feed = 0.7564, capex = 0.1453, opex = 0.0983),
+      IVC13b_mar = c(feed = 0.3105, capex = 0.3090, opex = 0.3805)
+    ),
+
+    dist_feed = list(
+      IVC8a = c(
+        food_bev = 0.0126, agriculture = 0.5995, forestry = 0.1296,
+        paper = 0.1496, sewerage = 0.0234,
+        adv_biogasoline = 0.0427, adv_biodiesel = 0.0427
+      ),
+
+      IVC8b = c(adv_biogas = 1.0000),
+
+      IVC13b_mar = c(
+        agriculture = 0.6695, forestry = 0.1351, paper = 0.1607,
+        food_bev = 0.0136, sewerage = 0.0211
+      )
+    )
+  ),
+
+
+  RFNBOs = list(
+
+    abs_market_value = 18795926967.5300,
+
+    weights = c(IVC8c = 0.4174, IVC9b = 0.5826),
+
+    prod_cost = list(IVC8c = 377.8697, IVC9b = 1975.5649),
+
+    alpha = list(
+      IVC8c = c(feed = 0.7724, capex = 0.1508, opex = 0.0767),
+      IVC9b = c(feed = 0.8588, capex = 0.0648, opex = 0.0764)
+    ),
+
+    dist_feed = list(
+      IVC8c = c(chemicals = 1.0000),
+      IVC9b = c(chemicals = 1.0000)
+    )
+  ),
+
+
+  # ========================================================
+  # CONVENTIONAL BIOFUELS
+  # ========================================================
+
+  conv_biodiesel = list(
+
+    abs_market_value = 15987016701.4600,
+    weights = c(IVC_T_FF = 0.2007, IVC_HT_FF = 0.2766,
+                IVC_HT_CC = 0.0486, IVC_T_lipids = 0.4740),
+    dist_feed = list(
+      IVC_T_FF     = c(food_bev = 0.8006, food_bev_imp = 0.1994),
+      IVC_HT_FF    = c(food_bev = 0.8006, food_bev_imp = 0.1994),
+      IVC_HT_CC    = c(agriculture = 1.0000),
+      IVC_T_lipids = c(food_bev = 0.5732, food_bev_imp = 0.4268)
+    )
+  ),
+
+
+  conv_biogasoline = list(
+    abs_market_value = 0,
+    weights = c(IVC_EF_FF = 1.0000),
+    dist_feed = list(IVC_EF_FF = c(agriculture = 1.0000))
+  ),
+
+
+  conv_bio_kerosene = list(
+    abs_market_value = 6101382522.6300,
+    weights = c(IVC_HT_lipids_SAF = 1.0000),
+    dist_feed = list(
+      IVC_HT_lipids_SAF = c(food_bev = 0.5732, food_bev_imp = 0.4268)
+    )
+  )
+)
+
+
+#####################################################################################
+# SCENARIO 3 - 2035
+#####################################################################################
+
+S3_2035 <- list(
+
+  # ========================================================
+  # ADVANCED BIOFUELS
+  # ========================================================
+
+  adv_biodiesel = list(
+
+    abs_market_value = 17842831191.3756,
+
+    weights = c(IVC2_HVO = 0.0377, IVC11a_road = 0.5802, IVC13a = 0.3821),
+
+    prod_cost = list(IVC2_HVO = 2294.6802, IVC11a_road = 2741.0271,
+                     IVC13a = 1615.3897),
+
+    alpha = list(
+      IVC2_HVO    = c(feed = 0.7063, capex = 0.1172, opex = 0.1765),
+      IVC11a_road = c(feed = 0.1244, capex = 0.5272, opex = 0.3484),
+      IVC13a      = c(feed = 0.1414, capex = 0.4983, opex = 0.3603)
+    ),
+
+    dist_feed = list(
+      IVC2_HVO = c(agriculture = 1.0000),
+
+      IVC11a_road = c(
+        agriculture = 0.5977, forestry = 0.1292, paper = 0.1492,
+        food_bev = 0.0126, sewerage = 0.0233,
+        adv_biodiesel = 0.0440, adv_biogasoline = 0.0440
+      ),
+
+      IVC13a = c(
+        agriculture = 0.6390, forestry = 0.1482, paper = 0.1762,
+        food_bev = 0.0135, sewerage = 0.0232
+      )
+    )
+  ),
+
+
+  adv_biogasoline = list(
+
+    abs_market_value = 37997331094.2053,
+
+    weights = c(IVC5 = 0.2208, IVC12 = 0.2931,
+                IVC13a = 0.1794, IVC13b_road = 0.3067),
+
+    prod_cost = list(IVC5 = 1413.2295, IVC12 = 1264.6000,
+                     IVC13a = 1615.3897, IVC13b_road = 1757.4705),
+
+    alpha = list(
+      IVC5        = c(feed = 0.2422, capex = 0.3927, opex = 0.3651),
+      IVC12       = c(feed = 0.4694, capex = 0.2198, opex = 0.3108),
+      IVC13a      = c(feed = 0.1414, capex = 0.4983, opex = 0.3603),
+      IVC13b_road = c(feed = 0.1303, capex = 0.3898, opex = 0.4800)
+    ),
+
+    dist_feed = list(
+      IVC5  = c(agriculture = 0.8198, paper = 0.1802),
+      IVC12 = c(adv_biogas = 1.0000),
+
+      IVC13a = c(
+        agriculture = 0.6390, forestry = 0.1482, paper = 0.1762,
+        food_bev = 0.0135, sewerage = 0.0232
+      ),
+
+      IVC13b_road = c(
+        agriculture = 0.6374, forestry = 0.1478, paper = 0.1757,
+        food_bev = 0.0134, sewerage = 0.0231
+      )
+    )
+  ),
+
+
+  adv_biogas = list(
+
+    abs_market_value = 62493505022.8402,
+
+    weights = c(IVC7 = 0.6709, IVC9a = 0.3291),
+
+    prod_cost = list(IVC7 = 1032.8576, IVC9a = 1397.8934),
+
+    alpha = list(
+      IVC7  = c(feed = -0.0122, capex = 0.5858, opex = 0.4265),
+      IVC9a = c(feed =  0.1702, capex = 0.5723, opex = 0.2575)
+    ),
+
+    dist_feed = list(
+
+      IVC7 = c(
+        agriculture = -1.6999, sewerage = 3.1655,
+        food_bev = -0.3382, forestry = 0, paper = 0,
+        chemicals = -0.1274, adv_biodiesel = 0
+      ),
+
+      IVC9a = c(
+        agriculture = 0.6228, sewerage = 0.0243,
+        food_bev = 0.0131, forestry = 0.1346,
+        paper = 0.1554, chemicals = 0,
+        adv_biodiesel = 0.0249, adv_biogasoline = 0.0249
+      )
+    )
+  ),
+
+
+  adv_bio_kerosene = list(
+
+    abs_market_value =  15122013649.63,
+    weights = c(IVC2_HEFA = 0.2134, IVC6 = 0.212, IVC11a_SAF = 0.3081,
+                IVC13b_SAF = 0.2664),
+
+    prod_cost = list(
+      IVC2_HEFA  = 2497.6028,
+      IVC6 = 4313.8298,
+      IVC11a_SAF = 3025.0055,
+      IVC13b_SAF = 2216.7661
+    ),
+
+    alpha = list(
+      IVC2_HEFA  = c(feed = 0.6228, capex = 0.1505, opex = 0.2266),
+      IVC6       = c(feed = 0.2466, capex = 0.4240, opex = 0.3294),
+      IVC11a_SAF = c(feed = 0.2066, capex = 0.4777, opex = 0.3157),
+      IVC13b_SAF = c(feed = 0.3105, capex = 0.3090, opex = 0.3805)
+    ),
+
+    dist_feed = list(
+
+      IVC2_HEFA = c(
+        agriculture = 0.4309, adv_biogasoline = 0.1423,
+        chemicals = 0.2845, adv_biodiesel = 0.1423
+      ),
+      IVC6 = c(adv_bio_hfo = 1.0000),
+      IVC11a_SAF = c(
+        sewerage = 0.0254, food_bev = 0.0138,
+        agriculture = 0.6523, forestry = 0.1410,
+        paper = 0.1628, adv_biodiesel = 0.0024,
+        adv_biogasoline = 0.0024
+      ),
+
+      IVC13b_SAF = c(
+        food_bev = 0.0136, agriculture = 0.6695,
+        forestry = 0.1351, paper = 0.1607,
+        sewerage = 0.0211
+      )
+    )
+  ),
+
+
+  adv_bio_hfo = list(
+
+    abs_market_value = 51190582813.8491,
+
+    weights = c(IVC8a = 0.5093, IVC8b = 0.4527, IVC13b_mar = 0.0380),
+
+    prod_cost = list(IVC8a = 605.6846, IVC8b = 936.0000,
+                     IVC13b_mar = 2216.7661),
+
+    alpha = list(
+      IVC8a      = c(feed = 0.2290, capex = 0.4639, opex = 0.3071),
+      IVC8b      = c(feed = 0.7564, capex = 0.1453, opex = 0.0983),
+      IVC13b_mar = c(feed = 0.3105, capex = 0.3090, opex = 0.3805)
+    ),
+
+    dist_feed = list(
+
+      IVC8a = c(
+        food_bev = 0.0126, agriculture = 0.5995,
+        forestry = 0.1296, paper = 0.1496,
+        sewerage = 0.0234, adv_biogasoline = 0.0427,
+        adv_biodiesel = 0.0427
+      ),
+
+      IVC8b = c(adv_biogas = 1.0000),
+
+      IVC13b_mar = c(
+        agriculture = 0.6695, forestry = 0.1351,
+        paper = 0.1607, food_bev = 0.0136,
+        sewerage = 0.0211
+      )
+    )
+  ),
+
+
+  RFNBOs = list(
+
+    abs_market_value = 22030805806.3630,
+
+    weights = c(IVC8c = 0.5772, IVC9b = 0.4228),
+
+    prod_cost = list(IVC8c = 377.8697, IVC9b = 1975.5649),
+
+    alpha = list(
+      IVC8c = c(feed = 0.7724, capex = 0.1508, opex = 0.0767),
+      IVC9b = c(feed = 0.8588, capex = 0.0648, opex = 0.0764)
+    ),
+
+    dist_feed = list(
+      IVC8c = c(chemicals = 1.0000),
+      IVC9b = c(chemicals = 1.0000)
+    )
+  ),
+
+
+  # ========================================================
+  # CONVENTIONAL BIOFUELS
+  # ========================================================
+
+  conv_biodiesel = list(
+
+    abs_market_value = 15154198406.9827,
+
+    weights = c(
+      IVC_T_FF = 0.2716, IVC_HT_FF = 0.2284,
+      IVC_HT_CC = 0.2284, IVC_T_lipids = 0.2716
+    ),
+    dist_feed = list(
+      IVC_T_FF     = c(food_bev = 0.8006, food_bev_imp = 0.1994),
+      IVC_HT_FF    = c(food_bev = 0.8006, food_bev_imp = 0.1994),
+      IVC_HT_CC    = c(agriculture = 1.0000),
+      IVC_T_lipids = c(food_bev = 0.5732, food_bev_imp = 0.4268)
+    )
+  ),
+
+
+  # No conventional biogasoline production is reported
+  # in the S3 2035 workbook.
+  conv_biogasoline = list(
+    abs_market_value = 0,
+    weights = c(IVC_EF_FF = 1.0000),
+    dist_feed = list(
+      IVC_EF_FF = c(agriculture = 1.0000)
+    )
+  ),
+
+
+  # No conventional bio-kerosene production is reported
+  # in the S3 2035 workbook.
+  conv_bio_kerosene = list(
+    abs_market_value = 0,
+    weights = c(IVC_HT_lipids_SAF = 1.0000),
+    dist_feed = list(
+      IVC_HT_lipids_SAF = c(food_bev = 0.5732, food_bev_imp = 0.4268)
+    )
+  )
+)
+
+
+######################################################################################################
+### YEAR 2040 ###
+######################################################################################################
+ 
+#####################################################################################
+# SCENARIO 1 - 2040
+#####################################################################################
+ 
+# Derived from the "2040 Sc 1" sheet in Providing_sectors.xlsx.
+#
+# DATA CAVEATS (from the source workbook, not introduced here):
+#  - The "Advanced biodiesel" TOTAL cell is #REF! in the sheet; abs_market_value
+#    below is the sum of IVC1 + IVC2_HVO + IVC13a instead.
+#  - adv_bio_hfo: IVC8a and IVC8b have identical Mtoe/market-value figures in
+#    the sheet (a deliberate 50/50 technology split, as in 2035), so both are
+#    counted in the total even though the sheet's own TOTAL row does not do
+#    so. Please double check this assumption.
+#  - conv_bio_kerosene's only production route in this sheet is hydrotreatment
+#    of cover crops from marginal lands - a different feedstock than the
+#    UCO/animal-fats route (IVC_HT_lipids_SAF) used for conv_bio_kerosene in
+#    2030/2035. Named IVC_HT_CC_road here; please confirm this is consistent
+#    with the rest of the pipeline / your naming conventions elsewhere.
+ 
+S1_2040 <- list(
+ 
+  adv_biodiesel = list(
+    abs_market_value = 4896291861.95,
+ 
+    weights = c(IVC1 = 0.676675, IVC2_HVO = 0.280825, IVC13a = 0.042500),
+ 
+    prod_cost = list(IVC1 = 1350.000000, IVC2_HVO = 2471.934677, IVC13a = 1616.744445),
+ 
+    alpha = list(
+      IVC1 = c(feed = 0.740741, capex = 0.061481, opex = 0.197778),
+      IVC2_HVO = c(feed = 0.727339, capex = 0.108822, opex = 0.163839),
+      IVC13a = c(feed = 0.142103, capex = 0.497914, opex = 0.359983)
+    ),
+ 
+    dist_feed = list(
+      IVC1 = c(food_bev_imp = 1.000000),
+      IVC2_HVO = c(agriculture = 0.054751, adv_biodiesel = 0.803462, chemicals = 0.141787),
+      IVC13a = c(agriculture = 0.631062, forestry = 0.167348, paper = 0.166531, food_bev = 0.011138, sewerage = 0.023920)
+    )
+  ),
+ 
+  adv_biogasoline = list(
+    abs_market_value = 1263933076.99,
+ 
+    weights = c(IVC5 = 0.367334, IVC12 = 0.447838, IVC13a = 0.164640, IVC13b_road = 0.020187),
+ 
+    prod_cost = list(IVC5 = 1415.581514, IVC12 = 1264.600000, IVC13a = 1616.744445, IVC13b_road = 1758.490646),
+ 
+    alpha = list(
+      IVC5 = c(feed = 0.243420, capex = 0.392065, opex = 0.364515),
+      IVC12 = c(feed = 0.469397, capex = 0.219832, opex = 0.310770),
+      IVC13a = c(feed = 0.142103, capex = 0.497914, opex = 0.359983),
+      IVC13b_road = c(feed = 0.130789, capex = 0.389539, opex = 0.479673)
+    ),
+ 
+    dist_feed = list(
+      IVC5 = c(agriculture = 0.825048, paper = 0.174952),
+      IVC12 = c(adv_biogas = 1.000000),
+      IVC13a = c(agriculture = 0.631062, forestry = 0.167348, paper = 0.166531, food_bev = 0.011138, sewerage = 0.023920, adv_biogas = 0.000000),
+      IVC13b_road = c(agriculture = 0.635454, forestry = 0.165197, paper = 0.164679, food_bev = 0.011007, sewerage = 0.023663, adv_biogas = 0.000000)
+    )
+  ),
+ 
+  adv_biogas = list(
+    abs_market_value = 3358064459.51,
+ 
+    weights = c(IVC7 = 1.000000),
+ 
+    prod_cost = list(IVC7 = 1036.658199),
+ 
+    alpha = list(
+      IVC7 = c(feed = -0.008529, capex = 0.583606, opex = 0.424923)
+    ),
+ 
+    dist_feed = list(
+      IVC7 = c(sewerage = 4.329353, chemicals = -0.214912, food_bev = -0.484699, agriculture = -2.629741)
+    )
+  ),
+ 
+  adv_bio_kerosene = list(
+    abs_market_value = 4552687250.96,
+ 
+    weights = c(IVC2_HEFA = 0.896382, IVC11a_SAF = 0.064955, IVC13b_SAF = 0.038662),
+ 
+    prod_cost = list(IVC2_HEFA = 2624.758230, IVC11a_SAF = 3019.582395, IVC13b_SAF = 2218.841733),
+ 
+    alpha = list(
+      IVC2_HEFA = c(feed = 0.641110, capex = 0.143251, opex = 0.215639),
+      IVC11a_SAF = c(feed = 0.205188, capex = 0.478543, opex = 0.316269),
+      IVC13b_SAF = c(feed = 0.311127, capex = 0.308720, opex = 0.380153)
+    ),
+ 
+    dist_feed = list(
+      IVC2_HEFA = c(agriculture = 0.27, adv_biodiesel = 0.31, chemicals = 0.11, adv_biogasoline = 0.31),
+      IVC11a_SAF = c(agriculture = 0.642601, forestry = 0.159155, paper = 0.153645, sewerage = 0.026202, adv_biodiesel = 0.007041, food_bev = 0.011356, adv_biogasoline = 0.007041),
+      IVC13b_SAF = c(agriculture = 0.657475, forestry = 0.154729, paper = 0.154244, sewerage = 0.022164, food_bev = 0.011388)
+    )
+  ),
+ 
+  adv_bio_hfo = list(
+    abs_market_value = 1080555325.31,
+ 
+    weights = c(IVC8a = 0.485836, IVC8b = 0.485836, IVC13b_mar = 0.028329),
+ 
+    prod_cost = list(IVC8a = 603.677960, IVC8b = 936.000000, IVC13b_mar = 2218.841733),
+ 
+    alpha = list(
+      IVC8a = c(feed = 0.226409, capex = 0.465480, opex = 0.308111),
+      IVC8b = c(feed = 0.756410, capex = 0.145299, opex = 0.098291),
+      IVC13b_mar = c(feed = 0.311127, capex = 0.308720, opex = 0.380153)
+    ),
+ 
+    dist_feed = list(
+      IVC8a = c(agriculture = 0.611843, forestry = 0.150096, paper = 0.145616, sewerage = 0.024860, adv_biodiesel = 0.056843, food_bev = 0.010742, adv_biogasoline = 0.000000),
+      IVC8b = c(adv_biogas = 1.000000),
+      IVC13b_mar = c(agriculture = 0.657475, forestry = 0.154729, paper = 0.154244, food_bev = 0.011388, sewerage = 0.022164)
+    )
+  ),
+ 
+  RFNBOs = list(
+    abs_market_value = 1407891428.57,
+ 
+    weights = c(IVC8c = 0.725212, IVC9b = 0.274788),
+ 
+    prod_cost = list(IVC8c = 377.869686, IVC9b = 1975.564918),
+ 
+    alpha = list(
+      IVC8c = c(feed = 0.772408, capex = 0.150846, opex = 0.076746),
+      IVC9b = c(feed = 0.858775, capex = 0.064792, opex = 0.076434)
+    ),
+ 
+    dist_feed = list(
+      IVC8c = c(chemicals = 1.000000),
+      IVC9b = c(chemicals = 1.000000)
+    )
+  ),
+ 
+  # ========================================================
+  # CONVENTIONAL BIOFUELS
+  # ========================================================
+ 
+  conv_biodiesel = list(
+    abs_market_value = 8681609713.90,
+    weights = c(IVC_T_FF = 0.422235, IVC_HT_FF = 0.264754, IVC_T_CC = 0.313011),
+    dist_feed = list(
+      IVC_T_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
+      IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
+      IVC_T_CC = c(agriculture = 1.000000)
+    )
+  ),
+ 
+  conv_biogasoline = list(
+    abs_market_value = 3640979337.32,
+    weights = c(IVC_EF_FF = 1.000000),
+    dist_feed = list(IVC_EF_FF = c(agriculture = 1.000000))
+  ),
+ 
+  conv_bio_kerosene = list(
+    abs_market_value = 4238566319.66,
+    weights = c(IVC_HT_CC_SAF = 1.000000),
+    dist_feed = list(IVC_HT_CC_SAF = c(agriculture = 1.000000))
+  )
+ 
+)
+ 
+ 
+# ==========================================================
+# FINISHED BIOFUEL IMPORTS / EXPORTS - S1 2040
+# TODO: not present in Providing_sectors.xlsx - fill in from
+# the same source used for S1_imports_2030 / S1_imports_2035.
+# ==========================================================
+ 
+ S1_imports_2040 <- c(
+   conv_biodiesel    = 0,
+   adv_biodiesel     = 20096053598.94,
+   conv_biogasoline  = 0,
+   adv_biogasoline   = 955687153.39,
+   conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 11040737556.26,
+   adv_bio_hfo       = 11067382314.28,
+   RFNBOs            =  29197359699.92,
+   adv_biogas        = 0
+ )
+
+ S1_exports_2040 <-
+   setNames(
+     rep(0, length(BIOFUEL_SECTORS)),
+     names(BIOFUEL_SECTORS)
+   )
+ 
+ 
+#####################################################################################
+# SCENARIO 2 - 2040
+#####################################################################################
+ 
+# Derived from the "2040 Sc 2" sheet in Providing_sectors.xlsx.
+#
+# DATA CAVEATS (from the source workbook, not introduced here):
+#  - conv_biodiesel and conv_bio_kerosene are almost entirely #REF! in this
+#    sheet (broken formula references). abs_market_value and weights are left
+#    as NA below - the sheet needs to be fixed at the source before these can
+#    be populated. prod_cost/alpha/dist_feed shown use the same fixed
+#    conventional-technology values as elsewhere for reference only.
+#  - adv_bio_kerosene IVC6 has a market value but no cost breakdown ("n-d-" in
+#    the sheet) and is excluded from the fuel's weights/total here, consistent
+#    with the sheet's own TOTAL row.
+#  - conv_biogasoline is legitimately zero in this scenario (not broken).
+ 
+S2_2040 <- list(
+ 
+  adv_biodiesel = list(
+    abs_market_value = 17322238764.89,
+ 
+    weights = c(IVC2_HVO = 0.031159, IVC11a_road = 0.633301, IVC13a = 0.335539),
+ 
+    prod_cost = list(IVC2_HVO = 2429.568868, IVC11a_road = 2754.629822, IVC13a = 1616.860538),
+ 
+    alpha = list(
+      IVC2_HVO = c(feed = 0.722585, capex = 0.110719, opex = 0.166696),
+      IVC11a_road = c(feed = 0.128740, capex = 0.524571, opex = 0.346689),
+      IVC13a = c(feed = 0.142165, capex = 0.497878, opex = 0.359957)
+    ),
+ 
+    dist_feed = list(
+      IVC2_HVO = c(agriculture = 0.071728, adv_biodiesel = 0.394515, chemicals = 0.139241, adv_biogasoline = 0.394515),
+      IVC11a_road = c(agriculture = 0.595247, forestry = 0.113460, paper = 0.133678, food_bev = 0.010277, sewerage = 0.022231, adv_biodiesel = 0.062554, adv_biogasoline = 0.062554),
+      IVC13a = c(agriculture = 0.664934, forestry = 0.135759, paper = 0.164764, food_bev = 0.011454, sewerage = 0.023090)
+    )
+  ),
+ 
+  adv_biogasoline = list(
+    abs_market_value = 5775324475.38,
+ 
+    weights = c(IVC5 = 0.256220, IVC12 = 0.256220, IVC13a = 0.289156, IVC13b_road = 0.198405),
+ 
+    prod_cost = list(IVC5 = 1416.756944, IVC12 = 1264.600000, IVC13a = 1616.860538, IVC13b_road = 1758.650937),
+ 
+    alpha = list(
+      IVC5 = c(feed = 0.244048, capex = 0.391740, opex = 0.364212),
+      IVC12 = c(feed = 0.469397, capex = 0.219832, opex = 0.310770),
+      IVC13a = c(feed = 0.142165, capex = 0.497878, opex = 0.359957),
+      IVC13b_road = c(feed = 0.130868, capex = 0.389503, opex = 0.479629)
+    ),
+ 
+    dist_feed = list(
+      IVC5 = c(agriculture = 0.835477, paper = 0.164523),
+      IVC12 = c(adv_biogas = 1.000000),
+      IVC13a = c(agriculture = 0.664934, forestry = 0.135759, paper = 0.164764, food_bev = 0.011454, sewerage = 0.023090, adv_biogas = 0.000000),
+      IVC13b_road = c(agriculture = 0.669358, forestry = 0.133945, paper = 0.162603, food_bev = 0.011290, sewerage = 0.022804, adv_biogas = 0.000000)
+    )
+  ),
+ 
+  adv_biogas = list(
+    abs_market_value = 57960747255.99,
+ 
+    weights = c(IVC7 = 0.278822, IVC9a = 0.721178),
+ 
+    prod_cost = list(IVC7 = 1039.239005, IVC9a = 1399.493213),
+ 
+    alpha = list(
+      IVC7 = c(feed = -0.006025, capex = 0.582157, opex = 0.423868),
+      IVC9a = c(feed = 0.171129, capex = 0.571635, opex = 0.257236)
+    ),
+ 
+    dist_feed = list(
+      IVC7 = c(sewerage = 5.930618, chemicals = -0.256007, food_bev = -0.712993, agriculture = -3.961618),
+      IVC9a = c(agriculture = 0.658746, sewerage = 0.024575, food_bev = 0.011309, forestry = 0.125131, paper = 0.147515, chemicals = 0.000000, adv_biodiesel = 0.016362, adv_biogasoline = 0.016362)
+    )
+  ),
+ 
+  adv_bio_kerosene = list(
+    abs_market_value = 15297111992.43,
+ 
+    weights = c(IVC2_HEFA = 0.141581, IVC11a_SAF = 0.341673, IVC13b_SAF = 0.516746),
+ 
+    prod_cost = list(IVC2_HEFA = 2573.353820, IVC11a_SAF = 3024.905008, IVC13b_SAF = 2221.637832),
+ 
+    alpha = list(
+      IVC2_HEFA = c(feed = 0.633941, capex = 0.146113, opex = 0.219946),
+      IVC11a_SAF = c(feed = 0.206587, capex = 0.477701, opex = 0.315712),
+      IVC13b_SAF = c(feed = 0.311994, capex = 0.308331, opex = 0.379675)
+    ),
+ 
+    dist_feed = list(
+      IVC2_HEFA = c(agriculture = 0.331911, adv_biodiesel = 0.668089, chemicals = 0.211945),
+      IVC11a_SAF = c(agriculture = 0.675598, forestry = 0.128776, paper = 0.151723, sewerage = 0.025232, adv_biodiesel = 0.007008, food_bev = 0.011664, adv_biogasoline = 0.007008),
+      IVC13b_SAF = c(agriculture = 0.690241, forestry = 0.125038, paper = 0.151791, sewerage = 0.021288, food_bev = 0.011642)
+    )
+  ),
+ 
+  adv_bio_hfo = list(
+    abs_market_value = 11333779215.83,
+ 
+    weights = c(IVC8a = 0.382049, IVC8b = 0.382049, IVC13b_mar = 0.235902),
+ 
+    prod_cost = list(IVC8a = 604.827800, IVC8b = 936.000000, IVC13b_mar = 2221.637832),
+ 
+    alpha = list(
+      IVC8a = c(feed = 0.227879, capex = 0.464595, opex = 0.307526),
+      IVC8b = c(feed = 0.459319, capex = 0.270340, opex = 0.2703),
+      IVC13b_mar = c(feed = 0.311994, capex = 0.308331, opex = 0.379675)
+    ),
+ 
+    dist_feed = list(
+      IVC8a = c(agriculture = 0.642308, forestry = 0.122009, paper = 0.143834, sewerage = 0.023961, adv_biodiesel = 0.056862, food_bev = 0.011026, adv_biogasoline = 0.000000),
+      IVC8b = c(adv_biogas = 1.000000),
+      IVC13b_mar = c(agriculture = 0.690241, forestry = 0.125038, paper = 0.151791, food_bev = 0.011642, sewerage = 0.021288)
+    )
+  ),
+ 
+  RFNBOs = list(
+    abs_market_value = 27240254187.30,
+ 
+    weights = c(IVC8c = 0.251631, IVC9b = 0.748369),
+ 
+    prod_cost = list(IVC8c = 377.869686, IVC9b = 1975.564918),
+ 
+    alpha = list(
+      IVC8c = c(feed = 0.772408, capex = 0.150846, opex = 0.076746),
+      IVC9b = c(feed = 0.858775, capex = 0.064792, opex = 0.076434)
+    ),
+ 
+    dist_feed = list(
+      IVC8c = c(chemicals = 1.000000),
+      IVC9b = c(chemicals = 1.000000)
+    )
+  ),
+ 
+  # ========================================================
+  # CONVENTIONAL BIOFUELS
+  # ========================================================
+conv_biodiesel = list(
+    abs_market_value =  13777273858.11,
+    weights = c(IVC_T_FF = 0.1582, IVC_HT_FF = 0.1877, IVC_T_CC = 0.0895, IVC_T_lipids = 0.5647),
+    dist_feed = list(
+      IVC_T_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
+      IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
+      IVC_T_CC = c(agriculture = 1.000000),
+      IVC_T_lipids = c(food_bev = 0.72, food_bev_imp = 0.28)
+    )
+  ),
+ 
+  conv_biogasoline = list(
+    abs_market_value = 0,
+    weights = c(IVC_EF_FF = 1.000000),
+    dist_feed = list(IVC_EF_FF = c(agriculture = 1.000000))
+  ),
+ 
+  conv_bio_kerosene = list(
+    abs_market_value =  2586377873.39,
+    weights = c(IVC_HT_CC_SAF = 1),
+    dist_feed = list(IVC_HT_CC_SAF = c(agriculture = 1.000000))
+  )
+ 
+)
+ 
+ 
+# ==========================================================
+# FINISHED BIOFUEL IMPORTS / EXPORTS - S2 2040
+# TODO: not present in Providing_sectors.xlsx - fill in from
+# the same source used for S2_imports_2030 / S2_imports_2035.
+# ==========================================================
+ 
+ S2_imports_2040 <- c(
+   conv_biodiesel    = 0,
+   adv_biodiesel     = 0,
+   conv_biogasoline  = 0,
+   adv_biogasoline   = 0,
+   conv_bio_kerosene = 0,
+   adv_bio_kerosene  = 0,
+   adv_bio_hfo       = 0,
+   RFNBOs            = 0,
+   adv_biogas        = 0
+ )
+
+ S2_exports_2040 <-
+   setNames(
+     rep(0, length(BIOFUEL_SECTORS)),
+     names(BIOFUEL_SECTORS)
+   )
+ 
+
+
+####################################################################################
+# SCENARIO 3 - 2040
+#####################################################################################
+ 
+# Derived from the "2040 costs Sc 3" sheet in Providing_sectors.xlsx.
+# Unlike the Sc1/Sc2 sheets, this sheet has NO #REF! errors - every total
+# below was cross-checked against the sheet's own TOTAL row and matches
+# exactly.
+#
+# NOTES:
+#  - adv_bio_hfo: IVC8b has zero production in this scenario (weight = 0),
+#    same treatment as "IVC6 has zero production in S3 2035" elsewhere in
+#    this script. Its cost structure is kept for reference.
+#  - conv_biodiesel/biogasoline/bio-kerosene: ALL conventional biofuel
+#    production is reported as zero in this scenario (matches "technical
+#    capacity = no limitations", i.e. fully advanced-technology buildout).
+#    This is a real zero in the sheet, not a broken formula.
+ 
+S3_2040 <- list(
+ 
+  adv_biodiesel = list(
+    abs_market_value = 18683142916.96,
+ 
+    weights = c(IVC2_HVO = 0.029966, IVC11a_road = 0.587171, IVC13a = 0.382863),
+ 
+    prod_cost = list(IVC2_HVO = 2429.568868, IVC11a_road = 2754.629822, IVC13a = 1616.860538),
+ 
+    alpha = list(
+      IVC2_HVO = c(feed = 0.722585, capex = 0.110719, opex = 0.166696),
+      IVC11a_road = c(feed = 0.128740, capex = 0.524571, opex = 0.346689),
+      IVC13a = c(feed = 0.142165, capex = 0.497878, opex = 0.359957)
+    ),
+ 
+    dist_feed = list(
+      IVC2_HVO = c(agriculture = 0.071728, adv_biodiesel = 0.394515, chemicals = 0.139241, adv_biogasoline = 0.394515),
+      IVC11a_road = c(agriculture = 0.595247, forestry = 0.113460, paper = 0.133678, food_bev = 0.010277, sewerage = 0.022231, adv_biodiesel = 0.062554, adv_biogasoline = 0.062554),
+      IVC13a = c(agriculture = 0.664934, forestry = 0.135759, paper = 0.164764, food_bev = 0.011454, sewerage = 0.023090)
+    )
+  ),
+ 
+  adv_biogasoline = list(
+    abs_market_value = 38064992894.91,
+ 
+    weights = c(IVC5 = 0.233274, IVC12 = 0.195078, IVC13a = 0.187918, IVC13b_road = 0.383730),
+ 
+    prod_cost = list(IVC5 = 1416.756944, IVC12 = 1264.600000, IVC13a = 1616.860538, IVC13b_road = 1758.650937),
+ 
+    alpha = list(
+      IVC5 = c(feed = 0.244048, capex = 0.391740, opex = 0.364212),
+      IVC12 = c(feed = 0.469397, capex = 0.219832, opex = 0.310770),
+      IVC13a = c(feed = 0.142165, capex = 0.497878, opex = 0.359957),
+      IVC13b_road = c(feed = 0.130868, capex = 0.389503, opex = 0.479629)
+    ),
+ 
+    dist_feed = list(
+      IVC5 = c(agriculture = 0.835477, paper = 0.164523),
+      IVC12 = c(adv_biogas = 1.000000),
+      IVC13a = c(agriculture = 0.664934, forestry = 0.135759, paper = 0.164764, food_bev = 0.011454, sewerage = 0.023090, adv_biogas = 0.000000),
+      IVC13b_road = c(agriculture = 0.669358, forestry = 0.133945, paper = 0.162603, food_bev = 0.011290, sewerage = 0.022804, adv_biogas = 0.000000)
+    )
+  ),
+ 
+  adv_biogas = list(
+    abs_market_value = 63252702090.26,
+ 
+    weights = c(IVC7 = 0.668291, IVC9a = 0.331709),
+ 
+    prod_cost = list(IVC7 = 1039.239005, IVC9a = 1399.493213),
+ 
+    alpha = list(
+      IVC7 = c(feed = -0.006025, capex = 0.582157, opex = 0.423868),
+      IVC9a = c(feed = 0.171129, capex = 0.571635, opex = 0.257236)
+    ),
+ 
+    dist_feed = list(
+      IVC7 = c(sewerage = 5.930618, chemicals = -0.256007, food_bev = -0.712993, agriculture = -3.961618),
+      IVC9a = c(agriculture = 0.658746, sewerage = 0.024575, food_bev = 0.011309, forestry = 0.125131, paper = 0.147515, chemicals = 0.000000, adv_biodiesel = 0.016362, adv_biogasoline = 0.016362)
+    )
+  ),
+ 
+  adv_bio_kerosene = list(
+    abs_market_value = 14897702174.79,
+ 
+    weights = c(IVC2_HEFA = 0.279719, IVC11a_SAF = 0.381502, IVC13b_SAF = 0.338779),
+ 
+    prod_cost = list(IVC2_HEFA = 2573.353820, IVC11a_SAF = 3024.905008, IVC13b_SAF = 2221.637832),
+ 
+    alpha = list(
+      IVC2_HEFA = c(feed = 0.633941, capex = 0.146113, opex = 0.219946),
+      IVC11a_SAF = c(feed = 0.206587, capex = 0.477701, opex = 0.315712),
+      IVC13b_SAF = c(feed = 0.311994, capex = 0.308331, opex = 0.379675)
+    ),
+ 
+    dist_feed = list(
+      IVC2_HEFA = c(agriculture = 0.331911, adv_biodiesel = 0.2839, chemicals = 0.1002, adv_biogasoline = 0.2839),
+      IVC11a_SAF = c(agriculture = 0.675598, forestry = 0.128776, paper = 0.151723, sewerage = 0.025232, adv_biodiesel = 0.007008, food_bev = 0.011664, adv_biogasoline = 0.007008),
+      IVC13b_SAF = c(agriculture = 0.690241, forestry = 0.125038, paper = 0.151791, sewerage = 0.021288, food_bev = 0.011642)
+    )
+  ),
+ 
+  adv_bio_hfo = list(
+    abs_market_value = 29319426048.03,
+ 
+    weights = c(IVC8a = 0.916823, IVC8b = 0.000000, IVC13b_mar = 0.083177),
+ 
+    prod_cost = list(IVC8a = 604.827800, IVC8b = 936.000000, IVC13b_mar = 2221.637832),
+ 
+    alpha = list(
+      IVC8a = c(feed = 0.227879, capex = 0.464595, opex = 0.307526),
+      IVC8b = c(feed = 0.459319, capex = 0.270340, opex = 0.098291),
+      IVC13b_mar = c(feed = 0.311994, capex = 0.308331, opex = 0.379675)
+    ),
+ 
+    dist_feed = list(
+      IVC8a = c(agriculture = 0.642308, forestry = 0.122009, paper = 0.143834, sewerage = 0.023961, adv_biodiesel = 0.056862, food_bev = 0.011026, adv_biogasoline = 0.000000),
+      IVC8b = c(adv_biogas = 1.000000),
+      IVC13b_mar = c(agriculture = 0.690241, forestry = 0.125038, paper = 0.151791, food_bev = 0.011642, sewerage = 0.021288)
+    )
+  ),
+ 
+  RFNBOs = list(
+    abs_market_value = 26331716057.67,
+ 
+    weights = c(IVC8c = 0.577244, IVC9b = 0.422756),
+ 
+    prod_cost = list(IVC8c = 377.869686, IVC9b = 1975.564918),
+ 
+    alpha = list(
+      IVC8c = c(feed = 0.772408, capex = 0.150846, opex = 0.076746),
+      IVC9b = c(feed = 0.858775, capex = 0.064792, opex = 0.076434)
+    ),
+ 
+    dist_feed = list(
+      IVC8c = c(chemicals = 1.000000),
+      IVC9b = c(chemicals = 1.000000)
+    )
+  ),
+ 
+  # ========================================================
+  # CONVENTIONAL BIOFUELS
+  # ========================================================
+ 
+  # No conventional biofuel production of any kind is reported in the
+  # "2040 costs Sc 3" workbook (all cells legitimately zero/blank - this is
+  # the "no technical capacity limitations" scenario, i.e. fully advanced).
+ 
+  conv_biodiesel = list(
+    abs_market_value = 0,
+    weights = c(IVC_T_FF = 1.000000),
+    dist_feed = list(IVC_T_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446))
+  ),
+ 
+  conv_biogasoline = list(
+    abs_market_value = 0,
+    weights = c(IVC_EF_FF = 1.000000),
+    dist_feed = list(IVC_EF_FF = c(agriculture = 1.000000))
+  ),
+ 
+  conv_bio_kerosene = list(
+    abs_market_value = 0,
+    weights = c(IVC_HT_CC_SAF = 1.000000),
+    dist_feed = list(IVC_HT_CC_SAF = c(agriculture = 1.000000))
+  )
+ 
+)
+ 
+ 
+# ==========================================================
+# FINISHED BIOFUEL IMPORTS / EXPORTS - S3 2040
+# TODO: not present in Providing_sectors.xlsx - fill in from
+# the same source used for S3_imports_2030 / S3_imports_2035.
+# ==========================================================
+ 
+ S3_imports_2040 <- c(
+   conv_biodiesel    = 0,
+   adv_biodiesel     = 0,
+   conv_biogasoline  = 0,
+   adv_biogasoline   = 0,
+   conv_bio_kerosene = 0,
+   adv_bio_kerosene  = 0,
+   adv_bio_hfo       = 0,
+   RFNBOs            = 0,
+  adv_biogas        = 0
+ )
+
+ S3_exports_2040 <-
+   setNames(
+     rep(0, length(BIOFUEL_SECTORS)),
+     names(BIOFUEL_SECTORS)
+   )
+ 
+
+# ===================================================================
+# BUILD IMPORTED FINAL CONSUMPTION EXPENDITURE VECTOR
+# ===================================================================
+
+build_Y_imp_FCE <- function(import_cfg_eur) {
+  
+  # Start from observed 2023 imported final consumption expenditure
+  Y_imp_FCE_target <- t_f_e_imp
+  
+  # Replace biofuel rows with scenario-specific finished-fuel imports
+  for (fuel_name in names(import_cfg_eur)) {
+    
+    if (!fuel_name %in% names(BIOFUEL_SECTORS)) {
+      stop(
+        paste(
+          "Unknown biofuel in import configuration:",
+          fuel_name
+        )
+      )
+    }
+    
+    sector_idx <- BIOFUEL_SECTORS[[fuel_name]]
+    
+    Y_imp_FCE_target[sector_idx] <-
+      import_cfg_eur[[fuel_name]] /
+      SCENARIO_EUR_TO_IO_UNIT
+  }
+  
+  Y_imp_FCE_target
+}
+
+# ===================================================================
+# BUILD BIOFUEL EXPORT VECTOR
+# ===================================================================
+
+build_exports <- function(
+    export_cfg_eur,
+    base_exports
+) {
+
+  # Keep non-biofuel exports at observed 2023 values
+  exports_target <- base_exports
+
+  # Replace only biofuel exports with scenario assumptions
+  for (fuel_name in names(export_cfg_eur)) {
+
+    if (!fuel_name %in% names(BIOFUEL_SECTORS)) {
+      stop(
+        paste(
+          "Unknown biofuel in export configuration:",
+          fuel_name
+        )
+      )
+    }
+
+    sector_idx <- BIOFUEL_SECTORS[[fuel_name]]
+
+    exports_target[sector_idx] <-
+      export_cfg_eur[[fuel_name]] /
+      SCENARIO_EUR_TO_IO_UNIT
+  }
+
+  exports_target
+}
+
+
+
+
+
+
+
+
+# ===================================================================
+# 6. BUILD EXOGENOUS TARGET CONDITIONS FOR ONE SCENARIO
+# ===================================================================
+
+build_endpoint <- function(
+    scenario_cfg,
+    import_cfg_eur,
+    export_cfg_eur
+) {
+  
+  
+  # Biofuel sectors
+  BIO <- unname(BIOFUEL_SECTORS)
+  
+  
+  # ---------------------------------------------------------------
+  # 6.1. START FROM 2023 TECHNICAL COEFFICIENTS
+  # ---------------------------------------------------------------
+  
+  # Non-biofuel technology remains at its 2023 Eurostat structure.
+  # Biofuel columns are replaced below where scenario assumptions exist.
+  
+A_dom_target <-
+  BASE_2023$A_dom
+
+A_imp_target <-
+  BASE_2023$A_imp
+  
+  # ---------------------------------------------------------------
+  # 6.2. EXOGENOUS DOMESTIC BIOFUEL OUTPUT
+  # ---------------------------------------------------------------
+  
+  # Start from observed 2023 domestic output of the biofuel sectors.
+  # Scenario-specific biofuel sectors are replaced below.
+  
+ X_bio_target <-
+  BASE_2023$X_fuel[BIO]
+  
+  
+  # ---------------------------------------------------------------
+  # 6.3. EXOGENOUS IMPORTS OF FINISHED BIOFUELS
+  # ---------------------------------------------------------------
+  
+  Y_imp_FCE_target <-
+    build_Y_imp_FCE(import_cfg_eur)
+# ---------------------------------------------------------------
+# EXOGENOUS BIOFUEL EXPORTS
+# ---------------------------------------------------------------
+
+exports_target <-
+  build_exports(
+    export_cfg_eur,
+    BASE_2023$exports
+  )
+ # ---------------------------------------------------------------
+  # 6.4.DERIVED GATE-FEE REVENUE COEFFICIENT --> NOT an independent sceanrio assumption; but derived form the scenario-specific  IVC technology mix
+  # ---------------------------------------------------------------
+# Gate-fee revenue coefficient per unit of sector output.
+# Zero for sectors without such revenues.
+
+gate_fee_coeff_target <-
+  numeric(nIndustries)
+  
+  
+  # ---------------------------------------------------------------
+  # 6.4. APPLY SCENARIO-SPECIFIC BIOFUEL ASSUMPTIONS
+  # ---------------------------------------------------------------
+  
+  for (fuel_name in names(scenario_cfg)) {
+    
+    if (!fuel_name %in% names(BIOFUEL_SECTORS)) next
+    
+    
+    target_col <- BIOFUEL_SECTORS[[fuel_name]]
+    fuel_cfg   <- scenario_cfg[[fuel_name]]
+
+sourcing_group <-
+  FUEL_TECH_GROUP[[fuel_name]]
+
+if (is.null(sourcing_group)) {
+  stop(
+    paste(
+      "No sourcing group defined for",
+      fuel_name
+    )
+  )
+}
+    
+    # -------------------------------------------------------------
+    # 6.4a. EXOGENOUS DOMESTIC BIOFUEL OUTPUT
+    # -------------------------------------------------------------
+    
+    X_bio_target[
+      match(target_col, BIO)
+    ] <-
+      fuel_cfg$abs_market_value /
+      SCENARIO_EUR_TO_IO_UNIT
+    
+    
+    # -------------------------------------------------------------
+    # 6.4b. SCENARIO-SPECIFIC BIOFUEL OPERATING TECHNOLOGY
+    # -------------------------------------------------------------
+    # build_fuel_column() now returns feedstock + OPEX only.
+    # CAPEX is not inserted into A_dom_target / A_imp_target.
+    # -------------------------------------------------------------
+    
+ res_fuel <-
+  build_fuel_column(
+    fuel_cfg = fuel_cfg,
+    sourcing_group = sourcing_group
+  )
+    
+    gate_fee_coeff_target[target_col] <-
+  res_fuel$gate_fee_coeff
+
+    # Replace the old Eurostat technology column for this biofuel.
+    A_dom_target[, target_col] <- 0
+    A_imp_target[, target_col] <- 0
+    
+    
+    # Domestic intermediate input coefficients
+    for (sec_name in names(res_fuel$a_dom)) {
+      
+      if (sec_name %in% names(INPUT_SECTORS)) {
+        
+        row_idx <- INPUT_SECTORS[[sec_name]]
+        
+        A_dom_target[row_idx, target_col] <-
+          res_fuel$a_dom[[sec_name]]
+      }
+    }
+    
+    
+    # Imported intermediate input coefficients
+    for (imp_sec in names(res_fuel$a_imp)) {
+      
+      clean_sec <- gsub("_imp$", "", imp_sec)
+      
+      if (clean_sec %in% names(INPUT_SECTORS)) {
+        
+        row_idx <- INPUT_SECTORS[[clean_sec]]
+        
+        A_imp_target[row_idx, target_col] <-
+          res_fuel$a_imp[[imp_sec]]
+      }
+    }
+  }
+  
+  
+  # ---------------------------------------------------------------
+  # 6.5. RETURN EXOGENOUS TARGET CONDITIONS ONLY
+  # ---------------------------------------------------------------
+  
+  # X for NONBIO sectors, Z_dom, Z_imp, Y_dom, P2_ADJ and GVA are
+  # NOT calculated here. They are endogenous outcomes calculated
+  # annually in run_dynamic_scenario().
+  
+  list(
+    A_dom = A_dom_target,
+    A_imp = A_imp_target,
+    X_bio = X_bio_target,
+    Y_imp_FCE = Y_imp_FCE_target,
+    exports = exports_target,
+    gate_fee_coeff = gate_fee_coeff_target
+  )
+}
+
+
+# ===================================================================
+# 7. Common 2023 starting point derived from IOT
+# ===================================================================
+
+# Sector indices for gate-fee treatment
+ADV_BIOGAS <-
+  BIOFUEL_SECTORS[["adv_biogas"]]
+
+SEWERAGE <-
+  INPUT_SECTORS[["sewerage"]]
+
+# -------------------------------------------------------------------
+# Observed 2023 quantities
+# -------------------------------------------------------------------
+
+X_BASE_2023 <- q_s_dom
+
+Z_dom_BASE_2023 <- Z_dom
+Z_imp_BASE_2023 <- Z_imp
+
+
+exports_BASE_2023 <- as.numeric(
+  unlist(
+    IO_EU_domestic[
+      2:(nIndustries + 1),
+      nIndustries + 9
+    ]
+  )
+)
+
+
+
+# -------------------------------------------------------------------
+# Observed 2023 gate-fee revenue
+# -------------------------------------------------------------------
+
+gate_fee_revenue_BASE_2023 <-
+  Z_dom_BASE_2023[
+    ADV_BIOGAS,
+    SEWERAGE
+  ]
+
+
+# Fuel market value excludes gate-fee revenue.
+# Total observed output X_BASE_2023 includes it.
+X_fuel_BASE_2023 <-
+  X_BASE_2023
+
+X_fuel_BASE_2023[ADV_BIOGAS] <-
+  X_BASE_2023[ADV_BIOGAS] -
+  gate_fee_revenue_BASE_2023
+
+
+# -------------------------------------------------------------------
+# 2023 technical coefficients
+# -------------------------------------------------------------------
+
+# These are the actual monetary IO coefficients:
+# A_IO = Z / total accounting output X.
+# They therefore remain fully consistent with observed Z and X.
+# -------------------------------------------------------------------
+# Actual monetary 2023 IO coefficients
+# -------------------------------------------------------------------
+# These are based on total accounting output X and therefore satisfy:
+# Z = A_IO %*% diag(X)
+
+A_dom_IO_BASE_2023 <- A_dom
+A_imp_IO_BASE_2023 <- A_imp
+
+
+# -------------------------------------------------------------------
+# 2023 technology coefficients
+# -------------------------------------------------------------------
+# These are used to generate technical intermediate requirements.
+# For advanced biogas they are expressed per unit of fuel market value,
+# excluding gate-fee revenue.
+
+A_dom_BASE_2023 <- A_dom
+A_imp_BASE_2023 <- A_imp
+
+# For advanced biogas, technical coefficients must be expressed
+# per unit of fuel market value, excluding gate-fee revenue.
+A_dom_BASE_2023[, ADV_BIOGAS] <-
+  Z_dom_BASE_2023[, ADV_BIOGAS] /
+  X_fuel_BASE_2023[ADV_BIOGAS]
+
+A_imp_BASE_2023[, ADV_BIOGAS] <-
+  Z_imp_BASE_2023[, ADV_BIOGAS] /
+  X_fuel_BASE_2023[ADV_BIOGAS]
+
+# Gate-fee transaction is monetary accounting,
+# not a Leontief technical coefficient.
+A_dom_BASE_2023[
+  ADV_BIOGAS,
+  SEWERAGE
+] <- 0
+
+
+# -------------------------------------------------------------------
+# Observed 2023 gate-fee coefficient
+# -------------------------------------------------------------------
+
+gate_fee_coeff_BASE_2023 <-
+  numeric(nIndustries)
+
+if (X_fuel_BASE_2023[ADV_BIOGAS] != 0) {
+
+  gate_fee_coeff_BASE_2023[ADV_BIOGAS] <-
+    gate_fee_revenue_BASE_2023 /
+    X_fuel_BASE_2023[ADV_BIOGAS]
+}
+
+
+
+
+# -------------------------------------------------------------------
+# Remaining 2023 accounting quantities
+# -------------------------------------------------------------------
+
+tax_products_BASE_2023 <-
+  tax_products_2023
+
+Y_dom_BASE_2023 <-
+  X_BASE_2023 -
+  rowSums(Z_dom_BASE_2023)
+
+Y_domestic_final_BASE_2023 <-
+  Y_dom_BASE_2023 -
+  exports_BASE_2023
+
+P2_ADJ_BASE_2023 <-
+  colSums(Z_dom_BASE_2023) +
+  colSums(Z_imp_BASE_2023) +
+  tax_products_BASE_2023
+
+GVA_BASE_2023 <-
+  X_BASE_2023 -
+  P2_ADJ_BASE_2023
+
+
+# Leontief inverse based on the actual monetary IO coefficient matrix
+L_dom_BASE_2023 <-
+  solve(
+    base::diag(nIndustries) -
+      A_dom_IO_BASE_2023
+  )
+
+
+
+# -------------------------------------------------------------------
+# Collect 2023 baseline
+# -------------------------------------------------------------------
+
+BASE_2023 <- list(
+
+  A_dom = A_dom_BASE_2023,
+  A_imp = A_imp_BASE_2023,
+
+  # Actual monetary IO coefficients, consistent with observed Z and X
+  A_dom_IO = A_dom_IO_BASE_2023,
+  A_imp_IO = A_imp_IO_BASE_2023,
+
+  X = X_BASE_2023,
+  X_fuel = X_fuel_BASE_2023,
+
+  # Observed Z still contains the 2023 gate-fee transaction.
+  Z_dom = Z_dom_BASE_2023,
+  Z_imp = Z_imp_BASE_2023,
+
+  tax_products = tax_products_BASE_2023,
+  P2_ADJ = P2_ADJ_BASE_2023,
+  GVA = GVA_BASE_2023,
+
+  Y_dom = Y_dom_BASE_2023,
+  L_dom = L_dom_BASE_2023,
+
+  gate_fee_coeff = gate_fee_coeff_BASE_2023,
+
+  Y_imp_FCE = t_f_e_imp,
+  exports = exports_BASE_2023
+)
+
+# ===================================================================
+# NEW 7A:  REFERENCE SCENARIO: 2023 -> 2030
+# ===================================================================
+# Purpose:
+# - BASE_2023 is the observed starting point.
+# - REF represents a no-biofuel-shock reference path.
+# - For now, there is no autonomous growth and no SFC feedback yet.
+# - 2023 biofuel production, technologies and finished imports are kept.
+# - The SFC behavioral dynamics will be added later to this reference path.
+# ===================================================================
+
+
+# ===================================================================
+# a) DECOMPOSE 2023 DOMESTIC FINAL DEMAND
+# ===================================================================
+
+# Household + NPISH consumption
+C_dom_BASE_2023 <-
+  consumption_dom
+
+# Government consumption
+G_dom_BASE_2023 <-
+  g_dom
+
+# Remaining final demand:
+# investment, exports, inventories, etc.
+OTHER_dom_BASE_2023 <-
+  BASE_2023$Y_dom -
+  C_dom_BASE_2023 -
+  G_dom_BASE_2023
+
+
+# Check that the decomposition exactly reproduces 2023 final demand
+stopifnot(
+  isTRUE(
+    all.equal(
+      BASE_2023$Y_dom,
+      C_dom_BASE_2023 +
+        G_dom_BASE_2023 +
+        OTHER_dom_BASE_2023
+    )
+  )
+)
+
+
+
+# ===================================================================
+# 8. BUILD EXOGENOUS SCENARIO ENDPOINTS
+# ===================================================================
+
+# These endpoints contain ONLY the exogenous scenario conditions:
+#
+# - A_dom      technical coefficients for recurrent domestic inputs
+# - A_imp      technical coefficients for recurrent imported inputs
+# - X_bio      domestic biofuel output
+# - Y_imp_FCE  imported finished biofuels
+#
+# CAPEX is excluded from A_dom and A_imp.
+#
+# X_NONBIO, total X, Z_dom, Z_imp, Y_dom, P2_ADJ, GVA and L_dom
+# are calculated endogenously later in run_dynamic_scenario().
+
+S1_endpoint_2030 <- build_endpoint(
+  scenario_cfg = S1_2030,
+  import_cfg_eur = S1_imports_2030,
+  export_cfg_eur = S1_exports_2030
+)
+
+S2_endpoint_2030 <- build_endpoint(
+  scenario_cfg = S2_2030,
+  import_cfg_eur = S2_imports_2030,
+  export_cfg_eur = S2_exports_2030
+)
+
+S3_endpoint_2030 <- build_endpoint(
+  scenario_cfg = S3_2030,
+  import_cfg_eur = S3_imports_2030,
+  export_cfg_eur = S3_exports_2030
+)
+
+S1_endpoint_2035 <- build_endpoint(
+  scenario_cfg   = S1_2035,
+  import_cfg_eur = S1_imports_2035,
+  export_cfg_eur = S1_exports_2035
+)
+
+S2_endpoint_2035 <- build_endpoint(
+  scenario_cfg   = S2_2035,
+  import_cfg_eur = S2_imports_2035,
+  export_cfg_eur = S2_exports_2035
+)
+
+S3_endpoint_2035 <- build_endpoint(
+  scenario_cfg   = S3_2035,
+  import_cfg_eur = S3_imports_2035,
+  export_cfg_eur = S3_exports_2035
+)
+
+S1_endpoint_2040 <- build_endpoint(
+  scenario_cfg   = S1_2040,
+  import_cfg_eur = S1_imports_2040,
+  export_cfg_eur = S1_exports_2040
+)
+
+S2_endpoint_2040 <- build_endpoint(
+  scenario_cfg   = S2_2040,
+  import_cfg_eur = S2_imports_2040,
+  export_cfg_eur = S2_exports_2040
+)
+
+S3_endpoint_2040 <- build_endpoint(
+  scenario_cfg   = S3_2040,
+  import_cfg_eur = S3_imports_2040,
+  export_cfg_eur = S3_exports_2040
+)
+
+
+
+
+# ===================================================================
+# 9. CHECK EXOGENOUS SCENARIO ENDPOINTS
+# ===================================================================
+
+BIO <- unname(BIOFUEL_SECTORS)
+
+
+check_endpoint <- function(endpoint) {
+
+  stopifnot(
+    all(dim(endpoint$A_dom) == c(nIndustries, nIndustries)),
+    all(dim(endpoint$A_imp) == c(nIndustries, nIndustries)),
+    length(endpoint$X_bio) == length(BIO),
+    length(endpoint$Y_imp_FCE) == nIndustries,
+    length(endpoint$exports) == nIndustries,
+    length(endpoint$gate_fee_coeff) == nIndustries,
+
+    !anyNA(endpoint$A_dom),
+    !anyNA(endpoint$A_imp),
+    !anyNA(endpoint$X_bio),
+    !anyNA(endpoint$Y_imp_FCE),
+    !anyNA(endpoint$exports),
+    !anyNA(endpoint$gate_fee_coeff),
+
+    all(endpoint$gate_fee_coeff >= 0)
+  )
+}
+
+check_endpoint(S1_endpoint_2030)
+check_endpoint(S1_endpoint_2035)
+check_endpoint(S1_endpoint_2040)
+
+check_endpoint(S2_endpoint_2030)
+check_endpoint(S2_endpoint_2035)
+check_endpoint(S2_endpoint_2040)
+
+check_endpoint(S3_endpoint_2030)
+check_endpoint(S3_endpoint_2035)
+check_endpoint(S3_endpoint_2040)
+
+
+############################################################################################################################################################
+#######  build linear development between 2023 and the three 2030 endpoints - fix only Aimp, Adom and X(BIO) --> build annual EGOGENOUS scenario drivers####
+############################################################################################################################################################
+####### note Y(NONBIO) and Zdom and Zimp are NOT calculated here, since thery are endoegenously calculated in the loop  ####################################
+############################################################################################################################################################
+
+
+
+build_scenario_driver <- function(
+    start_endpoint,
+    end_endpoint,
+    start_year,
+    end_year
+) {
+
+  BIO <- unname(BIOFUEL_SECTORS)
+
+  years <- start_year:end_year
+  n_years <- length(years)
+
+
+  # ---------------------------------------------------------------
+  # Storage
+  # ---------------------------------------------------------------
+
+  A_dom_path <- array(
+    NA_real_,
+    dim = c(n_years, nIndustries, nIndustries),
+    dimnames = list(
+      year = as.character(years),
+      input_sector = NULL,
+      output_sector = NULL
+    )
+  )
+
+  A_imp_path <- array(
+    NA_real_,
+    dim = c(n_years, nIndustries, nIndustries),
+    dimnames = list(
+      year = as.character(years),
+      input_sector = NULL,
+      output_sector = NULL
+    )
+  )
+
+  # Only BIO output is exogenously prescribed
+  X_bio_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  # Imported finished fuels
+  Y_imp_FCE_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+exports_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
+
+# Derived gate-fee revenue coefficient
+# (not an independent scenario assumption)
+gate_fee_coeff_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
+
+
+
+# ---------------------------------------------------------------
+  # BIO OUTPUT AT START AND END POINT
+  # ---------------------------------------------------------------
+
+  # BASE_2023 stores the complete 73-sector output vector as $X.
+  # Scenario endpoints store only exogenous biofuel output as $X_bio.
+
+ X_bio_start <-
+  if (!is.null(start_endpoint$X_bio)) {
+
+    start_endpoint$X_bio
+
+  } else if (!is.null(start_endpoint$X_fuel)) {
+
+    start_endpoint$X_fuel[BIO]
+
+  } else {
+
+    start_endpoint$X[BIO]
+  }
+
+ X_bio_end <-
+  if (!is.null(end_endpoint$X_bio)) {
+
+    end_endpoint$X_bio
+
+  } else if (!is.null(end_endpoint$X_fuel)) {
+
+    end_endpoint$X_fuel[BIO]
+
+  } else {
+
+    end_endpoint$X[BIO]
+  }
+
+exports_start <- start_endpoint$exports
+exports_end   <- end_endpoint$exports
+
+  gate_fee_coeff_start <-
+    start_endpoint$gate_fee_coeff
+
+  gate_fee_coeff_end <-
+    end_endpoint$gate_fee_coeff
+
+
+  # ---------------------------------------------------------------
+  # Annual interpolation
+  # ---------------------------------------------------------------
+
+  for (i in seq_along(years)) {
+
+    current_year <- years[i]
+
+    lambda <-
+      (current_year - start_year) /
+      (end_year - start_year)
+
+
+    # -------------------------------------------------------------
+    # A MATRICES
+    #
+    # Keep all NONBIO technology coefficients at their 2023 values.
+    # Only the BIO columns evolve towards the scenario endpoint.
+    # -------------------------------------------------------------
+
+    A_dom_current <- start_endpoint$A_dom
+    A_imp_current <- start_endpoint$A_imp
+
+    A_dom_current[, BIO] <-                              ### here, also technical coeffcicinets of BIO sectors are modified, meaning that NONBIO sectors' Adom and Aimp is kept constant
+      start_endpoint$A_dom[, BIO, drop = FALSE] +
+      lambda * (
+        end_endpoint$A_dom[, BIO, drop = FALSE] -
+          start_endpoint$A_dom[, BIO, drop = FALSE]
+      )
+
+    A_imp_current[, BIO] <-
+      start_endpoint$A_imp[, BIO, drop = FALSE] +
+      lambda * (
+        end_endpoint$A_imp[, BIO, drop = FALSE] -
+          start_endpoint$A_imp[, BIO, drop = FALSE]
+      )
+
+
+    # -------------------------------------------------------------
+    # DOMESTIC BIOFUEL OUTPUT - exogeneously set
+    # -------------------------------------------------------------
+
+    X_bio_current <- rep(NA_real_, nIndustries)
+
+    X_bio_current[BIO] <-
+      X_bio_start +
+      lambda * (
+        X_bio_end -
+          X_bio_start
+      )
+
+    # -------------------------------------------------------------
+    # FINISHED BIOFUEL IMPORTS
+    #
+    # Non-biofuel imported final expenditure stays at 2023.
+    # Only the biofuel rows change towards the scenario target.
+    # -------------------------------------------------------------
+
+    Y_imp_FCE_current <-
+      start_endpoint$Y_imp_FCE
+
+    Y_imp_FCE_current[BIO] <-
+      start_endpoint$Y_imp_FCE[BIO] +
+      lambda * (
+        end_endpoint$Y_imp_FCE[BIO] -
+          start_endpoint$Y_imp_FCE[BIO]
+      )
+
+exports_current <-
+  exports_start +
+  lambda * (
+    exports_end -
+    exports_start
+  )
+
+
+gate_fee_coeff_current <-
+  gate_fee_coeff_start +
+  lambda * (
+    gate_fee_coeff_end -
+      gate_fee_coeff_start
+  )
+
+    # -------------------------------------------------------------
+    # Store
+    # -------------------------------------------------------------
+
+    A_dom_path[i, , ] <- A_dom_current
+    A_imp_path[i, , ] <- A_imp_current
+
+    X_bio_path[i, ] <- X_bio_current
+
+    Y_imp_FCE_path[i, ] <-
+      Y_imp_FCE_current
+
+exports_path[i, ] <- exports_current
+gate_fee_coeff_path[i, ] <-
+  gate_fee_coeff_current
+  }
+
+
+  # ---------------------------------------------------------------
+  # Return
+  # ---------------------------------------------------------------
+
+  list(
+    years = years,
+
+    A_dom = A_dom_path,
+    A_imp = A_imp_path,
+
+    X_bio = X_bio_path,
+
+    Y_imp_FCE = Y_imp_FCE_path,
+
+    exports = exports_path,
+  
+    gate_fee_coeff = gate_fee_coeff_path
+  )
+}
+
+
+# ===================================================================
+# 11. BUILD PATHWAYS BRIDGING THE YEARS - INTERPOLATION WITH THREE FIXED ENDPOINTS
+# ===================================================================
+
+# ===================================================================
+# SCENARIO 1: PIECEWISE EXOGENOUS PATH
+# 2023 -> 2030 -> 2035 -> 2040
+# ===================================================================
+
+S1_driver_2023_2030 <- build_scenario_driver(
+  start_endpoint = BASE_2023,
+  end_endpoint   = S1_endpoint_2030,
+  start_year     = 2023,
+  end_year       = 2030
+)
+
+S1_driver_2030_2035 <- build_scenario_driver(
+  start_endpoint = S1_endpoint_2030,
+  end_endpoint   = S1_endpoint_2035,
+  start_year     = 2030,
+  end_year       = 2035
+)
+
+S1_driver_2035_2040 <- build_scenario_driver(
+  start_endpoint = S1_endpoint_2035,
+  end_endpoint   = S1_endpoint_2040,
+  start_year     = 2035,
+  end_year       = 2040
+)
+
+# ===================================================================
+# SCENARIO 2: PIECEWISE EXOGENOUS PATH
+# 2023 -> 2030 -> 2035 -> 2040
+# ===================================================================
+
+S2_driver_2023_2030 <- build_scenario_driver(
+  start_endpoint = BASE_2023,
+  end_endpoint   = S2_endpoint_2030,
+  start_year     = 2023,
+  end_year       = 2030
+)
+
+S2_driver_2030_2035 <- build_scenario_driver(
+  start_endpoint = S2_endpoint_2030,
+  end_endpoint   = S2_endpoint_2035,
+  start_year     = 2030,
+  end_year       = 2035
+)
+
+S2_driver_2035_2040 <- build_scenario_driver(
+  start_endpoint = S2_endpoint_2035,
+  end_endpoint   = S2_endpoint_2040,
+  start_year     = 2035,
+  end_year       = 2040
+)
+
+
+# ===================================================================
+# SCENARIO 3: PIECEWISE EXOGENOUS PATH
+# 2023 -> 2030 -> 2035 -> 2040
+# ===================================================================
+
+S3_driver_2023_2030 <- build_scenario_driver(
+  start_endpoint = BASE_2023,
+  end_endpoint   = S3_endpoint_2030,
+  start_year     = 2023,
+  end_year       = 2030
+)
+
+S3_driver_2030_2035 <- build_scenario_driver(
+  start_endpoint = S3_endpoint_2030,
+  end_endpoint   = S3_endpoint_2035,
+  start_year     = 2030,
+  end_year       = 2035
+)
+
+S3_driver_2035_2040 <- build_scenario_driver(
+  start_endpoint = S3_endpoint_2035,
+  end_endpoint   = S3_endpoint_2040,
+  start_year     = 2035,
+  end_year       = 2040
+)
+
+
+# ===================================================================
+# COMBINE CONSECUTIVE SCENARIO-DRIVER SEGMENTS
+# ===================================================================
+
+combine_scenario_drivers <- function(...) {
+
+  drivers <- list(...)
+
+  if (length(drivers) == 0) {
+    stop("No scenario drivers supplied.")
+  }
+
+  out <- drivers[[1]]
+
+  if (length(drivers) == 1) {
+    return(out)
+  }
+
+  for (k in 2:length(drivers)) {
+
+    d <- drivers[[k]]
+
+    # Skip first observation because it duplicates
+    # the previous segment's endpoint
+    keep <- 2:length(d$years)
+
+    old_n <- length(out$years)
+    new_n <- length(keep)
+
+    combined_years <-
+      c(
+        out$years,
+        d$years[keep]
+      )
+
+
+    # ------------------------------------------------------------
+    # A_dom
+    # ------------------------------------------------------------
+
+    A_dom_new <-
+      array(
+        NA_real_,
+        dim = c(
+          old_n + new_n,
+          nIndustries,
+          nIndustries
+        )
+      )
+
+    A_dom_new[1:old_n, , ] <- out$A_dom
+
+    A_dom_new[
+      (old_n + 1):(old_n + new_n),
+      ,
+    ] <-
+      d$A_dom[keep, , , drop = FALSE]
+
+
+    # ------------------------------------------------------------
+    # A_imp
+    # ------------------------------------------------------------
+
+    A_imp_new <-
+      array(
+        NA_real_,
+        dim = c(
+          old_n + new_n,
+          nIndustries,
+          nIndustries
+        )
+      )
+
+    A_imp_new[1:old_n, , ] <- out$A_imp
+
+    A_imp_new[
+      (old_n + 1):(old_n + new_n),
+      ,
+    ] <-
+      d$A_imp[keep, , , drop = FALSE]
+
+
+    # ------------------------------------------------------------
+    # Remaining matrices
+    # ------------------------------------------------------------
+
+    out$X_bio <-
+      rbind(
+        out$X_bio,
+        d$X_bio[keep, , drop = FALSE]
+      )
+
+    out$Y_imp_FCE <-
+      rbind(
+        out$Y_imp_FCE,
+        d$Y_imp_FCE[keep, , drop = FALSE]
+      )
+
+    out$exports <-
+      rbind(
+        out$exports,
+        d$exports[keep, , drop = FALSE]
+      )
+
+    out$gate_fee_coeff <-
+      rbind(
+        out$gate_fee_coeff,
+        d$gate_fee_coeff[keep, , drop = FALSE]
+      )
+
+
+    out$years <- combined_years
+    out$A_dom <- A_dom_new
+    out$A_imp <- A_imp_new
+  }
+
+
+  # ------------------------------------------------------------
+  # Restore year names
+  # ------------------------------------------------------------
+
+  dimnames(out$A_dom) <- list(
+    year = as.character(out$years),
+    input_sector = NULL,
+    output_sector = NULL
+  )
+
+  dimnames(out$A_imp) <- list(
+    year = as.character(out$years),
+    input_sector = NULL,
+    output_sector = NULL
+  )
+
+  rownames(out$X_bio) <-
+    as.character(out$years)
+
+  rownames(out$Y_imp_FCE) <-
+    as.character(out$years)
+
+  rownames(out$exports) <-
+    as.character(out$years)
+
+  rownames(out$gate_fee_coeff) <-
+    as.character(out$years)
+
+
+  out
+}
+
+
+
+# ===================================================================
+# CREATE ONE COMPLETE DRIVER FOR EACH SCENARIO
+# ===================================================================
+
+
+S1_driver_2023_2040 <-
+  combine_scenario_drivers(
+    S1_driver_2023_2030,
+    S1_driver_2030_2035,
+    S1_driver_2035_2040
+  )
+
+S2_driver_2023_2040 <-
+  combine_scenario_drivers(
+    S2_driver_2023_2030,
+    S2_driver_2030_2035,
+    S2_driver_2035_2040
+  )
+
+S3_driver_2023_2040 <-
+  combine_scenario_drivers(
+    S3_driver_2023_2030,
+    S3_driver_2030_2035,
+    S3_driver_2035_2040
+  )
+
+REF_driver_2023_2040 <-                  ### stationary base line scenario/ counterfactional
+  build_scenario_driver(
+    start_endpoint = BASE_2023,
+    end_endpoint   = BASE_2023,
+    start_year     = 2023,
+    end_year       = 2040
+  )
+
+stopifnot(
+  identical(S1_driver_2023_2040$years, 2023:2040),
+  identical(S2_driver_2023_2040$years, 2023:2040),
+  identical(S3_driver_2023_2040$years, 2023:2040),
+  identical(REF_driver_2023_2040$years, 2023:2040)
+)
+
+
+############################################################################################################################################################
+#### this is the ONE common annual simulatio used for all scenarios --> the scenario driver provides the exoegnous BIO assumptions, the model calculates the engoengousr esponse of NONBIO sectors
+############################################################################################################################################################
+
+run_dynamic_scenario <- function(scenario_driver) {
+
+  BIO <- unname(BIOFUEL_SECTORS)
+
+  NONBIO <- setdiff(
+    seq_len(nIndustries),
+    BIO
+  )
+
+  years <- scenario_driver$years
+  n_years <- length(years)
+
+
+# =================================================================
+  # STORAGE
+  # =================================================================
+
+# Actual monetary IO coefficient matrices.
+# These are derived annually from the final Z and total accounting X,
+# so that A_IO = Z / X always holds.
+
+A_dom_IO_path <- array(
+  NA_real_,
+  dim = c(n_years, nIndustries, nIndustries),
+  dimnames = list(
+    year = as.character(years),
+    input_sector = NULL,
+    output_sector = NULL
+  )
+)
+
+A_imp_IO_path <- array(
+  NA_real_,
+  dim = c(n_years, nIndustries, nIndustries),
+  dimnames = list(
+    year = as.character(years),
+    input_sector = NULL,
+    output_sector = NULL
+  )
+)
+
+  X_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  Y_dom_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  Z_dom_path <- array(
+    NA_real_,
+    dim = c(n_years, nIndustries, nIndustries),
+    dimnames = list(
+      year = as.character(years),
+      input_sector = NULL,
+      output_sector = NULL
+    )
+  )
+
+  Z_imp_path <- array(
+    NA_real_,
+    dim = c(n_years, nIndustries, nIndustries),
+    dimnames = list(
+      year = as.character(years),
+      input_sector = NULL,
+      output_sector = NULL
+    )
+  )
+
+  tax_products_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  P2_ADJ_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  GVA_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  L_dom_path <- array(
+    NA_real_,
+    dim = c(n_years, nIndustries, nIndustries),
+    dimnames = list(
+      year = as.character(years),
+      input_sector = NULL,
+      output_sector = NULL
+    )
+  )
+
+  Y_imp_FCE_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+# Gate-fee revenue by sector
+gate_fee_revenue_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
+
+exports_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
+
+Y_domestic_final_path <- matrix(
+  NA_real_,
+  nrow = n_years,
+  ncol = nIndustries,
+  dimnames = list(
+    year = as.character(years),
+    sector = NULL
+  )
+)
+
+
+# Household and government demand are stored separately
+  # because these will later become part of the SFC dynamics.
+
+  C_dom_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  G_dom_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+# =================================================================
+  # 2023 INITIAL CONDITION
+  # =================================================================
+  #
+  # Do NOT solve 2023 again.
+  # It is the observed empirical starting point.
+  # =================================================================
+
+A_dom_IO_path[1, , ] <-
+  BASE_2023$A_dom_IO
+
+A_imp_IO_path[1, , ] <-
+  BASE_2023$A_imp_IO 
+
+X_path[1, ] <-
+    BASE_2023$X
+
+  Y_dom_path[1, ] <-
+    BASE_2023$Y_dom
+
+exports_path[1, ] <-
+  scenario_driver$exports[1, ]
+
+Y_domestic_final_path[1, ] <-
+  BASE_2023$Y_dom -
+  exports_path[1, ]
+
+  Z_dom_path[1, , ] <-
+    BASE_2023$Z_dom
+
+  Z_imp_path[1, , ] <-
+    BASE_2023$Z_imp
+
+  tax_products_path[1, ] <-
+    BASE_2023$tax_products
+
+  P2_ADJ_path[1, ] <-
+    BASE_2023$P2_ADJ
+
+  GVA_path[1, ] <-
+    BASE_2023$GVA
+
+  L_dom_path[1, , ] <-
+    BASE_2023$L_dom
+
+  Y_imp_FCE_path[1, ] <-
+    BASE_2023$Y_imp_FCE
+
+  C_dom_path[1, ] <-
+    C_dom_BASE_2023
+
+  G_dom_path[1, ] <-
+    G_dom_BASE_2023
+
+gate_fee_revenue_path[1, ] <-
+  BASE_2023$gate_fee_coeff *
+  BASE_2023$X_fuel
+
+
+  # =================================================================
+  # ANNUAL DYNAMIC LOOP
+  # =================================================================
+
+  for (i in 2:n_years) {
+
+    current_year <- years[i]
+
+    cat(
+      "Simulating year:",
+      current_year,
+      "\n"
+    )
+
+
+    # ===============================================================
+    # READ EXOGENOUS SCENARIO CONDITIONS FOR THIS YEAR
+    # ===============================================================
+
+    A_dom_tech_current <-
+  scenario_driver$A_dom[
+    i,
+    ,
+  ]
+
+A_imp_tech_current <-
+  scenario_driver$A_imp[
+    i,
+    ,
+  ]
+
+    X_bio_current <-
+      scenario_driver$X_bio[
+        i,
+        BIO
+      ]
+
+    Y_imp_FCE_current <-
+      scenario_driver$Y_imp_FCE[
+        i,
+      ]
+
+gate_fee_coeff_current <-
+  scenario_driver$gate_fee_coeff[
+    i,
+  ]
+
+
+    # ===============================================================
+    # SFC BEHAVIOURAL BLOCK
+    # ===============================================================
+    #
+    # CURRENT VERSION:
+    # household and government consumption are fixed at 2023.
+    #
+    # THIS is the precise place where the SFC feedback will later be:
+    #
+    # previous/current output
+    #       -> employment
+    #       -> wages
+    #       -> disposable income
+    #       -> household consumption
+    #       -> final demand
+    #
+    # ===============================================================
+
+    C_dom_current <-
+      C_dom_BASE_2023
+
+    G_dom_current <-
+      G_dom_BASE_2023
+
+    OTHER_dom_current <-
+      OTHER_dom_BASE_2023
+
+
+    # ===============================================================
+    # 3. NON-BIOFUEL FINAL DEMAND
+    # ===============================================================
+
+
+## final demand (Y) for NONBIO sectors is kept constant, since C_dom, G_dom, and OTHER_dom (consumption) are kept constant at 2023 (see rigth above)
+## would only chnage if we activated SFC dynamics
+    Y_nonbio_current <-
+      (
+        C_dom_current +
+          G_dom_current +
+          OTHER_dom_current
+      )[NONBIO]
+
+
+    # ===============================================================
+    # 4. ENDOGENOUS NON-BIOFUEL OUTPUT
+    # ===============================================================
+
+    A_NN_current <-
+  A_dom_tech_current[
+    NONBIO,
+    NONBIO,
+    drop = FALSE
+  ]
+
+A_NB_current <-
+  A_dom_tech_current[
+    NONBIO,
+    BIO,
+    drop = FALSE
+  ]
+
+## output of NONBIO sectors is both from NONBIO inputs required by NONBIO and BIO production
+## In this model version A_NB contains recurrent feedstock/OPEX inputs only;
+## CAPEX is excluded.
+
+    X_nonbio_current <-
+      solve(
+        base::diag(length(NONBIO)) -
+          A_NN_current,
+
+        Y_nonbio_current +
+          A_NB_current %*%
+          X_bio_current
+      )
+
+
+# ===============================================================
+# 5. BUILD FUEL / TECHNICAL OUTPUT VECTOR
+# ===============================================================
+
+# For biofuel sectors this is the market value of fuel production
+# (physical production * fuel market price), excluding gate fees.
+X_fuel_current <-
+  numeric(nIndustries)
+
+X_fuel_current[BIO] <-
+  X_bio_current
+
+X_fuel_current[NONBIO] <-
+  as.numeric(
+    X_nonbio_current
+  )
+
+
+# ===============================================================
+# 5.2. GATE-FEE REVENUE
+# ===============================================================
+
+gate_fee_revenue_current <-
+  gate_fee_coeff_current *
+  X_fuel_current
+
+
+# ===============================================================
+# 5.3. TOTAL ACCOUNTING OUTPUT
+# ===============================================================
+
+# Total sector output includes the additional gate-fee service
+# revenue of advanced biogas.
+X_current <-
+  X_fuel_current
+
+X_current[ADV_BIOGAS] <-
+  X_fuel_current[ADV_BIOGAS] +
+  gate_fee_revenue_current[ADV_BIOGAS]
+
+
+# ===============================================================
+# 6. INTERMEDIATE FLOWS
+# ===============================================================
+
+# Technical intermediate requirements are driven by fuel production,
+# NOT by gate-fee revenue. For scenario BIO columns these technical
+# requirements contain feedstock + OPEX only; CAPEX is excluded.
+Z_dom_current <-
+  A_dom_tech_current %*%
+  base::diag(X_fuel_current)
+
+Z_imp_current <-
+  A_imp_tech_current %*%
+  base::diag(X_fuel_current)
+
+
+# Gate fee is added separately as a monetary transaction:
+# sewerage purchases a waste-treatment service from advanced biogas.
+Z_dom_current[
+  ADV_BIOGAS,
+  SEWERAGE
+] <-
+  Z_dom_current[
+    ADV_BIOGAS,
+    SEWERAGE
+  ] +
+  gate_fee_revenue_current[ADV_BIOGAS]
+
+
+
+# ===============================================================
+# 6.2. NEW: !!:  ACTUAL MONETARY IO COEFFICIENT MATRICES
+# ===============================================================
+#
+# The technology matrices above are defined relative to X_fuel.
+# After all monetary transactions, including gate-fee revenue,
+# have been entered into Z and total accounting output X is known,
+# derive the actual IO coefficients:
+#
+# A_IO = Z / X
+#
+# This guarantees:
+#
+# Z = A_IO %*% diag(X)
+
+X_safe_current <- X_current
+X_safe_current[
+  abs(X_safe_current) < 1e-12
+] <- 1e-6
+
+A_dom_IO_current <-
+  sweep(
+    Z_dom_current,
+    2,
+    X_safe_current,
+    "/"
+  )
+
+A_imp_IO_current <-
+  sweep(
+    Z_imp_current,
+    2,
+    X_safe_current,
+    "/"
+  )
+
+    # ===============================================================
+    # 7. DOMESTIC FINAL DEMAND AS ACCOUNTING RESIDUAL
+    # ===============================================================
+
+    Y_dom_current <-
+      X_current -
+      rowSums(Z_dom_current)
+
+exports_current <-
+  scenario_driver$exports[i, ]
+
+Y_domestic_final_current <-
+  Y_dom_current -
+  exports_current
+
+
+## Plausibilitätscheck
+if (
+  any(
+    Y_domestic_final_current[BIO] < -1e-8
+  )
+) {
+  stop(
+    paste(
+      "Biofuel exports exceed available final use in year",
+      current_year
+    )
+  )
+}
+
+
+    # ===============================================================
+    # 8. TAXES, INTERMEDIATE CONSUMPTION AND GVA
+    # ===============================================================
+
+    intermediate_inputs_current <-
+      colSums(Z_dom_current) +
+      colSums(Z_imp_current)
+
+    tax_products_current <-
+      p2_tax_rate_2023 *
+      intermediate_inputs_current
+
+    P2_ADJ_current <-
+      intermediate_inputs_current +
+      tax_products_current
+
+    GVA_current <-
+      X_current -
+      P2_ADJ_current
+
+
+    # ===============================================================
+    # 9. LEONTIEF INVERSE
+    # ===============================================================
+
+    L_dom_current <-
+  solve(
+    base::diag(nIndustries) -
+      A_dom_IO_current
+  )
+
+
+    # ===============================================================
+    # 10. STORE THIS YEAR
+    # ===============================================================
+A_dom_IO_path[i, , ] <-
+  A_dom_IO_current
+
+A_imp_IO_path[i, , ] <-
+  A_imp_IO_current
+   
+
+X_path[i, ] <-
+      X_current
+
+    Y_dom_path[i, ] <-
+      Y_dom_current
+
+    Z_dom_path[i, , ] <-
+      Z_dom_current
+
+    Z_imp_path[i, , ] <-
+      Z_imp_current
+
+    tax_products_path[i, ] <-
+      tax_products_current
+
+    P2_ADJ_path[i, ] <-
+      P2_ADJ_current
+
+    GVA_path[i, ] <-
+      GVA_current
+
+    L_dom_path[i, , ] <-
+      L_dom_current
+
+    Y_imp_FCE_path[i, ] <-
+      Y_imp_FCE_current
+
+exports_path[i, ] <- exports_current
+Y_domestic_final_path[i, ] <- Y_domestic_final_current
+
+    C_dom_path[i, ] <-
+      C_dom_current
+
+    G_dom_path[i, ] <-
+      G_dom_current
+
+gate_fee_revenue_path[i, ] <-
+  gate_fee_revenue_current
+  }
+
+
+  # =================================================================
+  # RETURN COMPLETE DYNAMIC PATH
+  # =================================================================
+
+  list(
+
+    years = years,
+
+    # Actual monetary IO coefficients
+A_dom =
+  A_dom_IO_path,
+
+A_imp =
+  A_imp_IO_path,
+
+# Technology coefficients used internally to generate Z
+A_dom_tech =
+  scenario_driver$A_dom,
+
+A_imp_tech =
+  scenario_driver$A_imp,
+X_bio =
+  scenario_driver$X_bio,
+
+    X =
+      X_path,
+
+    Y_dom =
+      Y_dom_path,
+
+    Z_dom =
+      Z_dom_path,
+
+    Z_imp =
+      Z_imp_path,
+
+    tax_products =
+      tax_products_path,
+
+    P2_ADJ =
+      P2_ADJ_path,
+
+    GVA =
+      GVA_path,
+
+    L_dom =
+      L_dom_path,
+
+    Y_imp_FCE =
+      Y_imp_FCE_path,
+exports =
+  exports_path,
+
+Y_domestic_final =
+  Y_domestic_final_path,
+
+    C_dom =
+      C_dom_path,
+
+    G_dom =
+      G_dom_path,
+
+gate_fee_coeff =
+  scenario_driver$gate_fee_coeff,
+
+gate_fee_revenue =
+  gate_fee_revenue_path
+  )
+}
+
+# ===================================================================
+# 13. RUN ALL SCENARIOS THROUGH THE SAME DYNAMIC MODEL
+# ===================================================================
+
+
+REF_dynamic_2023_2040 <-
+  run_dynamic_scenario(
+    REF_driver_2023_2040
+  )
+
+S1_dynamic_2023_2040 <-
+  run_dynamic_scenario(
+    S1_driver_2023_2040
+  )
+
+S2_dynamic_2023_2040 <-
+  run_dynamic_scenario(
+    S2_driver_2023_2040
+  )
+
+S3_dynamic_2023_2040 <-
+  run_dynamic_scenario(
+    S3_driver_2023_2040
+  )
+
+# ===================================================================
+# 14. EXTRACT ONE YEAR FROM A DYNAMIC RESULT
+# ===================================================================
+
+extract_dynamic_endpoint <- function(
+    dynamic_result,
+    year
+) {
+
+  year_char <- as.character(year)
+
+  if (!year_char %in%
+      as.character(dynamic_result$years)) {
+
+    stop(
+      paste(
+        "Year",
+        year,
+        "not contained in dynamic result."
+      )
+    )
+  }
+
+
+  list(
+
+    A_dom =
+      dynamic_result$A_dom[
+        year_char,
+        ,
+      ],
+
+    A_imp =
+      dynamic_result$A_imp[
+        year_char,
+        ,
+      ],
+
+A_dom_tech =
+  dynamic_result$A_dom_tech[
+    year_char,
+    ,
+  ],
+
+A_imp_tech =
+  dynamic_result$A_imp_tech[
+    year_char,
+    ,
+  ],
+
+X_bio =
+  dynamic_result$X_bio[
+    year_char,
+  ],
+
+    X =
+      dynamic_result$X[
+        year_char,
+      ],
+
+    Z_dom =
+      dynamic_result$Z_dom[
+        year_char,
+        ,
+      ],
+
+    Z_imp =
+      dynamic_result$Z_imp[
+        year_char,
+        ,
+      ],
+
+    Y_dom =
+      dynamic_result$Y_dom[
+        year_char,
+      ],
+exports =
+  dynamic_result$exports[
+    year_char,
+  ],
+
+Y_domestic_final =
+  dynamic_result$Y_domestic_final[
+    year_char,
+  ],
+
+    tax_products =
+      dynamic_result$tax_products[
+        year_char,
+      ],
+
+    P2_ADJ =
+      dynamic_result$P2_ADJ[
+        year_char,
+      ],
+
+    GVA =
+      dynamic_result$GVA[
+        year_char,
+      ],
+
+    Y_imp_FCE =
+      dynamic_result$Y_imp_FCE[
+        year_char,
+      ],
+
+    L_dom =
+      dynamic_result$L_dom[
+        year_char,
+        ,
+      ],
+
+    gate_fee_coeff =
+    dynamic_result$gate_fee_coeff[
+      year_char,
+    ],
+
+    gate_fee_revenue =
+    dynamic_result$gate_fee_revenue[
+      year_char,
+  ]
+  )
+}
+
+# ===================================================================
+# EXTRACT REFERENCE ENDPOINTS
+# ===================================================================
+
+REF_dynamic_endpoint_2030 <-
+  extract_dynamic_endpoint(
+    REF_dynamic_2023_2040,
+    2030
+  )
+
+REF_dynamic_endpoint_2035 <-
+  extract_dynamic_endpoint(
+    REF_dynamic_2023_2040,
+    2035
+  )
+
+REF_dynamic_endpoint_2040 <-
+  extract_dynamic_endpoint(
+    REF_dynamic_2023_2040,
+    2040
+  )
+
+
+# ===================================================================
+# EXTRACT S1 ENDPOINTS
+# ===================================================================
+
+S1_dynamic_endpoint_2030 <-
+  extract_dynamic_endpoint(
+    S1_dynamic_2023_2040,
+    2030
+  )
+
+S1_dynamic_endpoint_2035 <-
+  extract_dynamic_endpoint(
+    S1_dynamic_2023_2040,
+    2035
+  )
+
+S1_dynamic_endpoint_2040 <-
+  extract_dynamic_endpoint(
+    S1_dynamic_2023_2040,
+    2040
+  )
+
+
+# ===================================================================
+# EXTRACT S2 ENDPOINTS
+# ===================================================================
+
+S2_dynamic_endpoint_2030 <-
+  extract_dynamic_endpoint(
+    S2_dynamic_2023_2040,
+    2030
+  )
+
+S2_dynamic_endpoint_2035 <-
+  extract_dynamic_endpoint(
+    S2_dynamic_2023_2040,
+    2035
+  )
+
+S2_dynamic_endpoint_2040 <-
+  extract_dynamic_endpoint(
+    S2_dynamic_2023_2040,
+    2040
+  )
+
+
+# ===================================================================
+# EXTRACT S3 ENDPOINTS
+# ===================================================================
+
+S3_dynamic_endpoint_2030 <-
+  extract_dynamic_endpoint(
+    S3_dynamic_2023_2040,
+    2030
+  )
+
+S3_dynamic_endpoint_2035 <-
+  extract_dynamic_endpoint(
+    S3_dynamic_2023_2040,
+    2035
+  )
+
+S3_dynamic_endpoint_2040 <-
+  extract_dynamic_endpoint(
+    S3_dynamic_2023_2040,
+    2040
+  )
+
+# ===================================================================
+# EXTRACT S1 / 2030 RESULTS AS STANDALONE OBJECTS
+# ===================================================================
+
+A_dom_S1_2030 <- S1_dynamic_endpoint_2030$A_dom
+A_imp_S1_2030 <- S1_dynamic_endpoint_2030$A_imp
+X_S1_2030     <- S1_dynamic_endpoint_2030$X
+Z_dom_S1_2030 <- S1_dynamic_endpoint_2030$Z_dom
+Z_imp_S1_2030 <- S1_dynamic_endpoint_2030$Z_imp
+Y_dom_S1_2030 <- S1_dynamic_endpoint_2030$Y_dom
+GVA_S1_2030   <- S1_dynamic_endpoint_2030$GVA
+
+# ===================================================================
+# EXTRACT S2 / 2030 RESULTS AS STANDALONE OBJECTS
+# ===================================================================
+
+A_dom_S2_2030 <- S2_dynamic_endpoint_2030$A_dom
+A_imp_S2_2030 <- S2_dynamic_endpoint_2030$A_imp
+X_S2_2030     <- S2_dynamic_endpoint_2030$X
+Z_dom_S2_2030 <- S2_dynamic_endpoint_2030$Z_dom
+Z_imp_S2_2030 <- S2_dynamic_endpoint_2030$Z_imp
+Y_dom_S2_2030 <- S2_dynamic_endpoint_2030$Y_dom
+GVA_S2_2030   <- S2_dynamic_endpoint_2030$GVA
+
+# ===================================================================
+# EXTRACT S3 / 2030 RESULTS AS STANDALONE OBJECTS
+# ===================================================================
+
+A_dom_S3_2030 <- S3_dynamic_endpoint_2030$A_dom
+A_imp_S3_2030 <- S3_dynamic_endpoint_2030$A_imp
+X_S3_2030     <- S3_dynamic_endpoint_2030$X
+Z_dom_S3_2030 <- S3_dynamic_endpoint_2030$Z_dom
+Z_imp_S3_2030 <- S3_dynamic_endpoint_2030$Z_imp
+Y_dom_S3_2030 <- S3_dynamic_endpoint_2030$Y_dom
+GVA_S3_2030   <- S3_dynamic_endpoint_2030$GVA
+
+
+# ===================================================================
+# 15. BASIC DYNAMIC ENDPOINT CONSISTENCY CHECKS - checks whether X = Z^dom *1 + Y^dom
+# ===================================================================
+
+check_accounting_identity <- function(endpoint) {
+
+  stopifnot(
+    isTRUE(
+      all.equal(
+        endpoint$X,
+        rowSums(endpoint$Z_dom) +
+          endpoint$Y_dom
+      )
+    )
+  )
+}
+
+# -------------------------------------------------------------------
+# IO coefficient consistency: Z = A %*% diag(X)
+# -------------------------------------------------------------------
+
+
+check_io_consistency <- function(endpoint) {
+
+  stopifnot(
+
+    isTRUE(
+      all.equal(
+        endpoint$Z_dom,
+        endpoint$A_dom %*%
+          base::diag(endpoint$X),
+        tolerance = 1e-10
+      )
+    ),
+
+    isTRUE(
+      all.equal(
+        endpoint$Z_imp,
+        endpoint$A_imp %*%
+          base::diag(endpoint$X),
+        tolerance = 1e-10
+      )
+    )
+  )
+}
+
+endpoints_to_check <- list(
+
+  REF_2030 = REF_dynamic_endpoint_2030,
+  REF_2035 = REF_dynamic_endpoint_2035,
+  REF_2040 = REF_dynamic_endpoint_2040,
+
+  S1_2030 = S1_dynamic_endpoint_2030,
+  S1_2035 = S1_dynamic_endpoint_2035,
+  S1_2040 = S1_dynamic_endpoint_2040,
+
+  S2_2030 = S2_dynamic_endpoint_2030,
+  S2_2035 = S2_dynamic_endpoint_2035,
+  S2_2040 = S2_dynamic_endpoint_2040,
+
+  S3_2030 = S3_dynamic_endpoint_2030,
+  S3_2035 = S3_dynamic_endpoint_2035,
+  S3_2040 = S3_dynamic_endpoint_2040
+)
+
+invisible(
+  lapply(
+    endpoints_to_check,
+    check_accounting_identity
+  )
+)
+
+invisible(
+  lapply(
+    endpoints_to_check,
+    check_io_consistency
+  )
+)
+
+
+# -------------------------------------------------------------------
+# Reference path must reproduce the unchanged 2023 baseline
+# -------------------------------------------------------------------
+
+stopifnot(
+
+  isTRUE(
+    all.equal(
+      REF_dynamic_endpoint_2030$X,
+      BASE_2023$X
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      REF_dynamic_endpoint_2030$Z_dom,
+      BASE_2023$Z_dom
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      REF_dynamic_endpoint_2030$GVA,
+      BASE_2023$GVA
+    )
+  )
+)
+
+
+# -------------------------------------------------------------------
+# Gate-fee accounting check
+# -------------------------------------------------------------------
+# Gate-fee revenue of advanced biogas must appear exactly as the
+# monetary transaction from sewerage to advanced biogas in Z_dom.
+
+stopifnot(
+
+  isTRUE(
+    all.equal(
+      S1_dynamic_endpoint_2030$Z_dom[
+        ADV_BIOGAS,
+        SEWERAGE
+      ],
+      S1_dynamic_endpoint_2030$gate_fee_revenue[
+        ADV_BIOGAS
+      ]
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      S2_dynamic_endpoint_2030$Z_dom[
+        ADV_BIOGAS,
+        SEWERAGE
+      ],
+      S2_dynamic_endpoint_2030$gate_fee_revenue[
+        ADV_BIOGAS
+      ]
+    )
+  )
+)
+
+
+
+# ===================================================================
+# SAVE MODEL RESULTS
+# ===================================================================
+
+# ===================================================================
+# SAVE MODEL RESULTS:
+# benchmark endpoints + complete annual dynamic paths
+# ===================================================================
+
+model_results <- list(
+
+  # ---------------------------------------------------------------
+  # Benchmark-year results
+  # ---------------------------------------------------------------
+
+  `2030` = list(
+    REF = REF_dynamic_endpoint_2030,
+    S1  = S1_dynamic_endpoint_2030,
+    S2  = S2_dynamic_endpoint_2030,
+    S3  = S3_dynamic_endpoint_2030
+  ),
+
+  `2035` = list(
+    REF = REF_dynamic_endpoint_2035,
+    S1  = S1_dynamic_endpoint_2035,
+    S2  = S2_dynamic_endpoint_2035,
+    S3  = S3_dynamic_endpoint_2035
+  ),
+
+  `2040` = list(
+    REF = REF_dynamic_endpoint_2040,
+    S1  = S1_dynamic_endpoint_2040,
+    S2  = S2_dynamic_endpoint_2040,
+    S3  = S3_dynamic_endpoint_2040
+  ),
+
+
+  # ---------------------------------------------------------------
+  # Complete annual paths: 2023-2040
+  # ---------------------------------------------------------------
+
+  dynamic = list(
+    REF = REF_dynamic_2023_2040,
+    S1  = S1_dynamic_2023_2040,
+    S2  = S2_dynamic_2023_2040,
+    S3  = S3_dynamic_2023_2040
+  ),
+
+
+  # ---------------------------------------------------------------
+  # Metadata
+  # ---------------------------------------------------------------
+
+  metadata = list(
+    BIO = BIO,
+    NONBIO = NONBIO,
+    sector_names = sector_names,
+    model_variant = "CAPEX excluded from biofuel intermediate-input coefficients",
+    capex_treatment = "CAPEX excluded from A_dom/A_imp; no alternative CAPEX investment treatment implemented yet"
+  )
+)
+
+saveRDS(
+  model_results,
+  "model_results_CAPEX_separate.rds"
+)

@@ -4908,6 +4908,15 @@ A_dom_tech =
 
 A_imp_tech =
   scenario_driver$A_imp,
+
+A_capex_dom_tech =
+  scenario_driver$A_capex_dom,
+
+A_capex_imp_tech =
+  scenario_driver$A_capex_imp,
+
+  
+    
 X_bio =
   scenario_driver$X_bio,
 
@@ -5044,6 +5053,18 @@ A_dom_tech =
 
 A_imp_tech =
   dynamic_result$A_imp_tech[
+    year_char,
+    ,
+  ],
+
+    A_capex_dom_tech =
+  dynamic_result$A_capex_dom_tech[
+    year_char,
+    ,
+  ],
+
+A_capex_imp_tech =
+  dynamic_result$A_capex_imp_tech[
     year_char,
     ,
   ],

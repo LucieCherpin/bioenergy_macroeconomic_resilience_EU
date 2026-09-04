@@ -1280,7 +1280,7 @@ S1_2030 <- list(
     dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.715489, food_bev_imp = 0.284511)
     )
-  ),
+  )
 
 )
 
@@ -1459,7 +1459,7 @@ S2_2030 <- list(
     dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.715489, food_bev_imp = 0.284511)
     )
-  ),
+  )
 
 )
 
@@ -1622,7 +1622,7 @@ S3_2030 <- list(
     abs_market_value = 0,
     weights = c(IVC_HT_lipids_SAF = 1.000000),
     dist_feed = list(IVC_HT_lipids_SAF = c(agriculture = 1.000000))
-  ),
+  )
 
 )
 
@@ -1874,7 +1874,7 @@ S1_2035 <- list(
     dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.610000, food_bev_imp = 0.390000)
     )
-  ),
+  )
 
 )
 
@@ -2038,7 +2038,7 @@ S2_2035 <- list(
     dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.573200, food_bev_imp = 0.426800)
     )
-  ),
+  )
 
 )
 
@@ -2188,7 +2188,7 @@ S3_2035 <- list(
       IVC_HT_CC = c(agriculture = 1.000000),
       IVC_T_lipids = c(food_bev = 0.573200, food_bev_imp = 0.426800)
     )
-  ),
+  )
 
 )
 
@@ -2434,7 +2434,7 @@ S1_2040 <- list(
     dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.720000, food_bev_imp = 0.280000)
     )
-  ),
+  )
 
 )
 
@@ -2647,7 +2647,7 @@ S2_2040 <- list(
     dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.720000, food_bev_imp = 0.280000)
     )
-  ),
+  )
 
 )
 
@@ -2839,7 +2839,7 @@ S3_2040 <- list(
       IVC_HT_CC = c(agriculture = 1.000000),
       IVC_T_lipids = c(food_bev = 0.720000, food_bev_imp = 0.280000)
     )
-  ),
+  )
 
 )
 

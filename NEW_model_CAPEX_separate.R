@@ -493,7 +493,7 @@ IVC_TECH_LIBRARY <- list(
   
 
 IVC_T_FF = list(
-  prod_cost = 629,
+  prod_cost = 800,
   market_price = 1165.6261363636365,
   alpha = c(feed = 0.75, capex = 0.065, opex = 0.185),
   dist_capex = c(fab_metal = 0.07, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_el = 0.03),
@@ -501,70 +501,65 @@ IVC_T_FF = list(
 ),
 
 IVC_HT_FF = list(
-  prod_cost = 665.824761904762,
+  prod_cost = 900,
   market_price = 1165.6261363636365,
-  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
+  alpha = c(feed = 0.6666666666666666, capex = 0.1111111111111111, opex = 0.2222222222222222),
   dist_capex = c(fab_metal = 0.07, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
   dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
 ),
 
 IVC_T_CC = list(
-  prod_cost = 1598.13,
-  market_price =  1165.6261363636365,
-  alpha = c(feed = 0.74, capex = 0.07, opex = 0.19),
-  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_el = 0.03),
-  dist_opex = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.25, repair_inst = 0.15, land_transp = 0.10)
-), # not present in Scenario 2 table -> current values retained
-
-IVC_HT_CC = list(
-  prod_cost = 1218,
+  prod_cost = 1253,
   market_price = 1165.6261363636365,
-  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
-  dist_capex = c(fab_metal = 0.07, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
-  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+  alpha = c(feed = 0.7206703910614525, capex = 0.06624102154828412, opex = 0.21308858739026337),
+  dist_capex = c(fab_metal = 0.07, machinery = 0.48, construction = 0.12, architecture = 0.30, computer_el = 0.03),
+  dist_opex = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.25)
 ),
 
-
-## revise: should be differnet price and costs taht HT_CC (road)
-IVC_HT_CC_SAF = list(
-  prod_cost = 1218,
+IVC_HT_CC = list(
+  prod_cost = 1203,
   market_price = 1165.6261363636365,
-  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
-  dist_capex = c(fab_metal = 0.07, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
-  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+  alpha = c(feed = 0.7506234413965087, capex = 0.0831255195344971, opex = 0.1662510390689942),
+  dist_capex = c(fab_metal = 0.06, machinery = 0.58, construction = 0.08, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.15, chemicals = 0.35, legal_acc = 0.18, repair_inst = 0.15, land_transp = 0.17)
 ),
 
 IVC_T_lipids = list(
   prod_cost = 1253,
   market_price = 1165.6261363636365,
-  alpha = c(feed = 0.74, capex = 0.04, opex = 0.22),
-  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.45, construction = 0.15, architecture = 0.30, computer_el = 0.03),
-  dist_opex = c(electricity = 0.20, chemicals = 0.30, legal_acc = 0.25, repair_inst = 0.15, land_transp = 0.10)
+  alpha = c(feed = 0.7206703910614525, capex = 0.06624102154828412, opex = 0.21308858739026337),
+  dist_capex = c(fab_metal = 0.07, machinery = 0.50, construction = 0.10, architecture = 0.30, computer_el = 0.03),
+  dist_opex = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20, repair_inst = 0.20, land_transp = 0.10, sewerage = 0.10)
 ),
 
-IVC_HT_lipids_road = list(
-  prod_cost = 1598.13,
-  market_price =  1165.6261363636365,
-  alpha = c(feed = 0.67, capex = 0.13, opex = 0.20),
-  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
-  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
-), 
+# NOTE: renamed from IVC_HT_lipids_road -> IVC_HT_lipids to match the key
+# actually used throughout the scenario blocks. Also corrected market_price:
+# previously mistakenly set to the FAME price (1165.63); this pathway
+# produces HVO/renewable diesel, priced at 1750 elsewhere in this project
+# (see Annex D). Please double check this correction.
+IVC_HT_lipids = list(
+  prod_cost = 2016,
+  market_price = 1750,
+  alpha = c(feed = 0.6656746031746031, capex = 0.13343253968253968, opex = 0.20089285714285715),
+  dist_capex = c(fab_metal = 0.05, machinery = 0.60, construction = 0.07, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.10)
+),
 
 IVC_HT_lipids_SAF = list(
   prod_cost = 2903,
   market_price = 2100,
-  alpha = c(feed = 0.68, capex = 0.13, opex = 0.19),
-  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.55, construction = 0.10, architecture = 0.25, computer_el = 0.03),
-  dist_opex = c(electricity = 0.20, chemicals = 0.40, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.05)
+  alpha = c(feed = 0.6755080950740613, capex = 0.12952118498105408, opex = 0.1949707199448846),
+  dist_capex = c(fab_metal = 0.05, machinery = 0.60, construction = 0.07, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.10)
 ),
 
 IVC_EF_FF = list(
   prod_cost = 903.57,
   market_price = 1018.96958174905,
   alpha = c(feed = 0.70, capex = 0.10, opex = 0.20),
-  dist_capex = c(fab_metal = 0.07, elec_equip = 0.00, machinery = 0.50, construction = 0.15, architecture = 0.25, computer_el = 0.03),
+  dist_capex = c(fab_metal = 0.07, machinery = 0.50, construction = 0.15, architecture = 0.25, computer_el = 0.03),
   dist_opex = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.10)
-) 
+)
 )
 
 ############################################################
@@ -1227,18 +1222,7 @@ S1_2030 <- list(
 
     weights = c(IVC_T_FF = 0.245841, IVC_HT_FF = 0.282090, IVC_T_CC = 0.180696, IVC_HT_CC = 0.090913, IVC_T_lipids = 0.141169, IVC_HT_lipids = 0.059291),
 
-    prod_cost = list(IVC_T_FF = 800.000000, IVC_HT_FF = 900.000000, IVC_T_CC = 1253.000000, IVC_HT_CC = 1203.000000, IVC_T_lipids = 1253.000000, IVC_HT_lipids = 2016.000000),
-
-    alpha = list(
-      IVC_T_FF = c(feed = 0.750000, capex = 0.065000, opex = 0.185000),
-      IVC_HT_FF = c(feed = 0.666667, capex = 0.111111, opex = 0.222222),
-      IVC_T_CC = c(feed = 0.720670, capex = 0.066241, opex = 0.213089),
-      IVC_HT_CC = c(feed = 0.750623, capex = 0.083126, opex = 0.166251),
-      IVC_T_lipids = c(feed = 0.720670, capex = 0.066241, opex = 0.213089),
-      IVC_HT_lipids = c(feed = 0.665675, capex = 0.133433, opex = 0.200893)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_T_FF = c(food_bev = 1.000000),
       IVC_HT_FF = c(food_bev = 1.000000),
       IVC_T_CC = c(agriculture = 1.000000),
@@ -1253,14 +1237,7 @@ S1_2030 <- list(
 
     weights = c(IVC_EF_FF = 1.000000, IVC_HT_lipids_SAF = 0.217971),
 
-    prod_cost = list(IVC_EF_FF = 903.570000, IVC_HT_lipids_SAF = 2903.000000),
-
-    alpha = list(
-      IVC_EF_FF = c(feed = 0.700000, capex = 0.100000, opex = 0.200000),
-      IVC_HT_lipids_SAF = c(feed = 0.675508, capex = 0.129521, opex = 0.194971)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_EF_FF = c(agriculture = 1.000000),
       IVC_HT_lipids_SAF = c(food_bev = 0.715489, food_bev_imp = 0.284511)
     )
@@ -1271,13 +1248,7 @@ S1_2030 <- list(
 
     weights = c(IVC_HT_lipids_SAF = 1.000000),
 
-    prod_cost = list(IVC_HT_lipids_SAF = 2903.000000),
-
-    alpha = list(
-      IVC_HT_lipids_SAF = c(feed = 0.675508, capex = 0.129521, opex = 0.194971)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.715489, food_bev_imp = 0.284511)
     )
   )
@@ -1412,16 +1383,7 @@ S2_2030 <- list(
 
     weights = c(IVC_T_FF = 0.267121, IVC_HT_FF = 0.315488, IVC_T_lipids = 0.388809, IVC_HT_CC = 0.028581),
 
-    prod_cost = list(IVC_T_FF = 800.000000, IVC_HT_FF = 900.000000, IVC_T_lipids = 1253.000000, IVC_HT_CC = 1203.000000),
-
-    alpha = list(
-      IVC_T_FF = c(feed = 0.750000, capex = 0.065000, opex = 0.185000),
-      IVC_HT_FF = c(feed = 0.666667, capex = 0.111111, opex = 0.222222),
-      IVC_T_lipids = c(feed = 0.720670, capex = 0.066241, opex = 0.213089),
-      IVC_HT_CC = c(feed = 0.750623, capex = 0.083126, opex = 0.166251)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_T_FF = c(food_bev = 1.000000),
       IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_T_lipids = c(food_bev = 0.715489, food_bev_imp = 0.284511),
@@ -1434,13 +1396,7 @@ S2_2030 <- list(
 
     weights = c(IVC_EF_FF = 1.000000),
 
-    prod_cost = list(IVC_EF_FF = 903.570000),
-
-    alpha = list(
-      IVC_EF_FF = c(feed = 0.700000, capex = 0.100000, opex = 0.200000)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_EF_FF = c(agriculture = 1.000000)
     )
   ),
@@ -1450,13 +1406,7 @@ S2_2030 <- list(
 
     weights = c(IVC_HT_lipids_SAF = 1.000000),
 
-    prod_cost = list(IVC_HT_lipids_SAF = 2903.000000),
-
-    alpha = list(
-      IVC_HT_lipids_SAF = c(feed = 0.675508, capex = 0.129521, opex = 0.194971)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.715489, food_bev_imp = 0.284511)
     )
   )
@@ -1593,16 +1543,7 @@ S3_2030 <- list(
 
     weights = c(IVC_T_FF = 0.290972, IVC_HT_FF = 0.343657, IVC_T_lipids = 0.334238, IVC_HT_CC = 0.031133),
 
-    prod_cost = list(IVC_T_FF = 800.000000, IVC_HT_FF = 900.000000, IVC_T_lipids = 1253.000000, IVC_HT_CC = 1203.000000),
-
-    alpha = list(
-      IVC_T_FF = c(feed = 0.750000, capex = 0.065000, opex = 0.185000),
-      IVC_HT_FF = c(feed = 0.666667, capex = 0.111111, opex = 0.222222),
-      IVC_T_lipids = c(feed = 0.720670, capex = 0.066241, opex = 0.213089),
-      IVC_HT_CC = c(feed = 0.750623, capex = 0.083126, opex = 0.166251)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_T_FF = c(food_bev = 1.000000),
       IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_T_lipids = c(food_bev = 0.715489, food_bev_imp = 0.284511),
@@ -1825,17 +1766,7 @@ S1_2035 <- list(
 
     weights = c(IVC_T_FF = 0.268713, IVC_HT_FF = 0.193709, IVC_T_CC = 0.000000, IVC_HT_CC = 0.197817, IVC_HT_lipids_SAF = 0.339761),
 
-    prod_cost = list(IVC_T_FF = 800.000000, IVC_HT_FF = 900.000000, IVC_T_CC = 1253.000000, IVC_HT_CC = 1203.000000, IVC_HT_lipids_SAF = 2903.000000),
-
-    alpha = list(
-      IVC_T_FF = c(feed = 0.750000, capex = 0.065000, opex = 0.185000),
-      IVC_HT_FF = c(feed = 0.666667, capex = 0.111111, opex = 0.222222),
-      IVC_T_CC = c(feed = 0.720670, capex = 0.066241, opex = 0.213089),
-      IVC_HT_CC = c(feed = 0.750623, capex = 0.083126, opex = 0.166251),
-      IVC_HT_lipids_SAF = c(feed = 0.675508, capex = 0.129521, opex = 0.194971)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_T_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
       IVC_T_CC = c(agriculture = 1.000000),
@@ -1849,13 +1780,7 @@ S1_2035 <- list(
 
     weights = c(IVC_EF_FF = 1.000000),
 
-    prod_cost = list(IVC_EF_FF = 903.570000),
-
-    alpha = list(
-      IVC_EF_FF = c(feed = 0.700000, capex = 0.100000, opex = 0.200000)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_EF_FF = c(agriculture = 1.000000)
     )
   ),
@@ -1865,13 +1790,7 @@ S1_2035 <- list(
 
     weights = c(IVC_HT_lipids_SAF = 1.000000),
 
-    prod_cost = list(IVC_HT_lipids_SAF = 2903.000000),
-
-    alpha = list(
-      IVC_HT_lipids_SAF = c(feed = 0.675508, capex = 0.129521, opex = 0.194971)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.610000, food_bev_imp = 0.390000)
     )
   )
@@ -2011,14 +1930,7 @@ S2_2035 <- list(
 
     weights = c(IVC_HT_CC = 0.093048, IVC_T_lipids = 0.906952),
 
-    prod_cost = list(IVC_HT_CC = 1203.000000, IVC_T_lipids = 1253.000000),
-
-    alpha = list(
-      IVC_HT_CC = c(feed = 0.750623, capex = 0.083126, opex = 0.166251),
-      IVC_T_lipids = c(feed = 0.720670, capex = 0.066241, opex = 0.213089)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_HT_CC = c(agriculture = 1.000000),
       IVC_T_lipids = c(food_bev = 0.573200, food_bev_imp = 0.426800)
     )
@@ -2029,13 +1941,7 @@ S2_2035 <- list(
 
     weights = c(IVC_HT_lipids_SAF = 1.000000),
 
-    prod_cost = list(IVC_HT_lipids_SAF = 2903.000000),
-
-    alpha = list(
-      IVC_HT_lipids_SAF = c(feed = 0.675508, capex = 0.129521, opex = 0.194971)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.573200, food_bev_imp = 0.426800)
     )
   )
@@ -2173,16 +2079,7 @@ S3_2035 <- list(
 
     weights = c(IVC_T_FF = 0.271605, IVC_HT_FF = 0.228395, IVC_HT_CC = 0.228395, IVC_T_lipids = 0.271605),
 
-    prod_cost = list(IVC_T_FF = 800.000000, IVC_HT_FF = 900.000000, IVC_HT_CC = 1203.000000, IVC_T_lipids = 1253.000000),
-
-    alpha = list(
-      IVC_T_FF = c(feed = 0.750000, capex = 0.065000, opex = 0.185000),
-      IVC_HT_FF = c(feed = 0.666667, capex = 0.111111, opex = 0.222222),
-      IVC_HT_CC = c(feed = 0.750623, capex = 0.083126, opex = 0.166251),
-      IVC_T_lipids = c(feed = 0.720670, capex = 0.066241, opex = 0.213089)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_T_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
       IVC_HT_CC = c(agriculture = 1.000000),
@@ -2389,15 +2286,7 @@ S1_2040 <- list(
 
     weights = c(IVC_T_FF = 0.421769, IVC_HT_FF = 0.264488, IVC_T_CC = 0.313743),
 
-    prod_cost = list(IVC_T_FF = 800.000000, IVC_HT_FF = 900.000000, IVC_T_CC = 1253.000000),
-
-    alpha = list(
-      IVC_T_FF = c(feed = 0.750000, capex = 0.065000, opex = 0.185000),
-      IVC_HT_FF = c(feed = 0.666667, capex = 0.111111, opex = 0.222222),
-      IVC_T_CC = c(feed = 0.720670, capex = 0.066241, opex = 0.213089)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_T_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_T_CC = c(agriculture = 1.000000)
@@ -2409,13 +2298,7 @@ S1_2040 <- list(
 
     weights = c(IVC_EF_FF = 1.000000),
 
-    prod_cost = list(IVC_EF_FF = 903.570000),
-
-    alpha = list(
-      IVC_EF_FF = c(feed = 0.700000, capex = 0.100000, opex = 0.200000)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_EF_FF = c(agriculture = 1.000000)
     )
   ),
@@ -2425,13 +2308,7 @@ S1_2040 <- list(
 
     weights = c(IVC_HT_lipids_SAF = 1.000000),
 
-    prod_cost = list(IVC_HT_lipids_SAF = 2903.000000),
-
-    alpha = list(
-      IVC_HT_lipids_SAF = c(feed = 0.675508, capex = 0.129521, opex = 0.194971)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.720000, food_bev_imp = 0.280000)
     )
   )
@@ -2609,16 +2486,7 @@ S2_2040 <- list(
 
     weights = c(IVC_T_FF = 0.158169, IVC_HT_FF = 0.187664, IVC_T_CC = 0.089475, IVC_T_lipids = 0.564692),
 
-    prod_cost = list(IVC_T_FF = 800.000000, IVC_HT_FF = 900.000000, IVC_T_CC = 1253.000000, IVC_T_lipids = 1253.000000),
-
-    alpha = list(
-      IVC_T_FF = c(feed = 0.750000, capex = 0.065000, opex = 0.185000),
-      IVC_HT_FF = c(feed = 0.666667, capex = 0.111111, opex = 0.222222),
-      IVC_T_CC = c(feed = 0.720670, capex = 0.066241, opex = 0.213089),
-      IVC_T_lipids = c(feed = 0.720670, capex = 0.066241, opex = 0.213089)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_T_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_T_CC = c(agriculture = 1.000000),
@@ -2638,13 +2506,7 @@ S2_2040 <- list(
 
     weights = c(IVC_HT_lipids_SAF = 1.000000),
 
-    prod_cost = list(IVC_HT_lipids_SAF = 2903.000000),
-
-    alpha = list(
-      IVC_HT_lipids_SAF = c(feed = 0.675508, capex = 0.129521, opex = 0.194971)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_HT_lipids_SAF = c(food_bev = 0.720000, food_bev_imp = 0.280000)
     )
   )
@@ -2824,16 +2686,7 @@ S3_2040 <- list(
 
     weights = c(IVC_T_FF = 0.173572, IVC_HT_FF = 0.205940, IVC_HT_CC = 0.082567, IVC_T_lipids = 0.537921),
 
-    prod_cost = list(IVC_T_FF = 800.000000, IVC_HT_FF = 900.000000, IVC_HT_CC = 1203.000000, IVC_T_lipids = 1253.000000),
-
-    alpha = list(
-      IVC_T_FF = c(feed = 0.750000, capex = 0.065000, opex = 0.185000),
-      IVC_HT_FF = c(feed = 0.666667, capex = 0.111111, opex = 0.222222),
-      IVC_HT_CC = c(feed = 0.750623, capex = 0.083126, opex = 0.166251),
-      IVC_T_lipids = c(feed = 0.720670, capex = 0.066241, opex = 0.213089)
-    ),
-
-    dist_feed = list(
+dist_feed = list(
       IVC_T_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_HT_CC = c(agriculture = 1.000000),

@@ -1599,7 +1599,7 @@ S2_imports_2030 <- c(
 )
 
 
-# S3 2030 imports are explicitly "NONE" in the source workbook - all zero.
+# S3 2030 imports are NONE
 S3_imports_2030 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
 
 ## Conversion from scenario values (stored in EUR) into the monetary unit
@@ -2141,8 +2141,17 @@ S2_imports_2035 <- c(
 )
 S2_exports_2035 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
 
-# S3 2035 imports are explicitly "NONE" in the source workbook - all zero.
-S3_imports_2035 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
+S3_imports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 0,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 0,
+  adv_bio_hfo       = 0,
+  RFNBOs            = 1636636120.986,
+  adv_biogas        = 0
+)
 
 S3_exports_2035 <- c(
   conv_biodiesel    = 0,
@@ -2164,8 +2173,7 @@ S3_exports_2035 <- c(
 #####################################################################################
 # SCENARIO 1 - 2040
 #####################################################################################
- 
-# Derived from the "2040 Sc 1" sheet in Providing_sectors.xlsx.
+
  
 S1_2040 <- list(
 

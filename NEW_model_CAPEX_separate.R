@@ -3284,14 +3284,6 @@ BASE_2023 <- list(
   A_dom = A_dom_BASE_2023,
   A_imp = A_imp_BASE_2023,
 
-  # OPTION A - real, IVC-derived 2023 CAPEX investment coefficients
-  # (see block above). CAPEX is no longer part of Z_dom_BASE_2023 /
-  # Z_imp_BASE_2023 (moved to the real "Gross fixed capital formation"
-  # column directly in the source domestic_iot.xlsx / imports_iot.xlsx
-  # tables); these coefficients are the separate, X_bio-proportional
-  # CAPEX investment demand for 2023, giving build_scenario_driver() a
-  # real (non-zero) starting point to interpolate from towards the
-  # first scenario endpoint's A_capex_dom/A_capex_imp.
   A_capex_dom = A_capex_dom_BASE_2023,
 
   A_capex_imp = A_capex_imp_BASE_2023,
@@ -3303,7 +3295,7 @@ BASE_2023 <- list(
   X = X_BASE_2023,
   X_fuel = X_fuel_BASE_2023,
 
-  # Observed Z still contains the 2023 gate-fee transaction.
+
   # CAPEX no longer appears here (see A_capex_dom / A_capex_imp above).
   Z_dom = Z_dom_BASE_2023,
   Z_imp = Z_imp_BASE_2023,

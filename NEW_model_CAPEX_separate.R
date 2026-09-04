@@ -2363,15 +2363,6 @@ dist_feed = list(
 # Derived from the "2040 Sc 2" sheet in Providing_sectors.xlsx.
 #
 # DATA CAVEATS (from the source workbook, not introduced here):
-#  - conv_biodiesel and conv_bio_kerosene are almost entirely #REF! in this
-#    sheet (broken formula references). abs_market_value and weights are left
-#    as NA below - the sheet needs to be fixed at the source before these can
-#    be populated. prod_cost/alpha/dist_feed shown use the same fixed
-#    conventional-technology values as elsewhere for reference only.
-#  - adv_bio_kerosene IVC6 has a market value but no cost breakdown ("n-d-" in
-#    the sheet) and is excluded from the fuel's weights/total here, consistent
-#    with the sheet's own TOTAL row.
-#  - conv_biogasoline is legitimately zero in this scenario (not broken).
  
 S2_2040 <- list(
 

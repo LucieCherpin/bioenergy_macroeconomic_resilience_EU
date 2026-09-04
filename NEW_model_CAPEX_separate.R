@@ -2495,7 +2495,7 @@ dist_feed = list(
     weights = c(IVC_HT_lipids_SAF = 1.000000),
 
 dist_feed = list(
-      IVC_HT_lipids_SAF = c(food_bev = 0.720000, food_bev_imp = 0.280000)
+      IVC_HT_CC_SAF = c(food_bev = 0.720000, food_bev_imp = 0.280000)
     )
   )
 

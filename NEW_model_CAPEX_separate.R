@@ -1638,19 +1638,19 @@ S3_2030 <- list(
 
 
 S1_imports_2030 <- c(
-  conv_biodiesel    = 687626520.93,
-  adv_biodiesel     = 14428717943.19,
+  conv_biodiesel    = 879154718.43,
+  adv_biodiesel     = 13022074304.18,
   conv_biogasoline  = 0,
   adv_biogasoline   = 4661504967.96,
   conv_bio_kerosene = 0,
   adv_bio_kerosene  = 1865379175.15,
-  adv_bio_hfo       = 1741730959.95,
+  adv_bio_hfo       = 1937302197.55,
   RFNBOs            = 359095080.85,
   adv_biogas        = 0
 )
 
 S2_imports_2030 <- c(
-  conv_biodiesel    =  7885863786.04,
+  conv_biodiesel    = 7535613093.35,
   adv_biodiesel     = 0,
   conv_biogasoline  = 0,
   adv_biogasoline   = 0,
@@ -1662,17 +1662,8 @@ S2_imports_2030 <- c(
 )
 
 
-S3_imports_2030 <- c(
-  conv_biodiesel    =  2640822799.72,     ## discuss with Dina
-  adv_biodiesel     = 0,
-  conv_biogasoline  = 0,
-  adv_biogasoline   = 0,
-  conv_bio_kerosene = 0,
-  adv_bio_kerosene  = 0,
-  adv_bio_hfo       = 0,
-  RFNBOs            = 0,
-  adv_biogas        = 0
-)
+# S3 2030 imports are explicitly "NONE" in the source workbook - all zero.
+S3_imports_2030 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
 
 ## Conversion from scenario values (stored in EUR) into the monetary unit
 ## of the Eurostat IO tables. Keep 1 if the IO tables are in EUR;
@@ -1693,13 +1684,12 @@ S3_exports_2030 <- c(
   conv_biodiesel    = 0,
   adv_biodiesel     = 0,
   conv_biogasoline  = 0,
-  adv_biogasoline   = 30137468584.173,
+  adv_biogasoline   = 36212333077.31,
   conv_bio_kerosene = 0,
-  adv_bio_kerosene  = 892829381.237,
-  adv_bio_hfo       = 25347018903.397,
-  RFNBOs            = 17050082963.604,
-  adv_biogas        = 20790959910.667
-
+  adv_bio_kerosene  = 11401449827.92,
+  adv_bio_hfo       = 44606111011.19,
+  RFNBOs            = 17050082963.60,
+  adv_biogas        = 25917437239.16
 )
 ######################################################################################################
 ### YEAR 2035 ###
@@ -2203,6 +2193,53 @@ S3_2035 <- list(
 )
 
 
+# ==========================================================
+# FINISHED BIOFUEL IMPORTS / EXPORTS - 2035
+# Monetary values in EUR, at market value.
+# Derived from Imports_Exports_All_Scenarios.xlsx ('2035 Sc 1/2/3' sheets).
+# ==========================================================
+
+S1_imports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 18862095594.02,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 2658381656.52,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 8222014081.21,
+  adv_bio_hfo       = 762619367.67,
+  RFNBOs            = 35603837506.48,
+  adv_biogas        = 0
+)
+S1_exports_2035 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
+
+S2_imports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 0,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 0,
+  adv_bio_hfo       = 0,
+  RFNBOs            = 5485908772.16,
+  adv_biogas        = 0
+)
+S2_exports_2035 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
+
+# S3 2035 imports are explicitly "NONE" in the source workbook - all zero.
+S3_imports_2035 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
+
+S3_exports_2035 <- c(
+  conv_biodiesel    = 0,
+  adv_biodiesel     = 0,
+  conv_biogasoline  = 0,
+  adv_biogasoline   = 42698721669.95,
+  conv_bio_kerosene = 0,
+  adv_bio_kerosene  = 7341873991.52,
+  adv_bio_hfo       = 44735575368.87,
+  RFNBOs            = 4871514959.82,
+  adv_biogas        = 26315422128.06
+)
+
 
 ######################################################################################################
 ### YEAR 2040 ###
@@ -2411,7 +2448,7 @@ S1_2040 <- list(
  
  S1_imports_2040 <- c(
    conv_biodiesel    = 0,
-   adv_biodiesel     = 20096053598.94,
+   adv_biodiesel     = 18362241739.48,
    conv_biogasoline  = 0,
    adv_biogasoline   = 955687153.39,
    conv_bio_kerosene = 0,
@@ -2630,7 +2667,7 @@ S2_2040 <- list(
    conv_bio_kerosene = 0,
    adv_bio_kerosene  = 0,
    adv_bio_hfo       = 0,
-   RFNBOs            = 0,
+   RFNBOs            = 13360816104.27,
    adv_biogas        = 0
  )
 
@@ -2826,11 +2863,17 @@ S3_2040 <- list(
   adv_biogas        = 0
  )
 
- S3_exports_2040 <-
-   setNames(
-     rep(0, length(BIOFUEL_SECTORS)),
-     names(BIOFUEL_SECTORS)
-   )
+ S3_exports_2040 <- c(
+   conv_biodiesel    = 0,
+   adv_biodiesel     = 0,
+   conv_biogasoline  = 0,
+   adv_biogasoline   = 48875983085.77,
+   conv_bio_kerosene = 0,
+   adv_bio_kerosene  = 4909200712.67,
+   adv_bio_hfo       = 37422924814.15,
+   RFNBOs            = 949431082.25,
+   adv_biogas        = 26379203962.07
+ )
  
 
 # ===================================================================

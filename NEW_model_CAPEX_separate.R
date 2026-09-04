@@ -740,12 +740,9 @@ build_ivc_vector <- function(
   # ------------------------------------------------------------
   # CAPEX is deliberately kept OUTSIDE intermediate consumption
   # (a_feed / a_opex / operating_inputs / A_dom / A_imp / Z).
-  # OPTION A (continuous, annualized investment treatment):
+  # Continuous, annualized investment treatment):
   # CAPEX is built here as its OWN separate technical-coefficient
   # vector (a_capex), sourced domestic/import exactly like OPEX,
-  # so it can later be applied as an annual GFCF-equivalent
-  # investment demand term in the NONBIO solve step - NOT as an
-  # addition to intermediate consumption.
   # ------------------------------------------------------------
 
   dist_capex_sourced <-
@@ -4138,21 +4135,7 @@ run_dynamic_scenario <- function(scenario_driver) {
 # =================================================================
   # 2023 BASELINE CAPEX-DRIVEN NONBIO DEMAND (for the delta-CAPEX fix)
   # =================================================================
-  #
-  # BASE_2023$Y_dom (and therefore C_dom_BASE_2023 / G_dom_BASE_2023 /
-  # OTHER_dom_BASE_2023, which make up the frozen Y_nonbio_current every
-  # year) already reflects the OBSERVED 2023 economy - including
-  # whatever biofuel-related CAPEX (machinery, construction, etc.) was
-  # actually realised in 2023, embedded in the parent sectors' recorded
-  # GFCF. If the full annual GFCF_capex_demand_current (A_capex_dom_t %*%
-  # X_bio_t) is then added on top of that frozen 2023 final demand every
-  # year, the 2023 biofuel-CAPEX activity gets counted twice: once
-  # implicitly via the frozen baseline, once explicitly via this term.
-  #
-  # Fix: only add the CHANGE in CAPEX-driven demand relative to 2023,
-  # not its full level - i.e. Delta K_t = K_t - K_2023. K_2023 is
-  # constant across years and scenarios, so it is computed once here.
-  # =================================================================
+  
 
   K_2023_NONBIO <-
     BASE_2023$A_capex_dom[
@@ -4211,11 +4194,7 @@ A_imp_IO_path <- array(
     )
   )
 
-  # OPTION A - diagnostic-only paths for CAPEX-driven GFCF demand.
-  # Not needed for the solve or for the accounting identities (Y_dom
-  # is a residual and already reflects this correctly - see below),
-  # but kept so the CAPEX-driven share of NONBIO activation can be
-  # reported separately from the OPEX/feedstock-driven share.
+
   GFCF_capex_dom_path <- matrix(
     NA_real_,
     nrow = n_years,
@@ -4378,7 +4357,7 @@ X_path[1, ] <-
   Y_dom_path[1, ] <-
     BASE_2023$Y_dom
 
-  # OPTION A diagnostics: zero in 2023 (observed base year, no
+  #Zero in 2023 (observed base year, no
   # scenario-specific CAPEX investment vector applied to it).
   GFCF_capex_dom_path[1, ] <-
     0
@@ -4534,7 +4513,7 @@ A_NB_current <-
 ## CAPEX is excluded from A_NB / A_dom_tech / Z, by design.
 
 ## ===============================================================
-## OPTION A - CAPEX AS SEPARATE, CONTINUOUS GFCF-EQUIVALENT DEMAND
+## CAPEX AS SEPARATE, CONTINUOUS GFCF-EQUIVALENT DEMAND
 ## ===============================================================
 ## CAPEX enters the NONBIO solve as its own additive demand term,
 ## NOT inside A_NB / A_dom_tech, and NEVER inside Z_dom / Z_imp
@@ -4552,14 +4531,7 @@ A_capex_NB_current <-
     drop = FALSE
   ]
 
-# Delta-CAPEX fix: only the CHANGE in CAPEX-driven NONBIO demand
-# relative to the 2023 baseline enters the solve, not its full level -
-# see the K_2023_NONBIO comment above the STORAGE section. This is the
-# only line that changed for that fix; everything else in this
-# function (Z construction, GVA, exports, etc.) is unaffected because
-# GFCF_capex_demand_current is only ever used as an additive term in
-# the NONBIO solve below and in the diagnostic GFCF_capex_dom_path
-# output.
+
 GFCF_capex_demand_current <-
   (
     A_capex_NB_current %*%
@@ -5431,9 +5403,7 @@ model_results <- list(
   metadata = list(
     BIO = BIO,
     NONBIO = NONBIO,
-    sector_names = sector_names,
-    model_variant = "CAPEX excluded from biofuel intermediate-input coefficients",
-    capex_treatment = "CAPEX excluded from A_dom/A_imp; no alternative CAPEX investment treatment implemented yet"
+    sector_names = sector_names
   )
 )
 

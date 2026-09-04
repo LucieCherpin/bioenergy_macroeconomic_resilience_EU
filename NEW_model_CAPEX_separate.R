@@ -4,13 +4,7 @@
 #
 # Biofuel-sector intermediate-input coefficients contain only:
 #   - purchased feedstock inputs; and
-#   - recurrent OPEX inputs.
-#
-# CAPEX assumptions and distributions remain documented in the
-# technology/scenario data, but CAPEX does not enter intermediate
-# consumption in this version. No alternative CAPEX investment/GFCF
-# treatment yet.
-#
+#   - recurrent OPEX inputs
 #####################################################################
 
 #####################################################################

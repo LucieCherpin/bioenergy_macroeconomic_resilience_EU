@@ -1583,7 +1583,6 @@ dist_feed = list(
 # Monetary value in EUR, at market value
 # All imported finished fuels go to final consumption expenditure
 # ==========================================================
-## note: so far only an exogenous scenario vraiavle, stored in each endpoint, but not yet inegrated into annual SFC dynamics
 
 
 S1_imports_2030 <- c(
@@ -3327,13 +3326,7 @@ BASE_2023 <- list(
 # ===================================================================
 # Purpose:
 # - BASE_2023 is the observed starting point.
-# - REF represents a no-biofuel-shock reference path.
-# - For now, there is no autonomous growth and no SFC feedback yet.
-# - 2023 biofuel production, technologies and finished imports are kept.
-# - The SFC behavioral dynamics will be added later to this reference path.
-# ===================================================================
-
-
+# - REF represents a no-biofuel-shock reference path
 # ===================================================================
 # a) DECOMPOSE 2023 DOMESTIC FINAL DEMAND
 # ===================================================================
@@ -4353,9 +4346,6 @@ Y_domestic_final_path <- matrix(
 )
 
 
-# Household and government demand are stored separately
-  # because these will later become part of the SFC dynamics.
-
   C_dom_path <- matrix(
     NA_real_,
     nrow = n_years,
@@ -4504,24 +4494,6 @@ gate_fee_coeff_current <-
   ]
 
 
-    # ===============================================================
-    # SFC BEHAVIOURAL BLOCK
-    # ===============================================================
-    #
-    # CURRENT VERSION:
-    # household and government consumption are fixed at 2023.
-    #
-    # THIS is the precise place where the SFC feedback will later be:
-    #
-    # previous/current output
-    #       -> employment
-    #       -> wages
-    #       -> disposable income
-    #       -> household consumption
-    #       -> final demand
-    #
-    # ===============================================================
-
     C_dom_current <-
       C_dom_BASE_2023
 
@@ -4538,7 +4510,7 @@ gate_fee_coeff_current <-
 
 
 ## final demand (Y) for NONBIO sectors is kept constant, since C_dom, G_dom, and OTHER_dom (consumption) are kept constant at 2023 (see rigth above)
-## would only chnage if we activated SFC dynamics
+
     Y_nonbio_current <-
       (
         C_dom_current +

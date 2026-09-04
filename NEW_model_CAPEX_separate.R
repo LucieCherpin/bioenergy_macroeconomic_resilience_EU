@@ -2688,8 +2688,6 @@ dist_feed = list(
  
 # ==========================================================
 # FINISHED BIOFUEL IMPORTS / EXPORTS - S3 2040
-# TODO: not present in Providing_sectors.xlsx - fill in from
-# the same source used for S3_imports_2030 / S3_imports_2035.
 # ==========================================================
  
  S3_imports_2040 <- c(
@@ -2700,7 +2698,7 @@ dist_feed = list(
    conv_bio_kerosene = 0,
    adv_bio_kerosene  = 0,
    adv_bio_hfo       = 0,
-   RFNBOs            = 0,
+   RFNBOs            = 5222966153.074,
   adv_biogas        = 0
  )
 

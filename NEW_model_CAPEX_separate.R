@@ -3877,7 +3877,6 @@ S3_driver_2035_2040 <- build_scenario_driver(
 # ===================================================================
 # COMBINE CONSECUTIVE SCENARIO-DRIVER SEGMENTS
 # ===================================================================
-
 combine_scenario_drivers <- function(...) {
 
   drivers <- list(...)
@@ -3957,6 +3956,58 @@ combine_scenario_drivers <- function(...) {
 
 
     # ------------------------------------------------------------
+    # A_capex_dom
+    # OPTION A - CAPEX investment-coefficient path. Must be carried
+    # forward across combined segments exactly like A_dom / A_imp
+    # above; otherwise it stays at the length of the first segment
+    # while $years / $A_dom / $A_imp grow, and run_dynamic_scenario()
+    # will index it out of bounds once the combined path is longer
+    # than the first segment.
+    # ------------------------------------------------------------
+
+    A_capex_dom_new <-
+      array(
+        NA_real_,
+        dim = c(
+          old_n + new_n,
+          nIndustries,
+          nIndustries
+        )
+      )
+
+    A_capex_dom_new[1:old_n, , ] <- out$A_capex_dom
+
+    A_capex_dom_new[
+      (old_n + 1):(old_n + new_n),
+      ,
+    ] <-
+      d$A_capex_dom[keep, , , drop = FALSE]
+
+
+    # ------------------------------------------------------------
+    # A_capex_imp
+    # ------------------------------------------------------------
+
+    A_capex_imp_new <-
+      array(
+        NA_real_,
+        dim = c(
+          old_n + new_n,
+          nIndustries,
+          nIndustries
+        )
+      )
+
+    A_capex_imp_new[1:old_n, , ] <- out$A_capex_imp
+
+    A_capex_imp_new[
+      (old_n + 1):(old_n + new_n),
+      ,
+    ] <-
+      d$A_capex_imp[keep, , , drop = FALSE]
+
+
+    # ------------------------------------------------------------
     # Remaining matrices
     # ------------------------------------------------------------
 
@@ -3988,6 +4039,8 @@ combine_scenario_drivers <- function(...) {
     out$years <- combined_years
     out$A_dom <- A_dom_new
     out$A_imp <- A_imp_new
+    out$A_capex_dom <- A_capex_dom_new
+    out$A_capex_imp <- A_capex_imp_new
   }
 
 
@@ -4002,6 +4055,18 @@ combine_scenario_drivers <- function(...) {
   )
 
   dimnames(out$A_imp) <- list(
+    year = as.character(out$years),
+    input_sector = NULL,
+    output_sector = NULL
+  )
+
+  dimnames(out$A_capex_dom) <- list(
+    year = as.character(out$years),
+    input_sector = NULL,
+    output_sector = NULL
+  )
+
+  dimnames(out$A_capex_imp) <- list(
     year = as.character(out$years),
     input_sector = NULL,
     output_sector = NULL
@@ -4022,8 +4087,6 @@ combine_scenario_drivers <- function(...) {
 
   out
 }
-
-
 
 # ===================================================================
 # CREATE ONE COMPLETE DRIVER FOR EACH SCENARIO

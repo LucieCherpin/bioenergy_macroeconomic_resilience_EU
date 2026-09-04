@@ -2559,19 +2559,6 @@ dist_feed = list(
 # SCENARIO 3 - 2040
 #####################################################################################
  
-# Derived from the "2040 costs Sc 3" sheet in Providing_sectors.xlsx.
-# Unlike the Sc1/Sc2 sheets, this sheet has NO #REF! errors - every total
-# below was cross-checked against the sheet's own TOTAL row and matches
-# exactly.
-#
-# NOTES:
-#  - adv_bio_hfo: IVC8b has zero production in this scenario (weight = 0),
-#    same treatment as "IVC6 has zero production in S3 2035" elsewhere in
-#    this script. Its cost structure is kept for reference.
-#  - conv_biodiesel/biogasoline/bio-kerosene: ALL conventional biofuel
-#    production is reported as zero in this scenario (matches "technical
-#    capacity = no limitations", i.e. fully advanced-technology buildout).
-#    This is a real zero in the sheet, not a broken formula.
  
 S3_2040 <- list(
 
@@ -2697,16 +2684,29 @@ S3_2040 <- list(
 
   conv_biodiesel = list(
     abs_market_value = 12554667358.04,
-
     weights = c(IVC_T_FF = 0.173572, IVC_HT_FF = 0.205940, IVC_HT_CC = 0.082567, IVC_T_lipids = 0.537921),
-
 dist_feed = list(
       IVC_T_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_HT_CC = c(agriculture = 1.000000),
       IVC_T_lipids = c(food_bev = 0.720000, food_bev_imp = 0.280000)
     )
+  ),
+
+  conv_biogasoline = list(
+    # No conv_biogasoline production
+    abs_market_value = 0,
+    weights = c(IVC_EF_FF = 1.000000),
+    dist_feed = list(IVC_EF_FF = c(agriculture = 1.000000))
+  ),
+
+  conv_bio_kerosene = list(
+    # No conv_bio_kerosene production
+    abs_market_value = 0,
+    weights = c(IVC_HT_lipids_SAF = 1.000000),
+    dist_feed = list(IVC_HT_lipids_SAF = c(agriculture = 1.000000))
   )
+  
 
 )
 

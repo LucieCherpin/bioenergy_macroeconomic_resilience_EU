@@ -1932,6 +1932,12 @@ dist_feed = list(
     )
   ),
 
+  conv_biogasoline = list(
+  abs_market_value = 0,
+  weights = c(IVC_EF_FF = 1.000000),
+  dist_feed = list(IVC_EF_FF = c(agriculture = 1.000000))
+),
+
   conv_bio_kerosene = list(
     abs_market_value = 6101362522.63,
 
@@ -2081,7 +2087,24 @@ dist_feed = list(
       IVC_HT_CC = c(agriculture = 1.000000),
       IVC_T_lipids = c(food_bev = 0.573200, food_bev_imp = 0.426800)
     )
+  ),
+
+  conv_biogasoline = list(
+  abs_market_value = 0,
+  weights = c(IVC_EF_FF = 1.000000),
+  dist_feed = list(IVC_EF_FF = c(agriculture = 1.000000))
+),
+
+ conv_bio_kerosene = list(
+    abs_market_value = 0,
+
+    weights = c(IVC_HT_lipids_SAF = 1.000000),
+
+dist_feed = list(
+      IVC_HT_lipids_SAF = c(food_bev = 0.573200, food_bev_imp = 0.426800)
+    )
   )
+
 
 )
 

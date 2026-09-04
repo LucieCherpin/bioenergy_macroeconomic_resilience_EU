@@ -524,6 +524,14 @@ IVC_HT_CC = list(
   dist_opex = c(electricity = 0.15, chemicals = 0.35, legal_acc = 0.18, repair_inst = 0.15, land_transp = 0.17)
 ),
 
+IVC_HT_CC_SAF = list(
+  prod_cost = 2903,
+  market_price = 2100,
+  alpha = c(feed = 0.7506234413965087, capex = 0.0831255195344971, opex = 0.1662510390689942),
+  dist_capex = c(fab_metal = 0.06, machinery = 0.58, construction = 0.08, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.15, chemicals = 0.35, legal_acc = 0.18, repair_inst = 0.15, land_transp = 0.17)
+),
+
 IVC_T_lipids = list(
   prod_cost = 1253,
   market_price = 1165.6261363636365,

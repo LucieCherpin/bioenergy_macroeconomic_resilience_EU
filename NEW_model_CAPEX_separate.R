@@ -2341,10 +2341,8 @@ dist_feed = list(
  
 # ==========================================================
 # FINISHED BIOFUEL IMPORTS / EXPORTS - S1 2040
-# TODO: not present in Providing_sectors.xlsx - fill in from
-# the same source used for S1_imports_2030 / S1_imports_2035.
 # ==========================================================
- 
+
  S1_imports_2040 <- c(
    conv_biodiesel    = 0,
    adv_biodiesel     = 18362241739.48,
@@ -2530,10 +2528,8 @@ dist_feed = list(
  
 # ==========================================================
 # FINISHED BIOFUEL IMPORTS / EXPORTS - S2 2040
-# TODO: not present in Providing_sectors.xlsx - fill in from
-# the same source used for S2_imports_2030 / S2_imports_2035.
 # ==========================================================
- 
+
  S2_imports_2040 <- c(
    conv_biodiesel    = 0,
    adv_biodiesel     = 0,
@@ -2840,10 +2836,14 @@ A_dom_target <-
 A_imp_target <-
   BASE_2023$A_imp
 
-# OPTION A - CAPEX investment coefficients (separate from A_dom/A_imp).
-# There is no 2023 equivalent (2023 is observed Eurostat data, not a
-# scenario built from IVC technology), so these start at zero for every
-# sector. Only the BIO columns of biofuel sectors present in this
+# CAPEX investment coefficients (separate from A_dom/A_imp). 2023 has
+# its own, separately-computed real CAPEX coefficients derived from
+# 2023 IVC-level cost data (see A_capex_dom_BASE_2023 /
+# A_capex_imp_BASE_2023 above, in the BASE_2023 construction). This
+# function instead builds a SCENARIO ENDPOINT (2030/2035/2040) from the
+# IVC technology library, which has no such 2023 starting point to
+# inherit from - so the target matrix starts at zero for every sector
+# here, and only the BIO columns of biofuel sectors present in this
 # scenario are filled in below.
 A_capex_dom_target <-
   matrix(
@@ -4145,6 +4145,19 @@ run_dynamic_scenario <- function(scenario_driver) {
     ] %*%
     BASE_2023$X_fuel[BIO]
 
+  # Imported-CAPEX counterpart, for diagnostics only (CAPEX_imp_leakage
+  # never enters the domestic solve, so there is no double-counting risk
+  # here - this is only needed so that CAPEX_imp_leakage_path[1, ] can
+  # report the real 2023 level instead of a hardcoded 0, consistent with
+  # GFCF_capex_level_path[1, ]).
+  K_imp_2023_NONBIO <-
+    BASE_2023$A_capex_imp[
+      NONBIO,
+      BIO,
+      drop = FALSE
+    ] %*%
+    BASE_2023$X_fuel[BIO]
+
 
 # =================================================================
   # STORAGE
@@ -4384,6 +4397,9 @@ X_path[1, ] <-
 
   CAPEX_imp_leakage_path[1, ] <-
     0
+
+  CAPEX_imp_leakage_path[1, NONBIO] <-
+    as.numeric(K_imp_2023_NONBIO)
 
 exports_path[1, ] <-
   scenario_driver$exports[1, ]
@@ -5355,6 +5371,41 @@ stopifnot(
       BASE_2023$GVA
     )
   )
+)
+
+
+# -------------------------------------------------------------------
+# Reference path must reproduce the unchanged 2023 baseline in EVERY
+# year 2023-2040, not just at the 2030 endpoint. This is the strongest
+# available check that the model introduces no artificial dynamics
+# when no exogenous biofuel assumption actually changes.
+# -------------------------------------------------------------------
+
+stopifnot(
+
+  max(
+    abs(
+      REF_dynamic_2023_2040$X -
+        matrix(
+          BASE_2023$X,
+          nrow = length(REF_dynamic_2023_2040$years),
+          ncol = nIndustries,
+          byrow = TRUE
+        )
+    )
+  ) < 1e-8,
+
+  max(
+    abs(
+      REF_dynamic_2023_2040$GVA -
+        matrix(
+          BASE_2023$GVA,
+          nrow = length(REF_dynamic_2023_2040$years),
+          ncol = nIndustries,
+          byrow = TRUE
+        )
+    )
+  ) < 1e-8
 )
 
 

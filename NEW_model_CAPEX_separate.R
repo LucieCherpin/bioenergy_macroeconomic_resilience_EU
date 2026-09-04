@@ -4195,7 +4195,20 @@ A_imp_IO_path <- array(
   )
 
 
-  GFCF_capex_dom_path <- matrix(
+  # Absolute annualized CAPEX-driven NONBIO demand level, K_t.
+  GFCF_capex_level_path <- matrix(
+    NA_real_,
+    nrow = n_years,
+    ncol = nIndustries,
+    dimnames = list(
+      year = as.character(years),
+      sector = NULL
+    )
+  )
+
+  # Change relative to the 2023 baseline, Delta K_t = K_t - K_2023.
+  # This is the term that actually enters the NONBIO solve.
+  GFCF_capex_delta_path <- matrix(
     NA_real_,
     nrow = n_years,
     ncol = nIndustries,
@@ -4357,9 +4370,16 @@ X_path[1, ] <-
   Y_dom_path[1, ] <-
     BASE_2023$Y_dom
 
-  #Zero in 2023 (observed base year, no
-  # scenario-specific CAPEX investment vector applied to it).
-  GFCF_capex_dom_path[1, ] <-
+  # 2023 (base year): level = actual 2023 CAPEX-driven NONBIO demand,
+  # already embedded in the observed 2023 economy (K_2023); delta = 0
+  # by definition (2023 minus itself).
+  GFCF_capex_level_path[1, ] <-
+    0
+
+  GFCF_capex_level_path[1, NONBIO] <-
+    as.numeric(K_2023_NONBIO)
+
+  GFCF_capex_delta_path[1, ] <-
     0
 
   CAPEX_imp_leakage_path[1, ] <-
@@ -4532,11 +4552,18 @@ A_capex_NB_current <-
   ]
 
 
-GFCF_capex_demand_current <-
-  (
-    A_capex_NB_current %*%
-      X_bio_current
-  ) -
+# Absolute annualized domestic CAPEX-driven NONBIO demand in year t, K_t.
+GFCF_capex_level_current <-
+  A_capex_NB_current %*%
+  X_bio_current
+
+# Delta-CAPEX fix: only the CHANGE relative to the 2023 baseline
+# enters the solve, not the full level K_t - see the K_2023_NONBIO
+# comment above the STORAGE section. GFCF_capex_delta_current is the
+# only term that enters the NONBIO solve below; GFCF_capex_level_current
+# is diagnostic-only (stored in GFCF_capex_level_path).
+GFCF_capex_delta_current <-
+  GFCF_capex_level_current -
   K_2023_NONBIO
 
 # Imported CAPEX share: logged for reporting (e.g. "CAPEX import
@@ -4556,7 +4583,7 @@ CAPEX_imp_leakage_current <-
           A_NN_current,
 
         Y_nonbio_current +
-          GFCF_capex_demand_current +
+          GFCF_capex_delta_current +
           A_NB_current %*%
           X_bio_current
       )
@@ -4779,17 +4806,26 @@ X_path[i, ] <-
     Y_dom_path[i, ] <-
       Y_dom_current
 
-    # OPTION A diagnostics: expand the NONBIO-only CAPEX demand
-    # vectors to full sector length (zero for BIO sectors, which
-    # do not receive CAPEX demand themselves) and store them.
-    GFCF_capex_dom_current <-
+    # Diagnostics: expand the NONBIO-only CAPEX level/delta vectors
+    # to full sector length (zero for BIO sectors, which do not
+    # receive CAPEX demand themselves) and store them separately.
+    GFCF_capex_level_full_current <-
       numeric(nIndustries)
 
-    GFCF_capex_dom_current[NONBIO] <-
-      as.numeric(GFCF_capex_demand_current)
+    GFCF_capex_level_full_current[NONBIO] <-
+      as.numeric(GFCF_capex_level_current)
 
-    GFCF_capex_dom_path[i, ] <-
-      GFCF_capex_dom_current
+    GFCF_capex_level_path[i, ] <-
+      GFCF_capex_level_full_current
+
+    GFCF_capex_delta_full_current <-
+      numeric(nIndustries)
+
+    GFCF_capex_delta_full_current[NONBIO] <-
+      as.numeric(GFCF_capex_delta_current)
+
+    GFCF_capex_delta_path[i, ] <-
+      GFCF_capex_delta_full_current
 
     CAPEX_imp_leakage_full_current <-
       numeric(nIndustries)
@@ -4865,13 +4901,18 @@ X_bio =
     Y_dom =
       Y_dom_path,
 
-    # OPTION A diagnostics: CAPEX-driven GFCF demand (domestic) and
-    # the imported-CAPEX leakage, both by NONBIO supplying sector.
-    # Not used in any further calculation - purely for reporting the
-    # CAPEX-driven share of NONBIO activation separately from the
-    # OPEX/feedstock-driven share.
-    GFCF_capex_dom =
-      GFCF_capex_dom_path,
+    # Diagnostics: CAPEX-driven GFCF demand (domestic), split into
+    # absolute level (K_t) and change vs. 2023 (Delta K_t, the term
+    # actually entering the solve), plus the imported-CAPEX leakage -
+    # all by NONBIO supplying sector. Not used in any further
+    # calculation - purely for reporting the CAPEX-driven share of
+    # NONBIO activation separately from the OPEX/feedstock-driven
+    # share.
+    GFCF_capex_level =
+      GFCF_capex_level_path,
+
+    GFCF_capex_delta =
+      GFCF_capex_delta_path,
 
     CAPEX_imp_leakage =
       CAPEX_imp_leakage_path,
@@ -5018,8 +5059,13 @@ X_bio =
         year_char,
       ],
 
-    GFCF_capex_dom =
-      dynamic_result$GFCF_capex_dom[
+    GFCF_capex_level =
+      dynamic_result$GFCF_capex_level[
+        year_char,
+      ],
+
+    GFCF_capex_delta =
+      dynamic_result$GFCF_capex_delta[
         year_char,
       ],
 

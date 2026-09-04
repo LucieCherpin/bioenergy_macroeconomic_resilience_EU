@@ -4151,6 +4151,34 @@ run_dynamic_scenario <- function(scenario_driver) {
 
 
 # =================================================================
+  # 2023 BASELINE CAPEX-DRIVEN NONBIO DEMAND (for the delta-CAPEX fix)
+  # =================================================================
+  #
+  # BASE_2023$Y_dom (and therefore C_dom_BASE_2023 / G_dom_BASE_2023 /
+  # OTHER_dom_BASE_2023, which make up the frozen Y_nonbio_current every
+  # year) already reflects the OBSERVED 2023 economy - including
+  # whatever biofuel-related CAPEX (machinery, construction, etc.) was
+  # actually realised in 2023, embedded in the parent sectors' recorded
+  # GFCF. If the full annual GFCF_capex_demand_current (A_capex_dom_t %*%
+  # X_bio_t) is then added on top of that frozen 2023 final demand every
+  # year, the 2023 biofuel-CAPEX activity gets counted twice: once
+  # implicitly via the frozen baseline, once explicitly via this term.
+  #
+  # Fix: only add the CHANGE in CAPEX-driven demand relative to 2023,
+  # not its full level - i.e. Delta K_t = K_t - K_2023. K_2023 is
+  # constant across years and scenarios, so it is computed once here.
+  # =================================================================
+
+  K_2023_NONBIO <-
+    BASE_2023$A_capex_dom[
+      NONBIO,
+      BIO,
+      drop = FALSE
+    ] %*%
+    BASE_2023$X_fuel[BIO]
+
+
+# =================================================================
   # STORAGE
   # =================================================================
 
@@ -4560,9 +4588,20 @@ A_capex_NB_current <-
     drop = FALSE
   ]
 
+# Delta-CAPEX fix: only the CHANGE in CAPEX-driven NONBIO demand
+# relative to the 2023 baseline enters the solve, not its full level -
+# see the K_2023_NONBIO comment above the STORAGE section. This is the
+# only line that changed for that fix; everything else in this
+# function (Z construction, GVA, exports, etc.) is unaffected because
+# GFCF_capex_demand_current is only ever used as an additive term in
+# the NONBIO solve below and in the diagnostic GFCF_capex_dom_path
+# output.
 GFCF_capex_demand_current <-
-  A_capex_NB_current %*%
-  X_bio_current
+  (
+    A_capex_NB_current %*%
+      X_bio_current
+  ) -
+  K_2023_NONBIO
 
 # Imported CAPEX share: logged for reporting (e.g. "CAPEX import
 # dependency"), but must NOT enter the domestic solve below, since

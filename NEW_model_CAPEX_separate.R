@@ -876,7 +876,20 @@ build_fuel_column <- function(
   }
 
   # Normalize to avoid small deviations caused by rounding
-  weights <- weights / sum(weights)
+weight_sum <- sum(weights)
+
+if (abs(weight_sum - 1) > 1e-3) {
+  stop(
+    sprintf(
+      "IVC weights sum to %.6f instead of 1. Check source data. IVCs: %s",
+      weight_sum,
+      paste(names(weights), collapse = ", ")
+    )
+  )
+}
+
+# Only correct very small rounding deviations
+weights <- weights / weight_sum
 
   ivc_ids <- names(weights)
 
@@ -1231,11 +1244,10 @@ dist_feed = list(
   conv_biogasoline = list(
     abs_market_value = 4436256756.88,
 
-    weights = c(IVC_EF_FF = 1.000000, IVC_HT_lipids_SAF = 0.217971),
+    weights = c(IVC_EF_FF = 1.000000),
 
 dist_feed = list(
-      IVC_EF_FF = c(agriculture = 1.000000),
-      IVC_HT_lipids_SAF = c(food_bev = 0.715489, food_bev_imp = 0.284511)
+      IVC_EF_FF = c(agriculture = 1.000000)
     )
   ),
 
@@ -1684,7 +1696,7 @@ S1_2035 <- list(
   adv_biogas = list(
     abs_market_value = 2605285106.34,
 
-    weights = c(IVC7 = 1.000000, IVC9a = 0.262295),
+    weights = c(IVC7 = 0.792207597, IVC9a = 0.207792403),
 
     prod_cost = list(IVC7 = 917.570994, IVC9a = 1303.901317),
 
@@ -2222,7 +2234,7 @@ S1_2040 <- list(
   adv_biogas = list(
     abs_market_value = 4045070410.30,
 
-    weights = c(IVC7 = 1.000000, IVC9a = 0.095640),
+    weights = c(IVC7 = 0.91270837, IVC9a = 0.08729163),
 
     prod_cost = list(IVC7 = 926.533199, IVC9a = 1308.971617),
 
@@ -2427,9 +2439,9 @@ S2_2040 <- list(
   ),
 
   adv_bio_kerosene = list(
-    abs_market_value = 15416913779.75,
+    abs_market_value =  19382558026.61 ,
 
-    weights = c(IVC2_HEFA = 0.140481, IVC6 = 0.257227, IVC11a_SAF = 0.346789, IVC13b_SAF = 0.512730),
+    weights = c(IVC2_HEFA = 0.111738428, IVC6 = 0.204598601, IVC11a_SAF = 0.275836451, IVC13b_SAF = 0.40782652),
 
     prod_cost = list(IVC2_HEFA = 2431.853820, IVC6 = 2513.829787, IVC11a_SAF = 2783.965415, IVC13b_SAF = 2010.762832),
 
@@ -2614,9 +2626,9 @@ S3_2040 <- list(
   ),
 
   adv_bio_kerosene = list(
-    abs_market_value = 15042940399.52,
+    abs_market_value =  29344052708.12,
 
-    weights = c(IVC2_HEFA = 0.277018, IVC6 = 0.950686, IVC11a_SAF = 0.387473, IVC13b_SAF = 0.335508),
+    weights = c(IVC2_HEFA = 0.142010762, IVC6 = 0.487359822, IVC11a_SAF = 0.198634331, IVC13b_SAF = 0.171995085),
 
     prod_cost = list(IVC2_HEFA = 2431.853820, IVC6 = 2513.829787, IVC11a_SAF = 2783.965415, IVC13b_SAF = 2010.762832),
 

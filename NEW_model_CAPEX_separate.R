@@ -524,14 +524,6 @@ IVC_HT_CC = list(
   dist_opex = c(electricity = 0.15, chemicals = 0.35, legal_acc = 0.18, repair_inst = 0.15, land_transp = 0.17)
 ),
 
-IVC_HT_CC_SAF = list(
-  prod_cost = 2903,
-  market_price = 2100,
-  alpha = c(feed = 0.7506234413965087, capex = 0.0831255195344971, opex = 0.1662510390689942),
-  dist_capex = c(fab_metal = 0.06, machinery = 0.58, construction = 0.08, architecture = 0.25, computer_el = 0.03),
-  dist_opex = c(electricity = 0.15, chemicals = 0.35, legal_acc = 0.18, repair_inst = 0.15, land_transp = 0.17)
-),
-
 IVC_T_lipids = list(
   prod_cost = 1253,
   market_price = 1165.6261363636365,
@@ -547,7 +539,7 @@ IVC_T_lipids = list(
 # (see Annex D). Please double check this correction.
 IVC_HT_lipids = list(
   prod_cost = 2016,
-  market_price = 1165.6261363636365,
+  market_price = 1750,
   alpha = c(feed = 0.6656746031746031, capex = 0.13343253968253968, opex = 0.20089285714285715),
   dist_capex = c(fab_metal = 0.05, machinery = 0.60, construction = 0.07, architecture = 0.25, computer_el = 0.03),
   dist_opex = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.10)
@@ -750,9 +742,9 @@ build_ivc_vector <- function(
   # ------------------------------------------------------------
   # CAPEX
   # ------------------------------------------------------------
-  # CAPEX is kept OUTSIDE intermediate consumption
+  # CAPEX is deliberately kept OUTSIDE intermediate consumption
   # (a_feed / a_opex / operating_inputs / A_dom / A_imp / Z).
-  # Continuous, annualized investment treatment:
+  # OPTION A (continuous, annualized investment treatment):
   # CAPEX is built here as its OWN separate technical-coefficient
   # vector (a_capex), sourced domestic/import exactly like OPEX,
   # so it can later be applied as an annual GFCF-equivalent
@@ -813,8 +805,9 @@ build_ivc_vector <- function(
       operating_inputs
     )
 
-  # CAPEX is split domestic/import separately 
-  
+  # CAPEX is split domestic/import separately - it must NEVER be
+  # merged into operating_inputs, so it never enters a_dom/a_imp
+  # or the recurrent intermediate-consumption matrices.
   capex_split <-
     split_dom_imp(
       a_capex
@@ -1582,6 +1575,7 @@ dist_feed = list(
 # Monetary value in EUR, at market value
 # All imported finished fuels go to final consumption expenditure
 # ==========================================================
+## note: so far only an exogenous scenario vraiavle, stored in each endpoint, but not yet inegrated into annual SFC dynamics
 
 
 S1_imports_2030 <- c(
@@ -1609,7 +1603,7 @@ S2_imports_2030 <- c(
 )
 
 
-# S3 2030: NO imports
+# S3 2030 imports are explicitly "NONE" in the source workbook - all zero.
 S3_imports_2030 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
 
 ## Conversion from scenario values (stored in EUR) into the monetary unit
@@ -2110,7 +2104,7 @@ S1_imports_2035 <- c(
   conv_bio_kerosene = 0,
   adv_bio_kerosene  = 8222014081.21,
   adv_bio_hfo       = 762619367.67,
-  RFNBOs            = 17801918753.24,
+  RFNBOs            = 35603837506.48,
   adv_biogas        = 0
 )
 S1_exports_2035 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
@@ -2128,18 +2122,8 @@ S2_imports_2035 <- c(
 )
 S2_exports_2035 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
 
-# S3 
-S3_imports_2035 <- c(
-  conv_biodiesel    = 0,
-  adv_biodiesel     = 0,
-  conv_biogasoline  = 0,
-  adv_biogasoline   = 0,
-  conv_bio_kerosene = 0,
-  adv_bio_kerosene  = 0,
-  adv_bio_hfo       = 0,
-  RFNBOs            = 1636636120.986,
-  adv_biogas        = 0
-)
+# S3 2035 imports are explicitly "NONE" in the source workbook - all zero.
+S3_imports_2035 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
 
 S3_exports_2035 <- c(
   conv_biodiesel    = 0,
@@ -2165,7 +2149,12 @@ S3_exports_2035 <- c(
 # Derived from the "2040 Sc 1" sheet in Providing_sectors.xlsx.
 #
 # DATA CAVEATS (from the source workbook, not introduced here):
-#  - 
+#  - The "Advanced biodiesel" TOTAL cell is #REF! in the sheet; abs_market_value
+#    below is the sum of IVC1 + IVC2_HVO + IVC13a instead.
+#  - adv_bio_hfo: IVC8a and IVC8b have identical Mtoe/market-value figures in
+#    the sheet (a deliberate 50/50 technology split, as in 2035), so both are
+#    counted in the total even though the sheet's own TOTAL row does not do
+#    so. Please double check this assumption.
 #  - conv_bio_kerosene's only production route in this sheet is hydrotreatment
 #    of cover crops from marginal lands - a different feedstock than the
 #    UCO/animal-fats route (IVC_HT_lipids_SAF) used for conv_bio_kerosene in
@@ -2317,15 +2306,16 @@ dist_feed = list(
   conv_bio_kerosene = list(
     abs_market_value = 4238566319.66,
 
-    weights = c(IVC_HT_CC_SAF = 1.000000),
+    weights = c(IVC_HT_lipids_SAF = 1.000000),
 
 dist_feed = list(
-      IVC_HT_CC_SAF = c(food_bev = 0.720000, food_bev_imp = 0.280000)
+      IVC_HT_lipids_SAF = c(food_bev = 0.720000, food_bev_imp = 0.280000)
     )
   )
 
 )
 
+ 
  
 # ==========================================================
 # FINISHED BIOFUEL IMPORTS / EXPORTS - S1 2040
@@ -4640,6 +4630,37 @@ exports_current <-
 Y_domestic_final_current <-
   Y_dom_current -
   exports_current
+
+
+## ---------------------------------------------------------------
+## DIAGNOSTIC BLOCK (temporary) - prints details if any BIO value
+## is NA, right before the check that was failing. Remove once the
+## underlying cause is fixed.
+## ---------------------------------------------------------------
+if (anyNA(Y_domestic_final_current[BIO])) {
+
+  cat("\n\n==================== NA DIAGNOSTIC ====================\n")
+  cat("Year:", current_year, "\n")
+
+  bad <- names(BIOFUEL_SECTORS)[is.na(Y_domestic_final_current[BIO])]
+  cat("Affected biofuel sector(s):", paste(bad, collapse = ", "), "\n\n")
+
+  cat("X_current[BIO]:\n")
+  print(setNames(X_current[BIO], names(BIOFUEL_SECTORS)))
+
+  cat("\nrowSums(Z_dom_current)[BIO]:\n")
+  print(setNames(rowSums(Z_dom_current)[BIO], names(BIOFUEL_SECTORS)))
+
+  cat("\nexports_current:\n")
+  print(exports_current)
+
+  cat("\nY_dom_current[BIO]:\n")
+  print(setNames(Y_dom_current[BIO], names(BIOFUEL_SECTORS)))
+
+  cat("========================================================\n\n")
+
+  stop("NA detected in Y_domestic_final_current[BIO] - see diagnostic output above.")
+}
 
 
 ## Plausibilitätscheck

@@ -517,6 +517,13 @@ IVC_HT_CC = list(
   dist_capex = c(fab_metal = 0.06, machinery = 0.58, construction = 0.08, architecture = 0.25, computer_el = 0.03),
   dist_opex = c(electricity = 0.15, chemicals = 0.35, legal_acc = 0.18, repair_inst = 0.15, land_transp = 0.17)
 ),
+IVC_HT_CC_SAF = list(
+  prod_cost = 2903,
+  market_price = 2100,
+  alpha = c(feed = 0.7506234413965087, capex = 0.0831255195344971, opex = 0.1662510390689942),
+  dist_capex = c(fab_metal = 0.06, machinery = 0.58, construction = 0.08, architecture = 0.25, computer_el = 0.03),
+  dist_opex = c(electricity = 0.15, chemicals = 0.35, legal_acc = 0.18, repair_inst = 0.15, land_transp = 0.17)
+),
 
 IVC_T_lipids = list(
   prod_cost = 1253,
@@ -2141,19 +2148,6 @@ S3_exports_2035 <- c(
 #####################################################################################
  
 # Derived from the "2040 Sc 1" sheet in Providing_sectors.xlsx.
-#
-# DATA CAVEATS (from the source workbook, not introduced here):
-#  - The "Advanced biodiesel" TOTAL cell is #REF! in the sheet; abs_market_value
-#    below is the sum of IVC1 + IVC2_HVO + IVC13a instead.
-#  - adv_bio_hfo: IVC8a and IVC8b have identical Mtoe/market-value figures in
-#    the sheet (a deliberate 50/50 technology split, as in 2035), so both are
-#    counted in the total even though the sheet's own TOTAL row does not do
-#    so. Please double check this assumption.
-#  - conv_bio_kerosene's only production route in this sheet is hydrotreatment
-#    of cover crops from marginal lands - a different feedstock than the
-#    UCO/animal-fats route (IVC_HT_lipids_SAF) used for conv_bio_kerosene in
-#    2030/2035. Named IVC_HT_CC_road here; please confirm this is consistent
-#    with the rest of the pipeline / your naming conventions elsewhere.
  
 S1_2040 <- list(
 
@@ -2300,10 +2294,10 @@ dist_feed = list(
   conv_bio_kerosene = list(
     abs_market_value = 4238566319.66,
 
-    weights = c(IVC_HT_lipids_SAF = 1.000000),
+    weights = c(IVC_HT_CC_SAF = 1.000000),
 
 dist_feed = list(
-      IVC_HT_lipids_SAF = c(food_bev = 0.720000, food_bev_imp = 0.280000)
+      IVC_HT_CC_SAF = c(food_bev = 0.720000, food_bev_imp = 0.280000)
     )
   )
 

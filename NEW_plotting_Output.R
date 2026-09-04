@@ -1,17 +1,17 @@
 # ===================================================================
-# PLOTTING - OUTPUT-EBENE, KERNERGEBNISSE FUER DIE MA
-# Liest die von NEW_Output_Analysis.R gespeicherten CSVs aus
-# analysis_outputs/ und erzeugt die vier Kern-"Ergebnisdimensionen":
-#   1) Jahrespfad Gesamtoutput-Effekt 2023-2040 (ggue. REF), S1/S2/S3
-#   2) Top NONBIO-Sektoren nach Output-Zuwachs, 2030 / 2035 / 2040, je Szenario
-#   3) Zusammensetzung des NONBIO-Effekts: laufende Vorleistungen vs. CAPEX
-#      (Kapitalintensitaet des aktiven Technologiemixes, KEINE Bauphase!)
-#   4) Importabhaengigkeit: CAPEX-Importanteil ueber die Zeit
+# PLOTTING - OUTPUT-LEVEL CORE RESULTS FOR THE THESIS
+# Reads the CSVs saved by NEW_Output_Analysis.R from analysis_outputs/
+# and produces the four core "result dimensions":
+#   1) Annual path of the total output effect 2023-2040 (vs. REF), S1/S2/S3
+#   2) Top NONBIO sectors by output gain, 2030 / 2035 / 2040, by scenario
+#   3) Composition of the NONBIO effect: recurrent input demand vs. CAPEX
+#      (capital intensity of the active technology mix, NOT a build phase!)
+#   4) Import dependence: CAPEX import share over time
 #
-# Farben: aus dem dataviz-Skill-Referenzpalette entnommen und mit
-# scripts/validate_palette.js gegen CVD-Trennschaerfe/Kontrast geprueft
-# (alle Checks bestanden; Kategorie 1-3 fuer S1-S3, Kategorie 1+8 fuer
-# die Zwei-Komponenten-Zerlegung in Abbildung 3).
+# Colors: taken from the dataviz-skill reference palette and checked with
+# scripts/validate_palette.js for CVD separability/contrast (all checks
+# passed; slots 1-3 for S1-S3, slots 1+8 for the two-component breakdown
+# in Figure 3).
 # ===================================================================
 
 library(ggplot2)
@@ -25,28 +25,28 @@ dir.create(OUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
 scenario_order <- c("S1", "S2", "S3")
 
-# validierte kategoriale Palette (dataviz-Skill, Slots 1-3: blau/orange/aqua;
-# all-pairs CVD- und Normalsicht-Checks in beiden Modi bestanden)
+# validated categorical palette (dataviz skill, slots 1-3: blue/orange/aqua;
+# all-pairs CVD and normal-vision checks passed in both modes)
 scenario_colors <- c(
-  S1 = "#2a78d6",  # blau
+  S1 = "#2a78d6",  # blue
   S2 = "#eb6834",  # orange
   S3 = "#1baf7a"   # aqua
 )
 
 component_colors <- c(
-  "Laufende Vorleistungen (Feedstock/OPEX)" = "#2a78d6",  # Slot 1, blau
-  "CAPEX-getriebene Nachfrage"              = "#e34948"   # Slot 8, rot
+  "Recurrent input demand (feedstock/OPEX)" = "#2a78d6",  # slot 1, blue
+  "CAPEX-driven demand"                     = "#e34948"   # slot 8, red
 )
 
-# Chrome/Ink aus der Referenzpalette (references/palette.md)
+# chrome/ink from the reference palette (references/palette.md)
 ink_primary   <- "#0b0b0b"
 ink_secondary <- "#52514e"
 ink_muted     <- "#898781"
 grid_hairline <- "#e1e0d9"
 axis_line     <- "#c3c2b7"
 
-# Ergebnisse liegen in Mio. EUR vor (Eurostat-IO-Tabellenbasis) -
-# fuer die Abbildungen auf Mrd. EUR umgerechnet.
+# Results are stored in million EUR (Eurostat IO table basis) -
+# converted to billion EUR for the figures.
 TO_BN <- 1 / 1000
 
 base_theme <- theme_minimal(base_size = 12) +
@@ -67,7 +67,7 @@ base_theme <- theme_minimal(base_size = 12) +
   )
 
 # ===================================================================
-# ABBILDUNG 1: Jahrespfad Gesamtoutput-Effekt 2023-2040 (vs. REF)
+# FIGURE 1: Annual path of the total output effect, 2023-2040 (vs. REF)
 # ===================================================================
 
 annual_macro <- read.csv(file.path(IN_DIR, "annual_macro_path.csv"))
@@ -85,11 +85,11 @@ p1 <- ggplot(plot1_data, aes(x = year, y = total_output_change_bn, color = scena
   scale_x_continuous(breaks = seq(2023, 2040, by = 2)) +
   scale_y_continuous(labels = label_number(accuracy = 0.1)) +
   labs(
-    title = "Gesamtwirtschaftlicher Output-Effekt gegenüber der Referenz",
-    subtitle = "Differenz des Gesamtoutputs zu REF (stationäre 2023-Struktur), 2023-2040",
+    title = "Economy-wide output effect relative to the reference",
+    subtitle = "Difference in total output vs. REF (stationary 2023 structure), 2023-2040",
     x = NULL,
-    y = "Output-Differenz ggü. REF (Mrd. EUR)",
-    caption = "Quelle: eigene Berechnung, NEW_model_CAPEX_separate.R / NEW_Output_Analysis.R (annual_macro_path)."
+    y = "Output difference vs. REF (bn EUR)",
+    caption = "Source: own calculation, NEW_model_CAPEX_separate.R / NEW_Output_Analysis.R (annual_macro_path)."
   ) +
   base_theme
 
@@ -97,12 +97,12 @@ ggsave(file.path(OUT_DIR, "fig1_annual_output_effect.png"), p1, width = 8, heigh
 
 
 # ===================================================================
-# ABBILDUNG 2: Top NONBIO-Sektoren nach Output-Zuwachs, 2030/2035/2040
+# FIGURE 2: Top NONBIO sectors by output gain, 2030/2035/2040
 # ===================================================================
 
 top_gains <- read.csv(file.path(IN_DIR, "top_NONBIO_output_gains_all.csv"))
 
-# Sektornamen kuerzen fuer die Achsenbeschriftung
+# shorten sector names for axis labels
 shorten_sector <- function(x) {
   x <- sub(";.*$", "", x)
   x <- sub(" and related services$", "", x)
@@ -111,7 +111,7 @@ shorten_sector <- function(x) {
   ifelse(nchar(x) > 38, paste0(substr(x, 1, 36), "…"), x)
 }
 
-TOP_N <- 6  # pro Panel (Szenario x Jahr) - 9 Panels insgesamt, daher kompakter als vorher
+TOP_N <- 6  # per panel (scenario x year) - 9 panels total, so kept more compact than before
 
 plot2_data <- top_gains %>%
   filter(year %in% c(2030, 2035, 2040), rank <= TOP_N) %>%
@@ -129,14 +129,14 @@ plot2_data <- top_gains %>%
   arrange(facet_label, output_change_bn) %>%
   mutate(sector_key = paste0(sector_short, "___", facet_label))
 
-# Facet-lokale Sortierung ohne tidytext-Abhaengigkeit: pro Panel ein
-# eigener x-Schluessel (sector_key), dessen Suffix beim Beschriften wieder
-# entfernt wird. facet_wrap() (nicht facet_grid!) vergibt pro Panel eine
-# wirklich unabhaengige Skalierung - das ist hier noetig, weil sich die
-# Top-Sektoren UND die Groessenordnung je Szenario und Jahr unterscheiden.
-# Achtung ggplot2-Falle: nach coord_flip() vertauschen sich "free_x"/"free_y"
-# gefuehlt - "free_x" ist hier das, was auf dem Bild als Werte-Achse
-# (horizontal) erscheint, weil facet-Skalen VOR dem Flip trainiert werden.
+# Facet-local ordering without a tidytext dependency: each panel gets its
+# own x key (sector_key), whose suffix is stripped again at label time.
+# facet_wrap() (not facet_grid!) gives each panel a truly independent
+# scale - needed here because both the top sectors AND their magnitude
+# differ by scenario and year.
+# Watch out for this ggplot2 gotcha: after coord_flip(), "free_x"/"free_y"
+# feel swapped - "free_x" is what appears as the (horizontal) value axis
+# on screen, because facet scales are trained BEFORE the flip.
 plot2_data$sector_key <- factor(plot2_data$sector_key, levels = plot2_data$sector_key)
 
 p2 <- ggplot(
@@ -150,11 +150,11 @@ p2 <- ggplot(
   facet_wrap(~facet_label, ncol = 3, scales = "free") +
   scale_y_continuous(labels = label_number(accuracy = 0.1)) +
   labs(
-    title = "Sektoren mit dem größten Output-Zuwachs (NONBIO)",
-    subtitle = paste0("Top ", TOP_N, " Sektoren je Szenario und Jahr, Output-Veränderung gegenüber REF"),
+    title = "Sectors with the largest output gain (NONBIO)",
+    subtitle = paste0("Top ", TOP_N, " sectors by scenario and year, output change vs. REF"),
     x = NULL,
-    y = "Output-Zuwachs ggü. REF (Mrd. EUR)",
-    caption = "Quelle: eigene Berechnung, NEW_Output_Analysis.R (top_NONBIO_output_gains_all)."
+    y = "Output gain vs. REF (bn EUR)",
+    caption = "Source: own calculation, NEW_Output_Analysis.R (top_NONBIO_output_gains_all)."
   ) +
   base_theme +
   theme(
@@ -169,7 +169,7 @@ ggsave(file.path(OUT_DIR, "fig2_top_sectors_2030_2035_2040.png"), p2, width = 14
 
 
 # ===================================================================
-# ABBILDUNG 3: Zusammensetzung des NONBIO-Effekts (recurrent vs. CAPEX)
+# FIGURE 3: Composition of the NONBIO effect (recurrent vs. CAPEX)
 # ===================================================================
 
 decomp <- read.csv(file.path(IN_DIR, "NONBIO_decomposition_all.csv"))
@@ -187,8 +187,8 @@ plot3_data <- decomp %>%
     value_bn = value * TO_BN,
     component = recode(
       component,
-      recurrent_total_NONBIO_output = "Laufende Vorleistungen (Feedstock/OPEX)",
-      capex_total_NONBIO_output = "CAPEX-getriebene Nachfrage"
+      recurrent_total_NONBIO_output = "Recurrent input demand (feedstock/OPEX)",
+      capex_total_NONBIO_output = "CAPEX-driven demand"
     )
   )
 
@@ -198,15 +198,15 @@ p3 <- ggplot(plot3_data, aes(x = scenario, y = value_bn, fill = component)) +
   scale_fill_manual(values = component_colors) +
   scale_y_continuous(labels = label_number(accuracy = 1)) +
   labs(
-    title = "Zusammensetzung des NONBIO-Output-Effekts",
-    subtitle = "Anteil laufender Vorleistungen vs. CAPEX-getriebener Nachfrage am NONBIO-Effekt ggü. REF",
+    title = "Composition of the NONBIO output effect",
+    subtitle = "Share of recurrent input demand vs. CAPEX-driven demand in the NONBIO effect vs. REF",
     x = NULL,
-    y = "NONBIO-Output-Effekt (Mrd. EUR)",
+    y = "NONBIO output effect (bn EUR)",
     caption = paste(
-      "Beide Komponenten sind jährlich neu und proportional zum aktuellen Output berechnet (annualisiert);",
-      "der Anteil spiegelt die Kapitalintensität (alpha-Kostenanteile) des aktiven Technologiemixes wider,",
-      "nicht eine Bau- vs. Betriebsphase.",
-      "Quelle: eigene Berechnung, NEW_Output_Analysis.R (NONBIO_decomposition_all).",
+      "Both components are recalculated every year, proportional to current output (annualized); the split",
+      "reflects the capital intensity (alpha cost shares) of the active technology mix, not a build- vs.",
+      "operating-phase distinction.",
+      "Source: own calculation, NEW_Output_Analysis.R (NONBIO_decomposition_all).",
       sep = "\n"
     )
   ) +
@@ -217,7 +217,7 @@ ggsave(file.path(OUT_DIR, "fig3_recurrent_vs_capex.png"), p3, width = 8.5, heigh
 
 
 # ===================================================================
-# ABBILDUNG 4: Importabhaengigkeit - CAPEX-Importanteil ueber die Zeit
+# FIGURE 4: Import dependence - CAPEX import share over time
 # ===================================================================
 
 annual_trade <- read.csv(file.path(IN_DIR, "annual_import_trade_path.csv"))
@@ -234,14 +234,14 @@ p4 <- ggplot(plot4_data, aes(x = year, y = CAPEX_import_share_pct, color = scena
   scale_x_continuous(breaks = seq(2023, 2040, by = 2)) +
   scale_y_continuous(labels = label_number(suffix = "%", accuracy = 1)) +
   labs(
-    title = "Importanteil der CAPEX-getriebenen Nachfrage",
-    subtitle = "Anteil der CAPEX-Nachfrage (Maschinen, Bau, Elektronik u.Ä.), der importiert wird",
+    title = "Import share of CAPEX-driven demand",
+    subtitle = "Share of CAPEX demand (machinery, construction, electronics, etc.) that is imported",
     x = NULL,
-    y = "Importierter CAPEX-Anteil",
-    caption = "Quelle: eigene Berechnung, NEW_Output_Analysis.R (annual_import_trade_path)."
+    y = "Imported CAPEX share",
+    caption = "Source: own calculation, NEW_Output_Analysis.R (annual_import_trade_path)."
   ) +
   base_theme
 
 ggsave(file.path(OUT_DIR, "fig4_capex_import_share.png"), p4, width = 8.8, height = 5, dpi = 300, bg = "white")
 
-cat("Alle 4 Abbildungen gespeichert in:", OUT_DIR, "\n")
+cat("All 4 figures saved to:", OUT_DIR, "\n")

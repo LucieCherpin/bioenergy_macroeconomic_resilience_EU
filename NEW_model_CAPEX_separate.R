@@ -533,14 +533,9 @@ IVC_T_lipids = list(
   dist_opex = c(electricity = 0.15, chemicals = 0.25, legal_acc = 0.20, repair_inst = 0.20, land_transp = 0.10, sewerage = 0.10)
 ),
 
-# NOTE: renamed from IVC_HT_lipids_road -> IVC_HT_lipids to match the key
-# actually used throughout the scenario blocks. Also corrected market_price:
-# previously mistakenly set to the FAME price (1165.63); this pathway
-# produces HVO/renewable diesel, priced at 1750 elsewhere in this project
-# (see Annex D). Please double check this correction.
 IVC_HT_lipids = list(
   prod_cost = 2016,
-  market_price = 1750,
+  market_price = 1165.6261363636365,
   alpha = c(feed = 0.6656746031746031, capex = 0.13343253968253968, opex = 0.20089285714285715),
   dist_capex = c(fab_metal = 0.05, machinery = 0.60, construction = 0.07, architecture = 0.25, computer_el = 0.03),
   dist_opex = c(electricity = 0.40, chemicals = 0.15, legal_acc = 0.20, repair_inst = 0.15, land_transp = 0.10)

@@ -45,6 +45,13 @@ ink_muted     <- "#898781"
 grid_hairline <- "#e1e0d9"
 axis_line     <- "#c3c2b7"
 
+
+channel_colors <- c(
+  "Feedstock" = "#1baf7a",
+  "OPEX"      = "#2a78d6",
+  "CAPEX"     = "#e34948"
+)
+
 # Results are stored in million EUR (Eurostat IO table basis) -
 # converted to billion EUR for the figures.
 TO_BN <- 1 / 1000
@@ -244,4 +251,348 @@ p4 <- ggplot(plot4_data, aes(x = year, y = CAPEX_import_share_pct, color = scena
 
 ggsave(file.path(OUT_DIR, "fig4_capex_import_share.png"), p4, width = 8.8, height = 5, dpi = 300, bg = "white")
 
-cat("All 4 figures saved to:", OUT_DIR, "\n")
+# ===================================================================
+# FIGURE 5A: Absolute upstream output requirements
+#            Feedstock / OPEX / CAPEX
+# ===================================================================
+
+channel_structure <- read.csv(
+  file.path(
+    IN_DIR,
+    "channel_output_structure_all.csv"
+  )
+)
+
+channel_abs <- channel_structure %>%
+  select(
+    year,
+    scenario,
+    feedstock_total_output,
+    opex_total_output,
+    capex_total_output
+  ) %>%
+  pivot_longer(
+    cols = c(
+      feedstock_total_output,
+      opex_total_output,
+      capex_total_output
+    ),
+    names_to = "channel",
+    values_to = "value"
+  ) %>%
+  mutate(
+    scenario = factor(
+      scenario,
+      levels = scenario_order
+    ),
+
+    year = factor(
+      year,
+      levels = c(2030, 2035, 2040)
+    ),
+
+    channel = recode(
+      channel,
+      feedstock_total_output = "Feedstock",
+      opex_total_output      = "OPEX",
+      capex_total_output     = "CAPEX"
+    ),
+
+    channel = factor(
+      channel,
+      levels = c(
+        "Feedstock",
+        "OPEX",
+        "CAPEX"
+      )
+    ),
+
+    value_bn = value * TO_BN
+  )
+
+
+p5a <- ggplot(
+  channel_abs,
+  aes(
+    x = scenario,
+    y = value_bn,
+    fill = channel
+  )
+) +
+  geom_col(
+    width = 0.62
+  ) +
+  facet_wrap(
+    ~year,
+    nrow = 1
+  ) +
+  scale_fill_manual(
+    values = channel_colors
+  ) +
+  scale_y_continuous(
+    labels = label_number(
+      accuracy = 0.1
+    )
+  ) +
+  labs(
+    title =
+      "Domestic upstream output requirements by input channel",
+
+    subtitle =
+      "Absolute feedstock-, OPEX- and CAPEX-driven upstream output associated with each scenario",
+
+    x = NULL,
+
+    y =
+      "Domestic upstream output requirement (bn EUR)",
+
+    caption = paste(
+      "Scenario-internal structural comparison; not a change relative to REF.",
+      "CAPEX represents annualized capital requirements at their absolute scenario level.",
+      "Source: own calculation, NEW_Output_Analysis.R (channel_output_structure_all).",
+      sep = "\n"
+    )
+  ) +
+  base_theme +
+  theme(
+    plot.caption =
+      element_text(
+        hjust = 0,
+        lineheight = 1.15
+      )
+  )
+
+
+ggsave(
+  file.path(
+    OUT_DIR,
+    "fig5a_channel_output_absolute.png"
+  ),
+  p5a,
+  width = 8.5,
+  height = 5.3,
+  dpi = 300,
+  bg = "white"
+)
+
+                   # ===================================================================
+# FIGURE 5B: Composition shares
+#            Feedstock / OPEX / CAPEX
+# ===================================================================
+
+channel_shares <- channel_structure %>%
+  select(
+    year,
+    scenario,
+    feedstock_share,
+    opex_share,
+    capex_share
+  ) %>%
+  pivot_longer(
+    cols = c(
+      feedstock_share,
+      opex_share,
+      capex_share
+    ),
+    names_to = "channel",
+    values_to = "share"
+  ) %>%
+  mutate(
+    scenario = factor(
+      scenario,
+      levels = scenario_order
+    ),
+
+    year = factor(
+      year,
+      levels = c(2030, 2035, 2040)
+    ),
+
+    channel = recode(
+      channel,
+      feedstock_share = "Feedstock",
+      opex_share      = "OPEX",
+      capex_share     = "CAPEX"
+    ),
+
+    channel = factor(
+      channel,
+      levels = c(
+        "Feedstock",
+        "OPEX",
+        "CAPEX"
+      )
+    )
+  )
+
+
+p5b <- ggplot(
+  channel_shares,
+  aes(
+    x = scenario,
+    y = share,
+    fill = channel
+  )
+) +
+  geom_col(
+    width = 0.62
+  ) +
+  facet_wrap(
+    ~year,
+    nrow = 1
+  ) +
+  scale_fill_manual(
+    values = channel_colors
+  ) +
+  scale_y_continuous(
+    labels = label_percent(
+      accuracy = 1
+    ),
+    limits = c(0, 1),
+    expand = expansion(
+      mult = c(0, 0)
+    )
+  ) +
+  labs(
+    title =
+      "Composition of domestic upstream output requirements",
+
+    subtitle =
+      "Relative contribution of feedstock, OPEX and CAPEX to scenario-specific upstream output requirements",
+
+    x = NULL,
+
+    y =
+      "Share of upstream output requirement",
+
+    caption = paste(
+      "Shares sum to 100% within each scenario-year.",
+      "This figure compares production structures rather than changes relative to REF.",
+      "Source: own calculation, NEW_Output_Analysis.R (channel_output_structure_all).",
+      sep = "\n"
+    )
+  ) +
+  base_theme
+
+
+ggsave(
+  file.path(
+    OUT_DIR,
+    "fig5b_channel_output_shares.png"
+  ),
+  p5b,
+  width = 8.5,
+  height = 5.3,
+  dpi = 300,
+  bg = "white"
+)
+
+
+                   # ===================================================================
+# FIGURE 5C: Upstream output intensity per EUR BIO output
+# ===================================================================
+
+channel_intensity <- channel_structure %>%
+  select(
+    year,
+    scenario,
+    feedstock_output_per_eur_BIO,
+    opex_output_per_eur_BIO,
+    capex_output_per_eur_BIO
+  ) %>%
+  pivot_longer(
+    cols = c(
+      feedstock_output_per_eur_BIO,
+      opex_output_per_eur_BIO,
+      capex_output_per_eur_BIO
+    ),
+    names_to = "channel",
+    values_to = "intensity"
+  ) %>%
+  mutate(
+    scenario = factor(
+      scenario,
+      levels = scenario_order
+    ),
+
+    year = factor(
+      year,
+      levels = c(2030, 2035, 2040)
+    ),
+
+    channel = recode(
+      channel,
+      feedstock_output_per_eur_BIO = "Feedstock",
+      opex_output_per_eur_BIO      = "OPEX",
+      capex_output_per_eur_BIO     = "CAPEX"
+    ),
+
+    channel = factor(
+      channel,
+      levels = c(
+        "Feedstock",
+        "OPEX",
+        "CAPEX"
+      )
+    )
+  )
+
+
+p5c <- ggplot(
+  channel_intensity,
+  aes(
+    x = scenario,
+    y = intensity,
+    fill = channel
+  )
+) +
+  geom_col(
+    width = 0.62
+  ) +
+  facet_wrap(
+    ~year,
+    nrow = 1
+  ) +
+  scale_fill_manual(
+    values = channel_colors
+  ) +
+  scale_y_continuous(
+    labels = label_number(
+      accuracy = 0.01
+    )
+  ) +
+  labs(
+    title =
+      "Domestic upstream output intensity of biofuel production",
+
+    subtitle =
+      "Upstream output requirements per euro of domestic biofuel output, by input channel",
+
+    x = NULL,
+
+    y =
+      "Upstream output requirement per EUR biofuel output (EUR/EUR)",
+
+    caption = paste(
+      "Normalizing by domestic biofuel output separates production-structure effects from scenario scale.",
+      "CAPEX represents annualized capital requirements.",
+      "Source: own calculation, NEW_Output_Analysis.R (channel_output_structure_all).",
+      sep = "\n"
+    )
+  ) +
+  base_theme
+
+
+ggsave(
+  file.path(
+    OUT_DIR,
+    "fig5c_channel_output_intensity.png"
+  ),
+  p5c,
+  width = 8.5,
+  height = 5.3,
+  dpi = 300,
+  bg = "white"
+)
+                   
+cat("All output figures saved to:", OUT_DIR, "\n")

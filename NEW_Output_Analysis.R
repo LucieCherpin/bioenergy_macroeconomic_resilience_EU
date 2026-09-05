@@ -2454,7 +2454,7 @@ analysis_tables <- list(
   advanced_biofuel_GVA_all,
 
 advanced_GVA_summary_all =
-  advanced_GVA_summary_all,
+  advanced_GVA_summary_all
 )
 
 for (table_name in names(analysis_tables)) {

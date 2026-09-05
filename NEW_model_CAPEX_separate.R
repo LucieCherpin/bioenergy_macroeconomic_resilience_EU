@@ -782,52 +782,44 @@ build_ivc_vector <- function(
   # CAPEX is not included and the remaining components are NOT
   # renormalized.
   # ------------------------------------------------------------
+# Keep feedstock and OPEX separate for later diagnostics
+feed_split <- split_dom_imp(a_feed)
+opex_split <- split_dom_imp(a_opex)
 
-  operating_inputs <-
-    c(
-      a_feed,
-      a_opex
-    )
+capex_split <- split_dom_imp(a_capex)
 
+# Combined recurrent coefficients used by the actual IO model
+a_dom_recurrent <-
+  feed_split$dom +
+  opex_split$dom
 
-  # ------------------------------------------------------------
-  # SPLIT INTO DOMESTIC AND IMPORTED INPUT VECTORS
-  # ------------------------------------------------------------
-
-  input_split <-
-    split_dom_imp(
-      operating_inputs
-    )
-
-  # CAPEX is split domestic/import separately - it must NEVER be
-  # merged into operating_inputs, so it never enters a_dom/a_imp
-  # or the recurrent intermediate-consumption matrices.
-  capex_split <-
-    split_dom_imp(
-      a_capex
-    )
+a_imp_recurrent <-
+  feed_split$imp +
+  opex_split$imp
 
 
   # ------------------------------------------------------------
   # RETURN
   # ------------------------------------------------------------
 
-  list(
-    a_dom =
-      input_split$dom,
+list(
+  # combined recurrent coefficients used by model
+  a_dom = a_dom_recurrent,
+  a_imp = a_imp_recurrent,
 
-    a_imp =
-      input_split$imp,
+  # NEW: diagnostic split
+  a_feed_dom = feed_split$dom,
+  a_feed_imp = feed_split$imp,
 
-    a_capex_dom =
-      capex_split$dom,
+  a_opex_dom = opex_split$dom,
+  a_opex_imp = opex_split$imp,
 
-    a_capex_imp =
-      capex_split$imp,
+  # existing CAPEX
+  a_capex_dom = capex_split$dom,
+  a_capex_imp = capex_split$imp,
 
-    gate_fee_coeff =
-      gate_fee_coeff
-  )
+  gate_fee_coeff = gate_fee_coeff
+)
 }
 
 ##############################################################################################
@@ -900,6 +892,11 @@ weights <- weights / weight_sum
   a_imp_agg <- NULL
   a_capex_dom_agg <- NULL
   a_capex_imp_agg <- NULL
+  a_feed_dom_agg <- NULL
+a_feed_imp_agg <- NULL
+
+a_opex_dom_agg <- NULL
+a_opex_imp_agg <- NULL
   gate_fee_coeff_agg <- 0
 
 
@@ -1041,6 +1038,30 @@ weights <- weights / weight_sum
           names(ivc_res$a_dom)
         )
 
+      a_feed_dom_agg <-
+  setNames(
+    numeric(length(ivc_res$a_feed_dom)),
+    names(ivc_res$a_feed_dom)
+  )
+
+a_feed_imp_agg <-
+  setNames(
+    numeric(length(ivc_res$a_feed_imp)),
+    names(ivc_res$a_feed_imp)
+  )
+
+a_opex_dom_agg <-
+  setNames(
+    numeric(length(ivc_res$a_opex_dom)),
+    names(ivc_res$a_opex_dom)
+  )
+
+a_opex_imp_agg <-
+  setNames(
+    numeric(length(ivc_res$a_opex_imp)),
+    names(ivc_res$a_opex_imp)
+  )
+
       a_imp_agg <-
         setNames(
           numeric(length(ivc_res$a_imp)),
@@ -1084,6 +1105,23 @@ weights <- weights / weight_sum
     gate_fee_coeff_agg <-
       gate_fee_coeff_agg +
       w * ivc_res$gate_fee_coeff
+
+a_feed_dom_agg <-
+  a_feed_dom_agg +
+  w * ivc_res$a_feed_dom
+
+a_feed_imp_agg <-
+  a_feed_imp_agg +
+  w * ivc_res$a_feed_imp
+
+a_opex_dom_agg <-
+  a_opex_dom_agg +
+  w * ivc_res$a_opex_dom
+
+a_opex_imp_agg <-
+  a_opex_imp_agg +
+  w * ivc_res$a_opex_imp
+    
   }
 
 
@@ -1096,7 +1134,12 @@ weights <- weights / weight_sum
     a_imp = a_imp_agg,
     a_capex_dom = a_capex_dom_agg,
     a_capex_imp = a_capex_imp_agg,
-    gate_fee_coeff = gate_fee_coeff_agg
+    gate_fee_coeff = gate_fee_coeff_agg,
+    a_feed_dom = a_feed_dom_agg,
+a_feed_imp = a_feed_imp_agg,
+
+a_opex_dom = a_opex_dom_agg,
+a_opex_imp = a_opex_imp_agg
   )
 }
 
@@ -2862,6 +2905,35 @@ A_capex_imp_target <-
     dimnames = dimnames(BASE_2023$A_imp)
   )
 
+A_feed_dom_target <- matrix(
+  0,
+  nrow = nIndustries,
+  ncol = nIndustries,
+  dimnames = dimnames(BASE_2023$A_dom)
+)
+
+A_feed_imp_target <- matrix(
+  0,
+  nrow = nIndustries,
+  ncol = nIndustries,
+  dimnames = dimnames(BASE_2023$A_imp)
+)
+
+A_opex_dom_target <- matrix(
+  0,
+  nrow = nIndustries,
+  ncol = nIndustries,
+  dimnames = dimnames(BASE_2023$A_dom)
+)
+
+A_opex_imp_target <- matrix(
+  0,
+  nrow = nIndustries,
+  ncol = nIndustries,
+  dimnames = dimnames(BASE_2023$A_imp)
+)
+  
+
   # ---------------------------------------------------------------
   # 6.2. EXOGENOUS DOMESTIC BIOFUEL OUTPUT
   # ---------------------------------------------------------------
@@ -2945,7 +3017,8 @@ if (is.null(sourcing_group)) {
     fuel_cfg = fuel_cfg,
     sourcing_group = sourcing_group
   )
-    
+
+
     gate_fee_coeff_target[target_col] <-
   res_fuel$gate_fee_coeff
 
@@ -2980,6 +3053,74 @@ if (is.null(sourcing_group)) {
           res_fuel$a_imp[[imp_sec]]
       }
     }
+
+    for (sec_name in names(res_fuel$a_feed_dom)) {
+
+  if (sec_name %in% names(INPUT_SECTORS)) {
+
+    row_idx <- INPUT_SECTORS[[sec_name]]
+
+    A_feed_dom_target[row_idx, target_col] <-
+      res_fuel$a_feed_dom[[sec_name]]
+  }
+}
+
+    for (sec_name in names(res_fuel$a_feed_imp)) {
+
+  base_name <- sub("_imp$", "", sec_name)
+
+  if (base_name %in% names(INPUT_SECTORS)) {
+
+    row_idx <- INPUT_SECTORS[[base_name]]
+
+    A_feed_imp_target[row_idx, target_col] <-
+      res_fuel$a_feed_imp[[sec_name]]
+  }
+}
+
+    for (sec_name in names(res_fuel$a_opex_dom)) {
+
+  if (sec_name %in% names(INPUT_SECTORS)) {
+
+    row_idx <- INPUT_SECTORS[[sec_name]]
+
+    A_opex_dom_target[row_idx, target_col] <-
+      res_fuel$a_opex_dom[[sec_name]]
+  }
+}
+    
+for (sec_name in names(res_fuel$a_opex_imp)) {
+
+  base_name <- sub("_imp$", "", sec_name)
+
+  if (base_name %in% names(INPUT_SECTORS)) {
+
+    row_idx <- INPUT_SECTORS[[base_name]]
+
+    A_opex_imp_target[row_idx, target_col] <-
+      res_fuel$a_opex_imp[[sec_name]]
+  }
+}
+
+    stopifnot(
+  isTRUE(
+    all.equal(
+      A_dom_target[, BIO, drop = FALSE],
+      A_feed_dom_target[, BIO, drop = FALSE] +
+        A_opex_dom_target[, BIO, drop = FALSE],
+      tolerance = 1e-10
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      A_imp_target[, BIO, drop = FALSE],
+      A_feed_imp_target[, BIO, drop = FALSE] +
+        A_opex_imp_target[, BIO, drop = FALSE],
+      tolerance = 1e-10
+    )
+  )
+)
 
 
     # -------------------------------------------------------------
@@ -3034,7 +3175,12 @@ if (is.null(sourcing_group)) {
     X_bio = X_bio_target,
     Y_imp_FCE = Y_imp_FCE_target,
     exports = exports_target,
-    gate_fee_coeff = gate_fee_coeff_target
+    gate_fee_coeff = gate_fee_coeff_target,
+    A_feed_dom = A_feed_dom_target,
+A_feed_imp = A_feed_imp_target,
+
+A_opex_dom = A_opex_dom_target,
+A_opex_imp = A_opex_imp_target
   )
 }
 
@@ -3276,6 +3422,34 @@ A_capex_imp_BASE_2023[25, 14] <- 0.00106410  # computer_el_imp
 # -------------------------------------------------------------------
 # Collect 2023 baseline
 # -------------------------------------------------------------------
+A_feed_dom_BASE_2023 <- matrix(
+  0,
+  nrow = nIndustries,
+  ncol = nIndustries,
+  dimnames = dimnames(A_dom_BASE_2023)
+)
+
+A_feed_imp_BASE_2023 <- matrix(
+  0,
+  nrow = nIndustries,
+  ncol = nIndustries,
+  dimnames = dimnames(A_imp_BASE_2023)
+)
+
+A_opex_dom_BASE_2023 <- matrix(
+  0,
+  nrow = nIndustries,
+  ncol = nIndustries,
+  dimnames = dimnames(A_dom_BASE_2023)
+)
+
+A_opex_imp_BASE_2023 <- matrix(
+  0,
+  nrow = nIndustries,
+  ncol = nIndustries,
+  dimnames = dimnames(A_imp_BASE_2023)
+)
+
 
 BASE_2023 <- list(
 
@@ -3308,7 +3482,13 @@ BASE_2023 <- list(
   gate_fee_coeff = gate_fee_coeff_BASE_2023,
 
   Y_imp_FCE = t_f_e_imp,
-  exports = exports_BASE_2023
+  exports = exports_BASE_2023,
+
+  A_feed_dom = A_feed_dom_BASE_2023,
+A_feed_imp = A_feed_imp_BASE_2023,
+
+A_opex_dom = A_opex_dom_BASE_2023,
+A_opex_imp = A_opex_imp_BASE_2023
 )
 
 # ===================================================================
@@ -3576,6 +3756,30 @@ gate_fee_coeff_path <- matrix(
   )
 )
 
+  A_feed_dom_path <- array(
+  NA_real_,
+  dim = c(n_years, nIndustries, nIndustries),
+  dimnames = dimnames(A_dom_path)
+)
+
+A_feed_imp_path <- array(
+  NA_real_,
+  dim = c(n_years, nIndustries, nIndustries),
+  dimnames = dimnames(A_imp_path)
+)
+
+A_opex_dom_path <- array(
+  NA_real_,
+  dim = c(n_years, nIndustries, nIndustries),
+  dimnames = dimnames(A_dom_path)
+)
+
+A_opex_imp_path <- array(
+  NA_real_,
+  dim = c(n_years, nIndustries, nIndustries),
+  dimnames = dimnames(A_imp_path)
+)
+
 
 
 # ---------------------------------------------------------------
@@ -3685,6 +3889,34 @@ exports_end   <- end_endpoint$exports
           start_endpoint$A_capex_imp[, BIO, drop = FALSE]
       )
 
+    A_feed_dom_current <-
+  start_endpoint$A_feed_dom +
+  lambda * (
+    end_endpoint$A_feed_dom -
+      start_endpoint$A_feed_dom
+  )
+
+A_feed_imp_current <-
+  start_endpoint$A_feed_imp +
+  lambda * (
+    end_endpoint$A_feed_imp -
+      start_endpoint$A_feed_imp
+  )
+
+A_opex_dom_current <-
+  start_endpoint$A_opex_dom +
+  lambda * (
+    end_endpoint$A_opex_dom -
+      start_endpoint$A_opex_dom
+  )
+
+A_opex_imp_current <-
+  start_endpoint$A_opex_imp +
+  lambda * (
+    end_endpoint$A_opex_imp -
+      start_endpoint$A_opex_imp
+  )
+
 
     # -------------------------------------------------------------
     # DOMESTIC BIOFUEL OUTPUT - exogeneously set
@@ -3741,6 +3973,12 @@ gate_fee_coeff_current <-
     A_capex_dom_path[i, , ] <- A_capex_dom_current
     A_capex_imp_path[i, , ] <- A_capex_imp_current
 
+    A_feed_dom_path[i, , ] <- A_feed_dom_current
+A_feed_imp_path[i, , ] <- A_feed_imp_current
+
+A_opex_dom_path[i, , ] <- A_opex_dom_current
+A_opex_imp_path[i, , ] <- A_opex_imp_current
+
     X_bio_path[i, ] <- X_bio_current
 
     Y_imp_FCE_path[i, ] <-
@@ -3761,6 +3999,12 @@ gate_fee_coeff_path[i, ] <-
 
     A_dom = A_dom_path,
     A_imp = A_imp_path,
+
+    A_feed_dom = A_feed_dom_path,
+A_feed_imp = A_feed_imp_path,
+
+A_opex_dom = A_opex_dom_path,
+A_opex_imp = A_opex_imp_path,
 
     A_capex_dom = A_capex_dom_path,
     A_capex_imp = A_capex_imp_path,

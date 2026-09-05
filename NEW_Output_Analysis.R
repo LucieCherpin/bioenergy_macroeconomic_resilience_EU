@@ -2010,7 +2010,417 @@ for (year in as.integer(benchmark_years)) {
     )
   }
 }
+# ===================================================================
+# ADVANCED BIOFUEL-SPECIFIC DOMESTIC GVA INTENSITY
+#
+# Scenario-internal analysis.
+# No comparison with REF.
+#
+# For each advanced biofuel:
+#   - direct BIO GVA
+#   - feedstock-driven upstream GVA
+#   - OPEX-driven upstream GVA
+#   - CAPEX-related upstream GVA
+#
+# Upstream GVA is obtained by:
+#   1) propagating domestic channel-specific demand through L_NN
+#   2) applying NONBIO sector-specific GVA/output coefficients
+# ===================================================================
 
+
+calculate_advanced_biofuel_GVA <- function(
+    endpoint,
+    year,
+    scenario_name
+) {
+
+  # ---------------------------------------------------------------
+  # NONBIO production structure
+  # ---------------------------------------------------------------
+
+  A_NN <-
+    endpoint$A_dom_tech[
+      NONBIO,
+      NONBIO,
+      drop = FALSE
+    ]
+
+  L_NN <-
+    solve(
+      base::diag(length(NONBIO)) -
+        A_NN
+    )
+
+
+  # ---------------------------------------------------------------
+  # NONBIO GVA coefficients
+  #
+  # v_i = GVA_i / X_i
+  # ---------------------------------------------------------------
+
+  gva_coeff_NONBIO <-
+    safe_ratio(
+      endpoint$GVA[NONBIO],
+      endpoint$X[NONBIO]
+    )
+
+  gva_coeff_NONBIO[
+    !is.finite(gva_coeff_NONBIO)
+  ] <- 0
+
+
+  # ---------------------------------------------------------------
+  # CALCULATE EACH ADVANCED BIOFUEL SEPARATELY
+  # ---------------------------------------------------------------
+
+  out <- lapply(
+    ADV_BIO,
+    function(bio_sector) {
+
+      bio_output <-
+        endpoint$X_bio[bio_sector]
+
+
+      # If this fuel is not produced in this scenario-year,
+      # keep levels at zero and intensities at NA.
+      if (
+        !is.finite(bio_output) ||
+        abs(bio_output) < 1e-12
+      ) {
+
+        return(
+          data.frame(
+            year = as.integer(year),
+            scenario = scenario_name,
+            bio_sector_id = bio_sector,
+            biofuel = get_fuel_name(bio_sector),
+
+            BIO_output = 0,
+
+            direct_BIO_GVA = 0,
+            feedstock_upstream_GVA = 0,
+            opex_upstream_GVA = 0,
+            recurrent_upstream_GVA = 0,
+            capex_upstream_GVA = 0,
+
+            operating_chain_GVA = 0,
+            total_associated_GVA = 0,
+
+            direct_BIO_GVA_per_eur_BIO = NA_real_,
+            feedstock_upstream_GVA_per_eur_BIO = NA_real_,
+            opex_upstream_GVA_per_eur_BIO = NA_real_,
+            recurrent_upstream_GVA_per_eur_BIO = NA_real_,
+            capex_upstream_GVA_per_eur_BIO = NA_real_,
+
+            operating_chain_GVA_per_eur_BIO = NA_real_,
+            total_associated_GVA_per_eur_BIO = NA_real_
+          )
+        )
+      }
+
+
+      # -----------------------------------------------------------
+      # DIRECT DOMESTIC DEMAND BY CHANNEL
+      # -----------------------------------------------------------
+
+      feedstock_direct <-
+        endpoint$A_feed_dom_tech[
+          NONBIO,
+          bio_sector,
+          drop = FALSE
+        ] *
+        bio_output
+
+
+      opex_direct <-
+        endpoint$A_opex_dom_tech[
+          NONBIO,
+          bio_sector,
+          drop = FALSE
+        ] *
+        bio_output
+
+
+      capex_direct <-
+        endpoint$A_capex_dom_tech[
+          NONBIO,
+          bio_sector,
+          drop = FALSE
+        ] *
+        bio_output
+
+
+      # -----------------------------------------------------------
+      # PROPAGATE THROUGH DOMESTIC NONBIO SUPPLY CHAINS
+      # -----------------------------------------------------------
+
+      feedstock_output <-
+        as.numeric(
+          L_NN %*%
+            feedstock_direct
+        )
+
+
+      opex_output <-
+        as.numeric(
+          L_NN %*%
+            opex_direct
+        )
+
+
+      capex_output <-
+        as.numeric(
+          L_NN %*%
+            capex_direct
+        )
+
+
+      # -----------------------------------------------------------
+      # CONVERT UPSTREAM OUTPUT INTO UPSTREAM GVA
+      # -----------------------------------------------------------
+
+      feedstock_upstream_GVA <-
+        sum(
+          gva_coeff_NONBIO *
+            feedstock_output
+        )
+
+
+      opex_upstream_GVA <-
+        sum(
+          gva_coeff_NONBIO *
+            opex_output
+        )
+
+
+      recurrent_upstream_GVA <-
+        feedstock_upstream_GVA +
+        opex_upstream_GVA
+
+
+      capex_upstream_GVA <-
+        sum(
+          gva_coeff_NONBIO *
+            capex_output
+        )
+
+
+      # -----------------------------------------------------------
+      # DIRECT GVA OF THE ADVANCED BIOFUEL SECTOR ITSELF
+      # -----------------------------------------------------------
+
+      direct_BIO_GVA <-
+        endpoint$GVA[bio_sector]
+
+
+      # -----------------------------------------------------------
+      # AGGREGATES
+      # -----------------------------------------------------------
+
+      operating_chain_GVA <-
+        direct_BIO_GVA +
+        recurrent_upstream_GVA
+
+
+      total_associated_GVA <-
+        operating_chain_GVA +
+        capex_upstream_GVA
+
+
+      # -----------------------------------------------------------
+      # RETURN
+      # -----------------------------------------------------------
+
+      data.frame(
+        year = as.integer(year),
+        scenario = scenario_name,
+        bio_sector_id = bio_sector,
+        biofuel = get_fuel_name(bio_sector),
+
+        BIO_output = bio_output,
+
+        direct_BIO_GVA =
+          direct_BIO_GVA,
+
+        feedstock_upstream_GVA =
+          feedstock_upstream_GVA,
+
+        opex_upstream_GVA =
+          opex_upstream_GVA,
+
+        recurrent_upstream_GVA =
+          recurrent_upstream_GVA,
+
+        capex_upstream_GVA =
+          capex_upstream_GVA,
+
+        operating_chain_GVA =
+          operating_chain_GVA,
+
+        total_associated_GVA =
+          total_associated_GVA,
+
+
+        direct_BIO_GVA_per_eur_BIO =
+          safe_ratio(
+            direct_BIO_GVA,
+            bio_output
+          ),
+
+        feedstock_upstream_GVA_per_eur_BIO =
+          safe_ratio(
+            feedstock_upstream_GVA,
+            bio_output
+          ),
+
+        opex_upstream_GVA_per_eur_BIO =
+          safe_ratio(
+            opex_upstream_GVA,
+            bio_output
+          ),
+
+        recurrent_upstream_GVA_per_eur_BIO =
+          safe_ratio(
+            recurrent_upstream_GVA,
+            bio_output
+          ),
+
+        capex_upstream_GVA_per_eur_BIO =
+          safe_ratio(
+            capex_upstream_GVA,
+            bio_output
+          ),
+
+        operating_chain_GVA_per_eur_BIO =
+          safe_ratio(
+            operating_chain_GVA,
+            bio_output
+          ),
+
+        total_associated_GVA_per_eur_BIO =
+          safe_ratio(
+            total_associated_GVA,
+            bio_output
+          )
+      )
+    }
+  )
+
+
+  do.call(
+    rbind,
+    out
+  )
+}
+
+
+
+advanced_biofuel_GVA_all <-
+  do.call(
+    rbind,
+    lapply(
+      benchmark_years,
+      function(year) {
+
+        do.call(
+          rbind,
+          lapply(
+            scenario_names,
+            function(scenario_name) {
+
+              calculate_advanced_biofuel_GVA(
+                endpoint =
+                  results[[year]][[scenario_name]],
+
+                year =
+                  year,
+
+                scenario_name =
+                  scenario_name
+              )
+            }
+          )
+        )
+      }
+    )
+  )
+
+
+rownames(
+  advanced_biofuel_GVA_all
+) <- NULL
+
+# ===================================================================
+# AGGREGATE ADVANCED-BIOFUEL GVA INTENSITY
+# ===================================================================
+
+advanced_GVA_summary_all <-
+  aggregate(
+    cbind(
+      BIO_output,
+      direct_BIO_GVA,
+      feedstock_upstream_GVA,
+      opex_upstream_GVA,
+      recurrent_upstream_GVA,
+      capex_upstream_GVA,
+      operating_chain_GVA,
+      total_associated_GVA
+    ) ~ year + scenario,
+    data = advanced_biofuel_GVA_all,
+    FUN = sum
+  )
+
+
+advanced_GVA_summary_all$direct_BIO_GVA_per_eur_ADV <-
+  safe_ratio(
+    advanced_GVA_summary_all$direct_BIO_GVA,
+    advanced_GVA_summary_all$BIO_output
+  )
+
+
+advanced_GVA_summary_all$feedstock_upstream_GVA_per_eur_ADV <-
+  safe_ratio(
+    advanced_GVA_summary_all$feedstock_upstream_GVA,
+    advanced_GVA_summary_all$BIO_output
+  )
+
+
+advanced_GVA_summary_all$opex_upstream_GVA_per_eur_ADV <-
+  safe_ratio(
+    advanced_GVA_summary_all$opex_upstream_GVA,
+    advanced_GVA_summary_all$BIO_output
+  )
+
+
+advanced_GVA_summary_all$recurrent_upstream_GVA_per_eur_ADV <-
+  safe_ratio(
+    advanced_GVA_summary_all$recurrent_upstream_GVA,
+    advanced_GVA_summary_all$BIO_output
+  )
+
+
+advanced_GVA_summary_all$capex_upstream_GVA_per_eur_ADV <-
+  safe_ratio(
+    advanced_GVA_summary_all$capex_upstream_GVA,
+    advanced_GVA_summary_all$BIO_output
+  )
+
+
+advanced_GVA_summary_all$operating_chain_GVA_per_eur_ADV <-
+  safe_ratio(
+    advanced_GVA_summary_all$operating_chain_GVA,
+    advanced_GVA_summary_all$BIO_output
+  )
+
+
+advanced_GVA_summary_all$total_associated_GVA_per_eur_ADV <-
+  safe_ratio(
+    advanced_GVA_summary_all$total_associated_GVA,
+    advanced_GVA_summary_all$BIO_output
+  )
+  
+
+  
 # ===================================================================
 # 18. SAVE ANALYSIS TABLES
 # ===================================================================
@@ -2039,7 +2449,12 @@ analysis_tables <- list(
   S2_S3_decomposition_all = S2_S3_decomposition_all,
   S2_S3_sector_decomposition_all = S2_S3_sector_decomposition_all,
   channel_output_structure_all = channel_output_structure_all,
-  channel_sector_structure_all = channel_sector_structure_all
+  channel_sector_structure_all = channel_sector_structure_all,
+  advanced_biofuel_GVA_all =
+  advanced_biofuel_GVA_all,
+
+advanced_GVA_summary_all =
+  advanced_GVA_summary_all,
 )
 
 for (table_name in names(analysis_tables)) {

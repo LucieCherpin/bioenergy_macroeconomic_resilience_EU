@@ -169,26 +169,29 @@ get_imported_capex_level_from_coefficients <- function(endpoint) {
 # 4. PRE-FLIGHT CHECKS
 # ===================================================================
 
-required_endpoint_fields <- c(
+# Fields required for ALL endpoints, including REF
+required_endpoint_fields_common <- c(
   "X",
   "GVA",
   "A_dom_tech",
   "A_imp_tech",
-
-  "A_feed_dom_tech",
-  "A_feed_imp_tech",
-  "A_opex_dom_tech",
-  "A_opex_imp_tech",
-
   "A_capex_dom_tech",
   "A_capex_imp_tech",
-
   "X_bio",
   "Y_imp_FCE",
   "exports",
   "GFCF_capex_level",
   "GFCF_capex_delta",
   "CAPEX_imp_leakage"
+)
+
+# Additional fields required ONLY for S1/S2/S3
+# because the Feedstock/OPEX analysis is scenario-internal
+required_endpoint_fields_channels <- c(
+  "A_feed_dom_tech",
+  "A_feed_imp_tech",
+  "A_opex_dom_tech",
+  "A_opex_imp_tech"
 )
 
 for (year in benchmark_years) {
@@ -199,7 +202,19 @@ for (year in benchmark_years) {
   for (scenario_name in all_scenarios) {
     endpoint <- year_results[[scenario_name]]
 
-    missing_fields <- setdiff(required_endpoint_fields, names(endpoint))
+required_fields_current <- required_endpoint_fields_common
+
+if (scenario_name %in% scenario_names) {
+  required_fields_current <- c(
+    required_fields_current,
+    required_endpoint_fields_channels
+  )
+}
+
+missing_fields <- setdiff(
+  required_fields_current,
+  names(endpoint)
+)
 
     if (length(missing_fields) > 0) {
       stop(
@@ -211,22 +226,32 @@ for (year in benchmark_years) {
       )
     }
 
-    stopifnot(
-      length(endpoint$X) == length(sector_names),
-      length(endpoint$GVA) == length(sector_names),
-      length(endpoint$X_bio) == length(sector_names),
-      !anyNA(endpoint$X),
-      !anyNA(endpoint$GVA),
-      !anyNA(endpoint$X_bio[BIO]),
-      !anyNA(endpoint$A_dom_tech),
-      !anyNA(endpoint$A_imp_tech),
-      !anyNA(endpoint$A_capex_dom_tech),
-      !anyNA(endpoint$A_capex_imp_tech),
-      !anyNA(endpoint$A_feed_dom_tech),
-      !anyNA(endpoint$A_feed_imp_tech),
-      !anyNA(endpoint$A_opex_dom_tech),
-      !anyNA(endpoint$A_opex_imp_tech)
-    )
+stopifnot(
+  length(endpoint$X) == length(sector_names),
+  length(endpoint$GVA) == length(sector_names),
+  length(endpoint$X_bio) == length(sector_names),
+
+  !anyNA(endpoint$X),
+  !anyNA(endpoint$GVA),
+  !anyNA(endpoint$X_bio[BIO]),
+
+  !anyNA(endpoint$A_dom_tech),
+  !anyNA(endpoint$A_imp_tech),
+
+  !anyNA(endpoint$A_capex_dom_tech),
+  !anyNA(endpoint$A_capex_imp_tech)
+)
+
+# Feedstock/OPEX fields are only needed for S1/S2/S3
+if (scenario_name %in% scenario_names) {
+
+  stopifnot(
+    !anyNA(endpoint$A_feed_dom_tech),
+    !anyNA(endpoint$A_feed_imp_tech),
+    !anyNA(endpoint$A_opex_dom_tech),
+    !anyNA(endpoint$A_opex_imp_tech)
+  )
+}
 
     # CAPEX level stored by the model must match the level reconstructed
     # from the stored CAPEX coefficients and BIO output.

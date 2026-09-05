@@ -4161,7 +4161,31 @@ combine_scenario_drivers <- function(...) {
     ] <-
       d$A_dom[keep, , , drop = FALSE]
 
+    
+A_feed_dom_new[1:old_n, , ] <-
+  out$A_feed_dom
 
+A_feed_imp_new[1:old_n, , ] <-
+  out$A_feed_imp
+
+A_opex_dom_new[1:old_n, , ] <-
+  out$A_opex_dom
+
+A_opex_imp_new[1:old_n, , ] <-
+  out$A_opex_imp
+
+
+    A_feed_dom_new[(old_n + 1):new_n, , ] <-
+  drv$A_feed_dom[-1, , , drop = FALSE]
+
+A_feed_imp_new[(old_n + 1):new_n, , ] <-
+  drv$A_feed_imp[-1, , , drop = FALSE]
+
+A_opex_dom_new[(old_n + 1):new_n, , ] <-
+  drv$A_opex_dom[-1, , , drop = FALSE]
+
+A_opex_imp_new[(old_n + 1):new_n, , ] <-
+  drv$A_opex_imp[-1, , , drop = FALSE]
     # ------------------------------------------------------------
     # A_imp
     # ------------------------------------------------------------
@@ -4237,6 +4261,32 @@ combine_scenario_drivers <- function(...) {
       d$A_capex_imp[keep, , , drop = FALSE]
 
 
+A_feed_dom_new <-
+  array(
+    NA_real_,
+    dim = c(new_n, nIndustries, nIndustries)
+  )
+
+A_feed_imp_new <-
+  array(
+    NA_real_,
+    dim = c(new_n, nIndustries, nIndustries)
+  )
+
+A_opex_dom_new <-
+  array(
+    NA_real_,
+    dim = c(new_n, nIndustries, nIndustries)
+  )
+
+A_opex_imp_new <-
+  array(
+    NA_real_,
+    dim = c(new_n, nIndustries, nIndustries)
+  )
+    
+
+
     # ------------------------------------------------------------
     # Remaining matrices
     # ------------------------------------------------------------
@@ -4271,6 +4321,11 @@ combine_scenario_drivers <- function(...) {
     out$A_imp <- A_imp_new
     out$A_capex_dom <- A_capex_dom_new
     out$A_capex_imp <- A_capex_imp_new
+    out$A_feed_dom <- A_feed_dom_new
+out$A_feed_imp <- A_feed_imp_new
+
+out$A_opex_dom <- A_opex_dom_new
+out$A_opex_imp <- A_opex_imp_new
   }
 
 

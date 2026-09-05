@@ -252,6 +252,30 @@ for (year in benchmark_years) {
         )
       )
     )
+
+if (scenario_name %in% scenario_names) {
+
+  stopifnot(
+
+    isTRUE(
+      all.equal(
+        endpoint$A_dom_tech[, BIO, drop = FALSE],
+        endpoint$A_feed_dom_tech[, BIO, drop = FALSE] +
+          endpoint$A_opex_dom_tech[, BIO, drop = FALSE],
+        tolerance = 1e-10
+      )
+    ),
+
+    isTRUE(
+      all.equal(
+        endpoint$A_imp_tech[, BIO, drop = FALSE],
+        endpoint$A_feed_imp_tech[, BIO, drop = FALSE] +
+          endpoint$A_opex_imp_tech[, BIO, drop = FALSE],
+        tolerance = 1e-10
+      )
+    )
+  )
+}
   }
 }
 
@@ -1563,30 +1587,6 @@ calculate_biofuel_NONBIO_contributions <- function(year_results, year) {
       counter <- counter + 1
     }
 
-
-if (scenario_name %in% scenario_names) {
-
-  stopifnot(
-
-    isTRUE(
-      all.equal(
-        endpoint$A_dom_tech[, BIO, drop = FALSE],
-        endpoint$A_feed_dom_tech[, BIO, drop = FALSE] +
-          endpoint$A_opex_dom_tech[, BIO, drop = FALSE],
-        tolerance = 1e-10
-      )
-    ),
-
-    isTRUE(
-      all.equal(
-        endpoint$A_imp_tech[, BIO, drop = FALSE],
-        endpoint$A_feed_imp_tech[, BIO, drop = FALSE] +
-          endpoint$A_opex_imp_tech[, BIO, drop = FALSE],
-        tolerance = 1e-10
-      )
-    )
-  )
-}
 
     
   }

@@ -3181,36 +3181,74 @@ advanced_supply_chain_import_summary_all$total_supply_chain_import_per_eur_ADV <
 # ===================================================================
 
 analysis_tables <- list(
-  macro_summary_all = macro_summary_all,
-  pairwise_macro_all = pairwise_macro_all,
-  annual_macro_path = annual_macro_path,
-  sector_changes_all = sector_changes_all,
-  top_NONBIO_output_gains_all = top_NONBIO_output_gains_all,
-  top_NONBIO_GVA_gains_all = top_NONBIO_GVA_gains_all,
-  capex_summary_all = capex_summary_all,
-  annual_capex_path = annual_capex_path,
-  import_trade_summary_all = import_trade_summary_all,
-  annual_import_trade_path = annual_import_trade_path,
-  NONBIO_decomposition_all = NONBIO_decomposition_all,
-  activation_summary_all = activation_summary_all,
-  biofuel_input_intensity_all = biofuel_input_intensity_all,
-  advanced_biofuel_input_intensity_all = advanced_biofuel_input_intensity_all,
-  biofuel_NONBIO_contributions_all = biofuel_NONBIO_contributions_all,
-  fuel_group_contributions_all = fuel_group_contributions_all,
-  advanced_biofuel_contributions_all = advanced_biofuel_contributions_all,
-  advanced_group_summary_all = advanced_group_summary_all,
-  advanced_NONBIO_sector_effects_all = advanced_NONBIO_sector_effects_all,
-  top_advanced_NONBIO_sectors_all = top_advanced_NONBIO_sectors_all,
-  S2_S3_decomposition_all = S2_S3_decomposition_all,
-  S2_S3_sector_decomposition_all = S2_S3_sector_decomposition_all,
-  channel_output_structure_all = channel_output_structure_all,
-  channel_sector_structure_all = channel_sector_structure_all,
-  advanced_biofuel_GVA_all =
-  advanced_biofuel_GVA_all,
 
-advanced_GVA_summary_all =
-  advanced_GVA_summary_all,
-    channel_output_structure_all =
+  macro_summary_all =
+    macro_summary_all,
+
+  pairwise_macro_all =
+    pairwise_macro_all,
+
+  annual_macro_path =
+    annual_macro_path,
+
+  sector_changes_all =
+    sector_changes_all,
+
+  top_NONBIO_output_gains_all =
+    top_NONBIO_output_gains_all,
+
+  top_NONBIO_GVA_gains_all =
+    top_NONBIO_GVA_gains_all,
+
+  capex_summary_all =
+    capex_summary_all,
+
+  annual_capex_path =
+    annual_capex_path,
+
+  import_trade_summary_all =
+    import_trade_summary_all,
+
+  annual_import_trade_path =
+    annual_import_trade_path,
+
+  NONBIO_decomposition_all =
+    NONBIO_decomposition_all,
+
+  activation_summary_all =
+    activation_summary_all,
+
+  biofuel_input_intensity_all =
+    biofuel_input_intensity_all,
+
+  advanced_biofuel_input_intensity_all =
+    advanced_biofuel_input_intensity_all,
+
+  biofuel_NONBIO_contributions_all =
+    biofuel_NONBIO_contributions_all,
+
+  fuel_group_contributions_all =
+    fuel_group_contributions_all,
+
+  advanced_biofuel_contributions_all =
+    advanced_biofuel_contributions_all,
+
+  advanced_group_summary_all =
+    advanced_group_summary_all,
+
+  advanced_NONBIO_sector_effects_all =
+    advanced_NONBIO_sector_effects_all,
+
+  top_advanced_NONBIO_sectors_all =
+    top_advanced_NONBIO_sectors_all,
+
+  S2_S3_decomposition_all =
+    S2_S3_decomposition_all,
+
+  S2_S3_sector_decomposition_all =
+    S2_S3_sector_decomposition_all,
+
+  channel_output_structure_all =
     channel_output_structure_all,
 
   channel_sector_structure_all =
@@ -3231,9 +3269,7 @@ advanced_GVA_summary_all =
   advanced_GVA_summary_all =
     advanced_GVA_summary_all
 )
-)
 
-  source("NEW_Output_Analysis.R")
 
 for (table_name in names(analysis_tables)) {
   write.csv(

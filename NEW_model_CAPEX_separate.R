@@ -756,7 +756,7 @@ build_ivc_vector <- function(
     s_capex *
     dist_capex_sourced
 
-
+  
   # ------------------------------------------------------------
   # OPEX
   # Apply domestic/import sourcing assumptions

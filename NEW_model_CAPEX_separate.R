@@ -237,6 +237,7 @@ FUEL_TECH_GROUP <- c(
 )
 
 
+
 INPUT_SECTORS <- c(
   agriculture      = 1,
   forestry         = 2,

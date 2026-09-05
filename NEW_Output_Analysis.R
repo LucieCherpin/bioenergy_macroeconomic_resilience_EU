@@ -14,6 +14,7 @@ options(scipen = 999)
 RESULTS_FILE <- "model_results_CAPEX_separate.rds"
 OUTPUT_DIR   <- "analysis_outputs"
 
+
 dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
 results <- readRDS(RESULTS_FILE)

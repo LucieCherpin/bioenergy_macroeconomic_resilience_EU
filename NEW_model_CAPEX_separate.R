@@ -3102,25 +3102,6 @@ for (sec_name in names(res_fuel$a_opex_imp)) {
   }
 }
 
-    stopifnot(
-  isTRUE(
-    all.equal(
-      A_dom_target[, BIO, drop = FALSE],
-      A_feed_dom_target[, BIO, drop = FALSE] +
-        A_opex_dom_target[, BIO, drop = FALSE],
-      tolerance = 1e-10
-    )
-  ),
-
-  isTRUE(
-    all.equal(
-      A_imp_target[, BIO, drop = FALSE],
-      A_feed_imp_target[, BIO, drop = FALSE] +
-        A_opex_imp_target[, BIO, drop = FALSE],
-      tolerance = 1e-10
-    )
-  )
-)
 
 
     # -------------------------------------------------------------
@@ -3157,6 +3138,26 @@ for (sec_name in names(res_fuel$a_opex_imp)) {
       }
     }
   }
+
+      stopifnot(
+  isTRUE(
+    all.equal(
+      A_dom_target[, BIO, drop = FALSE],
+      A_feed_dom_target[, BIO, drop = FALSE] +
+        A_opex_dom_target[, BIO, drop = FALSE],
+      tolerance = 1e-10
+    )
+  ),
+
+  isTRUE(
+    all.equal(
+      A_imp_target[, BIO, drop = FALSE],
+      A_feed_imp_target[, BIO, drop = FALSE] +
+        A_opex_imp_target[, BIO, drop = FALSE],
+      tolerance = 1e-10
+    )
+  )
+)
   
   
   # ---------------------------------------------------------------
@@ -4162,30 +4163,7 @@ combine_scenario_drivers <- function(...) {
       d$A_dom[keep, , , drop = FALSE]
 
     
-A_feed_dom_new[1:old_n, , ] <-
-  out$A_feed_dom
 
-A_feed_imp_new[1:old_n, , ] <-
-  out$A_feed_imp
-
-A_opex_dom_new[1:old_n, , ] <-
-  out$A_opex_dom
-
-A_opex_imp_new[1:old_n, , ] <-
-  out$A_opex_imp
-
-
-    A_feed_dom_new[(old_n + 1):new_n, , ] <-
-  drv$A_feed_dom[-1, , , drop = FALSE]
-
-A_feed_imp_new[(old_n + 1):new_n, , ] <-
-  drv$A_feed_imp[-1, , , drop = FALSE]
-
-A_opex_dom_new[(old_n + 1):new_n, , ] <-
-  drv$A_opex_dom[-1, , , drop = FALSE]
-
-A_opex_imp_new[(old_n + 1):new_n, , ] <-
-  drv$A_opex_imp[-1, , , drop = FALSE]
     # ------------------------------------------------------------
     # A_imp
     # ------------------------------------------------------------
@@ -4261,30 +4239,85 @@ A_opex_imp_new[(old_n + 1):new_n, , ] <-
       d$A_capex_imp[keep, , , drop = FALSE]
 
 
-A_feed_dom_new <-
-  array(
-    NA_real_,
-    dim = c(new_n, nIndustries, nIndustries)
-  )
+       # ------------------------------------------------------------
+    # Feedstock / OPEX diagnostic paths
+    # ------------------------------------------------------------
 
-A_feed_imp_new <-
-  array(
-    NA_real_,
-    dim = c(new_n, nIndustries, nIndustries)
-  )
+    A_feed_dom_new <-
+      array(
+        NA_real_,
+        dim = c(
+          old_n + new_n,
+          nIndustries,
+          nIndustries
+        )
+      )
 
-A_opex_dom_new <-
-  array(
-    NA_real_,
-    dim = c(new_n, nIndustries, nIndustries)
-  )
+    A_feed_imp_new <-
+      array(
+        NA_real_,
+        dim = c(
+          old_n + new_n,
+          nIndustries,
+          nIndustries
+        )
+      )
 
-A_opex_imp_new <-
-  array(
-    NA_real_,
-    dim = c(new_n, nIndustries, nIndustries)
-  )
-    
+    A_opex_dom_new <-
+      array(
+        NA_real_,
+        dim = c(
+          old_n + new_n,
+          nIndustries,
+          nIndustries
+        )
+      )
+
+    A_opex_imp_new <-
+      array(
+        NA_real_,
+        dim = c(
+          old_n + new_n,
+          nIndustries,
+          nIndustries
+        )
+      )
+
+
+    # Existing segment
+    A_feed_dom_new[1:old_n, , ] <-
+      out$A_feed_dom
+
+    A_feed_imp_new[1:old_n, , ] <-
+      out$A_feed_imp
+
+    A_opex_dom_new[1:old_n, , ] <-
+      out$A_opex_dom
+
+    A_opex_imp_new[1:old_n, , ] <-
+      out$A_opex_imp
+
+
+    # Append new segment, excluding duplicated first year
+    A_feed_dom_new[
+      (old_n + 1):(old_n + new_n), , 
+    ] <-
+      d$A_feed_dom[keep, , , drop = FALSE]
+
+    A_feed_imp_new[
+      (old_n + 1):(old_n + new_n), , 
+    ] <-
+      d$A_feed_imp[keep, , , drop = FALSE]
+
+    A_opex_dom_new[
+      (old_n + 1):(old_n + new_n), , 
+    ] <-
+      d$A_opex_dom[keep, , , drop = FALSE]
+
+    A_opex_imp_new[
+      (old_n + 1):(old_n + new_n), , 
+    ] <-
+      d$A_opex_imp[keep, , , drop = FALSE] 
 
 
     # ------------------------------------------------------------
@@ -4356,6 +4389,31 @@ out$A_opex_imp <- A_opex_imp_new
     input_sector = NULL,
     output_sector = NULL
   )
+
+dimnames(out$A_feed_dom) <- list(
+  year = as.character(out$years),
+  input_sector = NULL,
+  output_sector = NULL
+)
+
+dimnames(out$A_feed_imp) <- list(
+  year = as.character(out$years),
+  input_sector = NULL,
+  output_sector = NULL
+)
+
+dimnames(out$A_opex_dom) <- list(
+  year = as.character(out$years),
+  input_sector = NULL,
+  output_sector = NULL
+)
+
+dimnames(out$A_opex_imp) <- list(
+  year = as.character(out$years),
+  input_sector = NULL,
+  output_sector = NULL
+)
+  
 
   rownames(out$X_bio) <-
     as.character(out$years)
@@ -4771,7 +4829,7 @@ A_imp_tech_current <-
     ,
   ]
 
-# OPTION A - CAPEX investment coefficients for this year
+#CAPEX investment coefficients for this year
 A_capex_dom_tech_current <-
   scenario_driver$A_capex_dom[
     i,
@@ -4783,6 +4841,8 @@ A_capex_imp_tech_current <-
     i,
     ,
   ]
+
+    
 
     X_bio_current <-
       scenario_driver$X_bio[
@@ -5215,7 +5275,17 @@ A_capex_dom_tech =
 A_capex_imp_tech =
   scenario_driver$A_capex_imp,
 
-  
+ A_feed_dom_tech =
+  scenario_driver$A_feed_dom,
+
+A_feed_imp_tech =
+  scenario_driver$A_feed_imp,
+
+A_opex_dom_tech =
+  scenario_driver$A_opex_dom,
+
+A_opex_imp_tech =
+  scenario_driver$A_opex_imp, 
     
 X_bio =
   scenario_driver$X_bio,
@@ -5369,6 +5439,32 @@ A_capex_imp_tech =
     ,
   ],
 
+
+    A_feed_dom_tech =
+  dynamic_result$A_feed_dom_tech[
+    year_char,
+    ,
+  ],
+
+A_feed_imp_tech =
+  dynamic_result$A_feed_imp_tech[
+    year_char,
+    ,
+  ],
+
+A_opex_dom_tech =
+  dynamic_result$A_opex_dom_tech[
+    year_char,
+    ,
+  ],
+
+A_opex_imp_tech =
+  dynamic_result$A_opex_imp_tech[
+    year_char,
+    ,
+  ],
+
+    
 X_bio =
   dynamic_result$X_bio[
     year_char,

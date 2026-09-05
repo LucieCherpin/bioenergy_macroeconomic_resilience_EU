@@ -594,5 +594,335 @@ ggsave(
   dpi = 300,
   bg = "white"
 )
+
+# ===================================================================
+# ADVANCED BIOFUELS:
+# DOMESTIC OPERATING-CHAIN GVA PER EUR ADVANCED BIOFUEL OUTPUT
+#
+# CAPEX deliberately excluded from the main measure.
+# ===================================================================
+
+adv_gva <-
+  read.csv(
+    file.path(
+      IN_DIR,
+      "advanced_GVA_summary_all.csv"
+    )
+  )
+
+
+adv_gva_plot <-
+  adv_gva %>%
+
+  select(
+    year,
+    scenario,
+    direct_BIO_GVA_per_eur_ADV,
+    feedstock_upstream_GVA_per_eur_ADV,
+    opex_upstream_GVA_per_eur_ADV
+  ) %>%
+
+  pivot_longer(
+    cols = c(
+      direct_BIO_GVA_per_eur_ADV,
+      feedstock_upstream_GVA_per_eur_ADV,
+      opex_upstream_GVA_per_eur_ADV
+    ),
+    names_to = "component",
+    values_to = "GVA_intensity"
+  ) %>%
+
+  mutate(
+
+    scenario =
+      factor(
+        scenario,
+        levels = c(
+          "S1",
+          "S2",
+          "S3"
+        )
+      ),
+
+    year =
+      factor(
+        year,
+        levels = c(
+          2030,
+          2035,
+          2040
+        )
+      ),
+
+    component =
+      recode(
+        component,
+
+        direct_BIO_GVA_per_eur_ADV =
+          "Direct advanced-biofuel GVA",
+
+        feedstock_upstream_GVA_per_eur_ADV =
+          "Feedstock-driven upstream GVA",
+
+        opex_upstream_GVA_per_eur_ADV =
+          "OPEX-driven upstream GVA"
+      ),
+
+    component =
+      factor(
+        component,
+        levels = c(
+          "Direct advanced-biofuel GVA",
+          "Feedstock-driven upstream GVA",
+          "OPEX-driven upstream GVA"
+        )
+      )
+  )
+
+
+adv_gva_colors <- c(
+  "Direct advanced-biofuel GVA" =
+    "#eb6834",
+
+  "Feedstock-driven upstream GVA" =
+    "#1baf7a",
+
+  "OPEX-driven upstream GVA" =
+    "#2a78d6"
+)
+
+
+p_adv_gva <-
+  ggplot(
+    adv_gva_plot,
+    aes(
+      x = scenario,
+      y = GVA_intensity,
+      fill = component
+    )
+  ) +
+
+  geom_col(
+    width = 0.62
+  ) +
+
+  facet_wrap(
+    ~year,
+    nrow = 1
+  ) +
+
+  scale_fill_manual(
+    values =
+      adv_gva_colors
+  ) +
+
+  scale_y_continuous(
+    labels =
+      scales::label_number(
+        accuracy = 0.01
+      )
+  ) +
+
+  labs(
+
+    title =
+      "Domestic GVA intensity of advanced biofuel production",
+
+    subtitle =
+      "Direct and recurrent upstream GVA per euro of domestic advanced-biofuel output",
+
+    x =
+      NULL,
+
+    y =
+      "Domestic GVA per EUR advanced-biofuel output (EUR/EUR)",
+
+    caption =
+      paste(
+        "Scenario-internal comparison; conventional biofuels and RFNBOs are excluded.",
+        "Upstream GVA includes domestic feedstock- and OPEX-driven supply-chain effects.",
+        "CAPEX-related GVA is excluded from this main measure.",
+        sep = "\n"
+      )
+  ) +
+
+  base_theme
+
+
+ggsave(
+  file.path(
+    OUT_DIR,
+    "fig_advanced_GVA_intensity.png"
+  ),
+  p_adv_gva,
+  width = 8.8,
+  height = 5.4,
+  dpi = 300,
+  bg = "white"
+)
+
+                   # ===================================================================
+# TECHNOLOGY-SPECIFIC ADVANCED-BIOFUEL GVA INTENSITY
+# 2040
+# ===================================================================
+
+adv_product_gva <-
+  read.csv(
+    file.path(
+      IN_DIR,
+      "advanced_biofuel_GVA_all.csv"
+    )
+  ) %>%
+
+  filter(
+    year == 2040,
+    BIO_output > 1e-10
+  ) %>%
+
+  select(
+    year,
+    scenario,
+    biofuel,
+    BIO_output,
+
+    direct_BIO_GVA_per_eur_BIO,
+    feedstock_upstream_GVA_per_eur_BIO,
+    opex_upstream_GVA_per_eur_BIO
+  ) %>%
+
+  pivot_longer(
+    cols = c(
+      direct_BIO_GVA_per_eur_BIO,
+      feedstock_upstream_GVA_per_eur_BIO,
+      opex_upstream_GVA_per_eur_BIO
+    ),
+    names_to = "component",
+    values_to = "GVA_intensity"
+  ) %>%
+
+  mutate(
+
+    scenario =
+      factor(
+        scenario,
+        levels = c(
+          "S1",
+          "S2",
+          "S3"
+        )
+      ),
+
+    biofuel =
+      recode(
+        biofuel,
+
+        adv_biodiesel =
+          "Advanced biodiesel",
+
+        adv_biogasoline =
+          "Advanced biogasoline",
+
+        adv_bio_kerosene =
+          "Advanced bio-kerosene",
+
+        adv_bio_hfo =
+          "Advanced bio-HFO",
+
+        adv_biogas =
+          "Advanced biogas"
+      ),
+
+    component =
+      recode(
+        component,
+
+        direct_BIO_GVA_per_eur_BIO =
+          "Direct advanced-biofuel GVA",
+
+        feedstock_upstream_GVA_per_eur_BIO =
+          "Feedstock-driven upstream GVA",
+
+        opex_upstream_GVA_per_eur_BIO =
+          "OPEX-driven upstream GVA"
+      )
+  )
+
+
+p_adv_product_gva <-
+  ggplot(
+    adv_product_gva,
+    aes(
+      x = biofuel,
+      y = GVA_intensity,
+      fill = component
+    )
+  ) +
+
+  geom_col(
+    width = 0.67
+  ) +
+
+  facet_wrap(
+    ~scenario,
+    nrow = 1
+  ) +
+
+  scale_fill_manual(
+    values =
+      adv_gva_colors
+  ) +
+
+  scale_y_continuous(
+    labels =
+      scales::label_number(
+        accuracy = 0.01
+      )
+  ) +
+
+  labs(
+
+    title =
+      "Domestic GVA intensity by advanced biofuel pathway",
+
+    subtitle =
+      "Domestic GVA associated with one euro of domestic production, 2040",
+
+    x =
+      NULL,
+
+    y =
+      "Domestic GVA per EUR advanced-biofuel output (EUR/EUR)",
+
+    caption =
+      paste(
+        "Only advanced biofuels with positive domestic production are shown.",
+        "The measure includes direct BIO-sector GVA and recurrent domestic upstream GVA.",
+        "CAPEX-related GVA is excluded.",
+        sep = "\n"
+      )
+  ) +
+
+  base_theme +
+
+  theme(
+    axis.text.x =
+      element_text(
+        angle = 35,
+        hjust = 1
+      )
+  )
+
+
+ggsave(
+  file.path(
+    OUT_DIR,
+    "fig_advanced_GVA_by_product_2040.png"
+  ),
+  p_adv_product_gva,
+  width = 12,
+  height = 6,
+  dpi = 300,
+  bg = "white"
+)
                    
 cat("All output figures saved to:", OUT_DIR, "\n")

@@ -840,6 +840,7 @@ calculate_NONBIO_decomposition <- function(year_results, year) {
     }
   )
 
+  
   do.call(rbind, out)
 }
 

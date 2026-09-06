@@ -1601,17 +1601,15 @@ dist_feed = list(
   ),
 
   conv_biogasoline = list(
-    # No conv_biogasoline production reported in this scenario's source sheet.
-    abs_market_value = 0,
+    abs_market_value =  3347923552.84,
     weights = c(IVC_EF_FF = 1.000000),
     dist_feed = list(IVC_EF_FF = c(agriculture = 1.000000))
   ),
 
   conv_bio_kerosene = list(
-    # No conv_bio_kerosene production reported in this scenario's source sheet.
-    abs_market_value = 0,
+    abs_market_value = 4446198240.63,
     weights = c(IVC_HT_lipids_SAF = 1.000000),
-    dist_feed = list(IVC_HT_lipids_SAF = c(agriculture = 1.000000))
+    dist_feed = list(IVC_HT_lipids_SAF = c(food_bev = 0.610000, food_bev_imp = 0.390000))
   )
 
 )
@@ -1671,11 +1669,11 @@ S2_exports_2030 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTO
 
 S3_exports_2030 <- c(
   conv_biodiesel    = 0,
-  adv_biodiesel     = 0,
+  adv_biodiesel     =  1621474593.16,
   conv_biogasoline  = 0,
-  adv_biogasoline   = 36212333077.31,
+  adv_biogasoline   = 38914546037.88,
   conv_bio_kerosene = 0,
-  adv_bio_kerosene  = 11401449827.92,
+  adv_bio_kerosene  = 16485888467.78,
   adv_bio_hfo       = 44606111011.19,
   RFNBOs            = 17050082963.60,
   adv_biogas        = 25917437239.16
@@ -2143,13 +2141,13 @@ dist_feed = list(
   ),
 
   conv_biogasoline = list(
-  abs_market_value = 0,
+  abs_market_value =  2533851928.47,
   weights = c(IVC_EF_FF = 1.000000),
   dist_feed = list(IVC_EF_FF = c(agriculture = 1.000000))
 ),
 
  conv_bio_kerosene = list(
-    abs_market_value = 0,
+    abs_market_value = 10693866139.53,
 
     weights = c(IVC_HT_lipids_SAF = 1.000000),
 
@@ -2210,9 +2208,9 @@ S3_exports_2035 <- c(
   conv_biodiesel    = 0,
   adv_biodiesel     = 0,
   conv_biogasoline  = 0,
-  adv_biogasoline   = 42698721669.95,
+  adv_biogasoline   = 44743872167.92,
   conv_bio_kerosene = 0,
-  adv_bio_kerosene  = 7341873991.52,
+  adv_bio_kerosene  = 11561728132.752,
   adv_bio_hfo       = 44735575368.87,
   RFNBOs            = 4871514959.82,
   adv_biogas        = 26315422128.06
@@ -2371,7 +2369,7 @@ dist_feed = list(
   ),
 
   conv_bio_kerosene = list(
-    abs_market_value = 4238566319.66,
+    abs_market_value =  7636230000.00,
 
     weights = c(IVC_HT_CC_SAF = 1.000000),
 
@@ -2558,7 +2556,7 @@ dist_feed = list(
   ),
 
   conv_bio_kerosene = list(
-    abs_market_value = 2475163914.40,
+    abs_market_value =  4459272195.51,
 
     weights = c(IVC_HT_CC_SAF = 1.000000),
 
@@ -2742,9 +2740,9 @@ dist_feed = list(
 
   conv_bio_kerosene = list(
     # No conv_bio_kerosene production
-    abs_market_value = 0,
-    weights = c(IVC_HT_lipids_SAF = 1.000000),
-    dist_feed = list(IVC_HT_lipids_SAF = c(agriculture = 1.000000))
+    abs_market_value =  6014395922.90,
+    weights = c(IVC_HT_CC_SAF = 1.000000),
+    dist_feed = list(IVC_HT_CC_SAF = c(food_bev = 0.720000, food_bev_imp = 0.280000))
   )
   
 
@@ -2774,7 +2772,7 @@ dist_feed = list(
    conv_biogasoline  = 0,
    adv_biogasoline   = 48875983085.77,
    conv_bio_kerosene = 0,
-   adv_bio_kerosene  = 4909200712.67,
+   adv_bio_kerosene  = 11946895412.81,
    adv_bio_hfo       = 37422924814.15,
    RFNBOs            = 949431082.25,
    adv_biogas        = 26379203962.07

@@ -1886,6 +1886,7 @@ S2_2035 <- list(
       IVC13a = c(feed = 0.155379, capex = 0.547660, opex = 0.296961),
       IVC13b_road = c(feed = 0.148048, capex = 0.442908, opex = 0.409044)
     ),
+    
 
     dist_feed = list(
       IVC5 = c(agriculture = 0.819758, paper = 0.180242),

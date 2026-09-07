@@ -2447,9 +2447,9 @@ S2_2040 <- list(
   ),
 
   adv_biogas = list(
-    abs_market_value = 10947031499.09,
+    abs_market_value =  12011795718.83,
 
-    weights = c(IVC7 = 0.702635, IVC9a = 0.297365),
+    weights = c(IVC7 = 0.728994309, IVC9a = 0.271005691),
 
     prod_cost = list(IVC7 = 929.114005, IVC9a = 1310.967643),
 
@@ -2465,9 +2465,9 @@ S2_2040 <- list(
   ),
 
   adv_bio_kerosene = list(
-    abs_market_value =  19382558026.61 ,
+    abs_market_value =   20537051749.06,
 
-    weights = c(IVC2_HEFA = 0.111738428, IVC6 = 0.204598601, IVC11a_SAF = 0.275836451, IVC13b_SAF = 0.40782652),
+    weights = c(IVC2_HEFA = 0.105457034, IVC6 = 0.24931222, IVC11a_SAF = 0.26033026, IVC13b_SAF = 0.384900486),
 
     prod_cost = list(IVC2_HEFA = 2431.853820, IVC6 = 2513.829787, IVC11a_SAF = 2783.965415, IVC13b_SAF = 2010.762832),
 
@@ -2487,9 +2487,9 @@ S2_2040 <- list(
   ),
 
   adv_bio_hfo = list(
-    abs_market_value = 16769402806.91,
+    abs_market_value = 18351842613.12,
 
-    weights = c(IVC8a = 0.258212, IVC8b = 0.582351, IVC13b_mar = 0.159437),
+    weights = c(IVC8a = 0.235946975, IVC8b = 0.618364346, IVC13b_mar = 0.145688679),
 
     prod_cost = list(IVC8a = 560.934836, IVC8b = 936.000000, IVC13b_mar = 2010.762832),
 

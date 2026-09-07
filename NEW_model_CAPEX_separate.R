@@ -1372,7 +1372,7 @@ S2_2030 <- list(
 
     weights = c(IVC6 = 0.7541, IVC11a_SAF = 0.2459),
 
-    prod_cost = list(IVC2_HEFA = 2356.102815, IVC6 = 2513.829787),
+    prod_cost = list(IVC6 = 2513.829787, IVC11a_SAF =  2784.77),
 
     alpha = list(
       IVC6 = c(feed = 0.423191, capex = 0.298350, opex = 0.278460),

@@ -1704,7 +1704,7 @@ S1_2035 <- list(
 
     dist_feed = list(
       IVC1 = c(food_bev_imp = 1.000000),
-      IVC2_HVO = c(agriculture = 0.0711, adv_biodiesel = 0.3948, adv_biogasoline = 0.3948, chemicals = 0.1393)
+      IVC2_HVO = c(agriculture = 0.0711, adv_biodiesel = 0.3948, adv_biogasoline = 0.3948, chemicals = 0.1393),
       IVC13a = c(agriculture = 0.570765, forestry = 0.211788, paper = 0.179757, food_bev = 0.012837, sewerage = 0.024852)
     )
   ),

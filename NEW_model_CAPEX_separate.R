@@ -1273,8 +1273,8 @@ S1_2030 <- list(
     weights = c(IVC_T_FF = 0.245841, IVC_HT_FF = 0.282090, IVC_T_CC = 0.180696, IVC_HT_CC = 0.090913, IVC_T_lipids = 0.141169, IVC_HT_lipids = 0.059291),
 
 dist_feed = list(
-      IVC_T_FF = c(food_bev = 1.000000),
-      IVC_HT_FF = c(food_bev = 1.000000),
+      IVC_T_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
+      IVC_HT_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
       IVC_T_CC = c(agriculture = 1.000000),
       IVC_HT_CC = c(agriculture = 1.000000),
       IVC_T_lipids = c(food_bev = 0.715489, food_bev_imp = 0.284511),
@@ -1429,7 +1429,7 @@ S2_2030 <- list(
     weights = c(IVC_T_FF = 0.267121, IVC_HT_FF = 0.315488, IVC_T_lipids = 0.388809, IVC_HT_CC = 0.028581),
 
 dist_feed = list(
-      IVC_T_FF = c(food_bev = 1.000000),
+      IVC_T_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_T_lipids = c(food_bev = 0.715489, food_bev_imp = 0.284511),
       IVC_HT_CC = c(agriculture = 1.000000)
@@ -1584,12 +1584,12 @@ S3_2030 <- list(
   ),
 
   conv_biodiesel = list(
-    abs_market_value = 14567166158.83,
+    abs_market_value =  15867820045.06,
 
-    weights = c(IVC_T_FF = 0.290972, IVC_HT_FF = 0.343657, IVC_T_lipids = 0.334238, IVC_HT_CC = 0.031133),
+    weights = c(IVC_T_FF = 0.267121291, IVC_HT_FF = 0.315488336, IVC_T_lipids = 0.388809315, IVC_HT_CC = 0.028581058),
 
 dist_feed = list(
-      IVC_T_FF = c(food_bev = 1.000000),
+      IVC_T_FF = c(food_bev = 0.800554, food_bev_imp = 0.199446),
       IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_T_lipids = c(food_bev = 0.715489, food_bev_imp = 0.284511),
       IVC_HT_CC = c(agriculture = 1.000000)

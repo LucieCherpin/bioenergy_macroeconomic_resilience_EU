@@ -2147,7 +2147,7 @@ dist_feed = list(
 ),
 
  conv_bio_kerosene = list(
-    abs_market_value = 10693866139.53,
+    abs_market_value = 3690143472.55,
 
     weights = c(IVC_HT_lipids_SAF = 1.000000),
 

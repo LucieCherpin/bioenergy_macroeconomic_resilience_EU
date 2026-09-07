@@ -2401,9 +2401,6 @@ dist_feed = list(
 # SCENARIO 2 - 2040
 #####################################################################################
  
-# Derived from the "2040 Sc 2" sheet in Providing_sectors.xlsx.
-#
-# DATA CAVEATS (from the source workbook, not introduced here):
  
 S2_2040 <- list(
 
@@ -2428,7 +2425,7 @@ S2_2040 <- list(
   ),
 
   adv_biogasoline = list(
-    abs_market_value = 5775324475.38,
+    abs_market_value = 6410449562.58,
 
     weights = c(IVC5 = 0.256220, IVC12 = 0.256220, IVC13a = 0.289156, IVC13b_road = 0.198405),
 

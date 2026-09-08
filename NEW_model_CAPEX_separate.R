@@ -1468,9 +1468,9 @@ dist_feed = list(
 S3_2030 <- list(
 
   adv_biodiesel = list(
-    abs_market_value = 22417240676.81,
+    abs_market_value =  28899846737.91,
 
-    weights = c(IVC2_HVO = 0.035002, IVC11a_road = 0.675818, IVC13a = 0.289179),
+    weights = c(IVC2_HVO = 0.027150753, IVC11a_road = 0.524223611, IVC13a = 0.448625636),
 
     prod_cost = list(IVC2_HVO = 2245.172862, IVC11a_road = 2502.277056, IVC13a = 1469.889719),
 
@@ -1488,12 +1488,9 @@ S3_2030 <- list(
   ),
 
   adv_biogasoline = list(
-    abs_market_value = 52371751577.73,
-
-    weights = c(IVC5 = 0.150813, IVC12 = 0.559335, IVC13a = 0.123781, IVC13b_road = 0.166071),
-
+    abs_market_value =  58854357638.83,
+    weights = c(IVC5 = 0.134201408, IVC12 = 0.497726556, IVC13a = 0.220293155, IVC13b_road = 0.147778882),
     prod_cost = list(IVC5 = 1284.229498, IVC12 = 1166.350000, IVC13a = 1469.889719, IVC13b_road = 1546.595519),
-
     alpha = list(
       IVC5 = c(feed = 0.266486, capex = 0.432166, opex = 0.301348),
       IVC12 = c(feed = 0.508938, capex = 0.238350, opex = 0.252711),
@@ -2004,9 +2001,9 @@ dist_feed = list(
 S3_2035 <- list(
 
   adv_biodiesel = list(
-    abs_market_value = 17842831191.38,
+    abs_market_value =  24660680256.18,
 
-    weights = c(IVC2_HVO = 0.037676, IVC11a_road = 0.580218, IVC13a = 0.382106),
+    weights = c(IVC2_HVO = 0.027260118, IVC11a_road = 0.419807117, IVC13a = 0.552932765),
 
     prod_cost = list(IVC2_HVO = 2245.172862, IVC11a_road = 2502.277056, IVC13a = 1469.889719),
 
@@ -2024,9 +2021,9 @@ S3_2035 <- list(
   ),
 
   adv_biogasoline = list(
-    abs_market_value = 56754841569.82,
+    abs_market_value =  63572690634.62,
 
-    weights = c(IVC5 = 0.147810, IVC12 = 0.526756, IVC13a = 0.120128, IVC13b_road = 0.205305),
+    weights = c(IVC5 = 0.131958535, IVC12 = 0.470264527, IVC13a = 0.21448987, IVC13b_road = 0.183287068),
 
     prod_cost = list(IVC5 = 1284.229498, IVC12 = 1166.350000, IVC13a = 1469.889719, IVC13b_road = 1546.595519),
 
@@ -2592,10 +2589,8 @@ dist_feed = list(
 S3_2040 <- list(
 
   adv_biodiesel = list(
-    abs_market_value = 18683142916.96,
-
-    weights = c(IVC2_HVO = 0.029966, IVC11a_road = 0.587171, IVC13a = 0.382863),
-
+    abs_market_value =  25836234985.47,
+    weights = c(IVC2_HVO = 0.021669314, IVC11a_road = 0.424605108, IVC13a = 0.553725577),
     prod_cost = list(IVC2_HVO = 2328.318868, IVC11a_road = 2515.879822, IVC13a = 1471.360538),
 
     alpha = list(
@@ -2612,10 +2607,8 @@ S3_2040 <- list(
   ),
 
   adv_biogasoline = list(
-    abs_market_value = 61137931561.92,
-
-    weights = c(IVC5 = 0.145238, IVC12 = 0.498849, IVC13a = 0.116999, IVC13b_road = 0.238913),
-
+    abs_market_value =  68291023630.42,
+    weights = c(IVC5 = 0.13002559, IVC12 = 0.446597287, IVC13a = 0.2094885, IVC13b_road = 0.213888622),
     prod_cost = list(IVC5 = 1287.756944, IVC12 = 1166.350000, IVC13a = 1471.360538, IVC13b_road = 1547.775937),
 
     alpha = list(

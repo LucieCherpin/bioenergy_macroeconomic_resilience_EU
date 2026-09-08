@@ -1967,11 +1967,11 @@ S2_2035 <- list(
   conv_biodiesel = list(
     abs_market_value =  16036419891.65,
 
-    weights = c(IVC_T_FF = 0.20009984, IVC_FT_FF = 0.275785251, IVC_HT_CC = 0.048480977, IVC_T_lipids = 0.475633933),
+    weights = c(IVC_T_FF = 0.20009984, IVC_HT_FF = 0.275785251, IVC_HT_CC = 0.048480977, IVC_T_lipids = 0.475633933),
 
 dist_feed = list(
       IVC_T_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
-      IVC_FT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
+      IVC_HT_FF = c(food_bev = 0.800553, food_bev_imp = 0.199446),
       IVC_HT_CC = c(agriculture = 1.000000),
       IVC_T_lipids = c(food_bev = 0.573200, food_bev_imp = 0.426800)
     )

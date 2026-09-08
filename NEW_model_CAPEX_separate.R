@@ -1156,11 +1156,11 @@ S1_2030 <- list(
 
     weights = c(IVC1 = 0.805139, IVC2_HVO = 0.160048, IVC13a = 0.034814),
 
-    prod_cost = list(IVC1 = 1283.250000, IVC2_HVO = 2329.904479, IVC13a = 1469.657534),
+    prod_cost = list(IVC1 = 1283.250000, IVC2_HVO = 1572.75, IVC13a = 1469.657534),
 
     alpha = list(
       IVC1 = c(feed = 0.779271, capex = 0.064680, opex = 0.156049),
-      IVC2_HVO = c(feed = 0.754174, capex = 0.115455, opex = 0.130370),
+      IVC2_HVO = c(feed = 0.9458, capex = 0.0254, opex = 0.0287),
       IVC13a = c(feed = 0.155245, capex = 0.547747, opex = 0.297008)
     ),
 
@@ -1690,11 +1690,11 @@ S1_2035 <- list(
 
     weights = c(IVC1 = 0.707430, IVC2_HVO = 0.254044, IVC13a = 0.038526),
 
-    prod_cost = list(IVC1 = 1283.250000, IVC2_HVO = 2329.904479, IVC13a = 1469.657534),
+    prod_cost = list(IVC1 = 1283.250000, IVC2_HVO = 1572.75, IVC13a = 1469.657534),
 
     alpha = list(
       IVC1 = c(feed = 0.779271, capex = 0.064680, opex = 0.156049),
-      IVC2_HVO = c(feed = 0.754174, capex = 0.115455, opex = 0.130370),
+      IVC2_HVO = c(feed = 0.9458, capex = 0.0254, opex = 0.0287),
       IVC13a = c(feed = 0.155245, capex = 0.547747, opex = 0.297008)
     ),
 
@@ -2225,11 +2225,11 @@ S1_2040 <- list(
 
     weights = c(IVC1 = 0.676675, IVC2_HVO = 0.280825, IVC13a = 0.042500),
 
-    prod_cost = list(IVC1 = 1283.250000, IVC2_HVO = 2370.684677, IVC13a = 1471.244445),
+    prod_cost = list(IVC1 = 1283.250000, IVC2_HVO = 1572.75, IVC13a = 1471.244445),
 
     alpha = list(
       IVC1 = c(feed = 0.779271, capex = 0.064680, opex = 0.156049),
-      IVC2_HVO = c(feed = 0.758403, capex = 0.113469, opex = 0.128128),
+      IVC2_HVO = c(feed = 0.9458, capex = 0.0254, opex = 0.0287),
       IVC13a = c(feed = 0.156157, capex = 0.547156, opex = 0.296688)
     ),
 

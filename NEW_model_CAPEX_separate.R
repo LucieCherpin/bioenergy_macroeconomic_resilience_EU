@@ -1216,7 +1216,7 @@ S1_2030 <- list(
 
     weights = c(IVC2_HEFA = 0.941860, IVC11a_SAF = 0.058140),
 
-    prod_cost = list(IVC2_HEFA = 2458.911636, IVC11a_SAF = 2774.146474),
+    prod_cost = list(IVC2_HEFA = 2974.41, IVC11a_SAF = 2774.146474),
 
     alpha = list(
       IVC2_HEFA = c(feed = 0.674449, capex = 0.152913, opex = 0.172637),
@@ -1750,7 +1750,7 @@ S1_2035 <- list(
 
     weights = c(IVC2_HEFA = 0.896382, IVC11a_SAF = 0.064955, IVC13b_SAF = 0.038662),
 
-    prod_cost = list(IVC2_HEFA = 2458.911636, IVC11a_SAF = 2774.146474, IVC13b_SAF = 2000.298884),
+    prod_cost = list(IVC2_HEFA = 2974.41, IVC11a_SAF = 2774.146474, IVC13b_SAF = 2000.298884),
 
     alpha = list(
       IVC2_HEFA = c(feed = 0.674449, capex = 0.152913, opex = 0.172637),
@@ -2287,7 +2287,7 @@ S1_2040 <- list(
 
     weights = c(IVC2_HEFA = 0.896382, IVC11a_SAF = 0.064955, IVC13b_SAF = 0.038662),
 
-    prod_cost = list(IVC2_HEFA = 2483.258230, IVC11a_SAF = 2778.651297, IVC13b_SAF = 2007.966733),
+    prod_cost = list(IVC2_HEFA = 2974.41, IVC11a_SAF = 2778.651297, IVC13b_SAF = 2007.966733),
 
     alpha = list(
       IVC2_HEFA = c(feed = 0.677641, capex = 0.151414, opex = 0.170945),

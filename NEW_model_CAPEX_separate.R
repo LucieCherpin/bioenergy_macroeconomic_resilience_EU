@@ -1627,13 +1627,13 @@ S1_imports_2030 <- c(
   adv_biogasoline   = 4661504967.96,
   conv_bio_kerosene = 0,
   adv_bio_kerosene  = 1865379175.15,
-  adv_bio_hfo       = 1937302197.55,
+  adv_bio_hfo       = 1850866721.65,
   RFNBOs            = 359095080.85,
   adv_biogas        = 0
 )
 
 S2_imports_2030 <- c(
-  conv_biodiesel    = 7535613093.35,
+  conv_biodiesel    =  7550251513.48,
   adv_biodiesel     = 0,
   conv_biogasoline  = 0,
   adv_biogasoline   = 0,
@@ -1665,12 +1665,12 @@ S2_exports_2030 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTO
 
 S3_exports_2030 <- c(
   conv_biodiesel    = 0,
-  adv_biodiesel     =  1621474593.16,
+  adv_biodiesel     = 1621474593.16,
   conv_biogasoline  = 0,
   adv_biogasoline   = 38914546037.88,
   conv_bio_kerosene = 0,
   adv_bio_kerosene  = 16276979105.96,
-  adv_bio_hfo       = 44606111011.19,
+  adv_bio_hfo       = 42615946318.14,
   RFNBOs            = 17050082963.60,
   adv_biogas        = 25917437239.16
 )
@@ -2167,8 +2167,8 @@ S1_imports_2035 <- c(
   adv_biogasoline   = 2658381656.52,
   conv_bio_kerosene = 0,
   adv_bio_kerosene  = 8222014081.21,
-  adv_bio_hfo       = 762619367.67,
-  RFNBOs            = 35603837506.48,
+  adv_bio_hfo       = 728594026.63,
+  RFNBOs            = 17801918753.24,
   adv_biogas        = 0
 )
 S1_exports_2035 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))
@@ -2205,7 +2205,7 @@ S3_exports_2035 <- c(
   adv_biogasoline   = 44743872167.92,
   conv_bio_kerosene = 0,
   adv_bio_kerosene  = 11561728132.752,
-  adv_bio_hfo       = 44735575368.87,
+  adv_bio_hfo       = 42739634440.502,
   RFNBOs            = 4871514959.82,
   adv_biogas        = 26315422128.06
 )
@@ -2387,7 +2387,7 @@ dist_feed = list(
    adv_biogasoline   = 955687153.39,
    conv_bio_kerosene = 0,
   adv_bio_kerosene  = 11040737556.26,
-   adv_bio_hfo       = 11067382314.28,
+   adv_bio_hfo       =  10573595408.70,
    RFNBOs            =  29197359699.92,
    adv_biogas        = 0
  )
@@ -2730,7 +2730,6 @@ dist_feed = list(
   ),
 
   conv_bio_kerosene = list(
-    # No conv_bio_kerosene production
     abs_market_value =  6014395922.90,
     weights = c(IVC_HT_CC_SAF = 1.000000),
     dist_feed = list(IVC_HT_CC_SAF = c(agriculture = 1.00000))
@@ -2764,7 +2763,7 @@ dist_feed = list(
    adv_biogasoline   = 48875983085.77,
    conv_bio_kerosene = 0,
    adv_bio_kerosene  = 11946895412.81,
-   adv_bio_hfo       = 37422924814.15,
+   adv_bio_hfo       = 35753248126.635,
    RFNBOs            = 949431082.25,
    adv_biogas        = 26379203962.07
  )

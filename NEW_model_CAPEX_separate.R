@@ -307,9 +307,9 @@ CAPEX_IMPORT_SHARES <- list(
   ),
 
   advanced = c(
-    machinery    = 0.40,
-    fab_metal    = 0.50,
-    computer_el  = 0.70,
+    machinery    = 0.20,
+    fab_metal    = 0.15,
+    computer_el  = 0.35,
     elec_equip   = 0.10,
     construction = 0.00,
     architecture = 0.00
@@ -329,7 +329,7 @@ OPEX_IMPORT_SHARES <- list(
   ),
 
   advanced = c(
-    chemicals    = 0.60,
+    chemicals    = 0.30,
     electricity  = 0.00,
     legal_acc    = 0.00,
     repair_inst  = 0.00,

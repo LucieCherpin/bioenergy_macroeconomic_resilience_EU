@@ -1160,7 +1160,7 @@ S1_2030 <- list(
 
     alpha = list(
       IVC1 = c(feed = 0.779271, capex = 0.064680, opex = 0.156049),
-      IVC2_HVO = c(feed = 0.9458, capex = 0.0254, opex = 0.0287),
+      IVC2_HVO = c(feed = 0.6358, capex = 0.1710, opex = 0.1931),
       IVC13a = c(feed = 0.155245, capex = 0.547747, opex = 0.297008)
     ),
 
@@ -1691,7 +1691,7 @@ S1_2035 <- list(
 
     alpha = list(
       IVC1 = c(feed = 0.779271, capex = 0.064680, opex = 0.156049),
-      IVC2_HVO = c(feed = 0.9458, capex = 0.0254, opex = 0.0287),
+      IVC2_HVO = c(feed = 0.6358, capex = 0.1710, opex = 0.1931),
       IVC13a = c(feed = 0.155245, capex = 0.547747, opex = 0.297008)
     ),
 
@@ -2228,7 +2228,7 @@ S1_2040 <- list(
 
     alpha = list(
       IVC1 = c(feed = 0.779271, capex = 0.064680, opex = 0.156049),
-      IVC2_HVO = c(feed = 0.9458, capex = 0.0254, opex = 0.0287),
+      IVC2_HVO = c(feed = 0.6358, capex = 0.1710, opex = 0.1931),
       IVC13a = c(feed = 0.156157, capex = 0.547156, opex = 0.296688)
     ),
 

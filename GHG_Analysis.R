@@ -31,13 +31,17 @@ WORKBOOK_FILE <- "Providing sectors.xlsx"
 INVENTORY_FILE <- "feedstock_inventory_from_providing_sectors.csv"
 AUDIT_FILE <- "feedstock_ghg_coverage_audit.csv"
 FACTOR_FILE <- "feedstock_ghg_factors_updated.csv"
+ENERGY_FACTOR_FILE <- "ghg_fuel_energy_factors.csv"
+VALIDATION_SOURCE_FILE <- "ghg_validation_sources.csv"
+BENCHMARK_FILE <- "ghg_external_benchmarks.csv"
 DOM_EXT_FILE <- "IOT_EU27_2022_DOM_environmental_extensions.csv"
 IMP_EXT_FILE <- "IOT_EU27_2022_IMP_environmental_extensions.csv"
 OUTPUT_DIR <- "ghg_outputs"
 dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
 needed <- c(RESULTS_FILE, WORKBOOK_FILE, INVENTORY_FILE, AUDIT_FILE,
-            FACTOR_FILE, DOM_EXT_FILE, IMP_EXT_FILE)
+            FACTOR_FILE, ENERGY_FACTOR_FILE, VALIDATION_SOURCE_FILE,
+            BENCHMARK_FILE, DOM_EXT_FILE, IMP_EXT_FILE)
 missing <- needed[!file.exists(needed)]
 if (length(missing)) stop("Missing required file(s): ", paste(missing, collapse=", "))
 
@@ -89,6 +93,81 @@ normalize_weights <- function(w, tol=1e-3) {
 inventory <- read.csv(INVENTORY_FILE, stringsAsFactors=FALSE, check.names=FALSE)
 audit <- read.csv(AUDIT_FILE, stringsAsFactors=FALSE, check.names=FALSE)
 factors <- read.csv(FACTOR_FILE, stringsAsFactors=FALSE, check.names=FALSE)
+energy_factors <- read.csv(ENERGY_FACTOR_FILE, stringsAsFactors=FALSE, check.names=FALSE)
+validation_sources <- read.csv(VALIDATION_SOURCE_FILE, stringsAsFactors=FALSE, check.names=FALSE)
+external_benchmarks <- read.csv(BENCHMARK_FILE, stringsAsFactors=FALSE, check.names=FALSE)
+
+energy_req <- c("model_biofuel","ivc_id","lhv_mj_per_kg","basis_quality","source_id")
+if (!all(energy_req %in% names(energy_factors))) stop("Energy-factor CSV has wrong schema.")
+if (anyDuplicated(paste(energy_factors$model_biofuel, energy_factors$ivc_id, sep="||"))) {
+  stop("Energy-factor model_biofuel/ivc_id keys are not unique.")
+}
+if (any(!is.finite(energy_factors$lhv_mj_per_kg) | energy_factors$lhv_mj_per_kg <= 0)) {
+  stop("Energy-factor LHV values must be positive and finite.")
+}
+if (!all(energy_factors$basis_quality %in% c("direct","proxy"))) {
+  stop("Energy-factor basis_quality must be direct or proxy.")
+}
+if (!all(c("source_id","citation_full","url") %in% names(validation_sources)) ||
+    anyDuplicated(validation_sources$source_id) ||
+    any(!nzchar(validation_sources$citation_full)) ||
+    any(!nzchar(validation_sources$url))) {
+  stop("Validation-source catalogue is incomplete or has duplicate source IDs.")
+}
+bench_req <- c("benchmark_id","model_biofuel","model_ivc","ghg_min_gCO2e_per_MJ",
+               "ghg_max_gCO2e_per_MJ","source_id","source_locator","comparison_class",
+               "circularity_or_comparability_note")
+if (!all(bench_req %in% names(external_benchmarks)) ||
+    anyDuplicated(external_benchmarks$benchmark_id)) {
+  stop("External-benchmark CSV has wrong schema or duplicate benchmark IDs.")
+}
+if (any(!is.finite(external_benchmarks$ghg_min_gCO2e_per_MJ)) ||
+    any(!is.finite(external_benchmarks$ghg_max_gCO2e_per_MJ)) ||
+    any(external_benchmarks$ghg_min_gCO2e_per_MJ > external_benchmarks$ghg_max_gCO2e_per_MJ)) {
+  stop("External-benchmark GHG bounds are invalid.")
+}
+if (!all(energy_factors$source_id %in% validation_sources$source_id)) {
+  stop("Energy-factor table references an unknown source_id.")
+}
+if (!all(external_benchmarks$source_id %in% validation_sources$source_id)) {
+  stop("External benchmark references an unknown source_id.")
+}
+underlying_ids <- unique(unlist(strsplit(
+  external_benchmarks$underlying_source_ids, ";", fixed=TRUE
+)))
+underlying_ids <- underlying_ids[nzchar(underlying_ids)]
+if (length(underlying_ids) && !all(underlying_ids %in% validation_sources$source_id)) {
+  stop("External benchmark references an unknown underlying_source_id: ",
+       paste(setdiff(underlying_ids,validation_sources$source_id),collapse=", "))
+}
+
+effective_bio_coefficients <- function(A_dom,A_imp,BIO,NONBIO,bio_sector,nonbio_output_coeff) {
+  if (length(nonbio_output_coeff)!=length(NONBIO) || any(!is.finite(nonbio_output_coeff))) {
+    stop("Invalid NONBIO output coefficient vector for BIO recursion.")
+  }
+  list(
+    domestic=as.numeric(
+      A_dom[BIO,bio_sector] +
+        A_dom[BIO,NONBIO,drop=FALSE] %*% nonbio_output_coeff
+    ),
+    imported=as.numeric(
+      A_imp[BIO,bio_sector] +
+        A_imp[BIO,NONBIO,drop=FALSE] %*% nonbio_output_coeff
+    )
+  )
+}
+
+energy_factor_for <- function(fuel_name, ivc_id) {
+  z <- energy_factors[
+    energy_factors$model_biofuel == fuel_name & energy_factors$ivc_id == ivc_id,
+    , drop=FALSE
+  ]
+  if (nrow(z) != 1) {
+    stop("Expected exactly one energy factor for ",fuel_name,"/",ivc_id,
+         "; found ",nrow(z),".")
+  }
+  z
+}
 
 preferred <- merge(
   audit[, c("feedstock_key","preferred_factor_id","coverage_status")],
@@ -121,7 +200,15 @@ read_extension <- function(path, boundary) {
   x <- read.csv(path, stringsAsFactors=FALSE, check.names=FALSE)
   req <- c("sector_position","sector","boundary","extension","stressor","unit","intensity")
   if (!all(req %in% names(x))) stop(path, " has wrong schema.")
-  if (!all(unique(x$boundary) %in% boundary)) stop(path, " has unexpected boundary.")
+  available <- unique(as.character(x$boundary))
+  if (!boundary %in% available) {
+    stop(path, " does not contain requested boundary '",boundary,
+         "'. Available boundaries: ",paste(sort(available),collapse=", "),".")
+  }
+  x <- x[x$boundary == boundary, , drop=FALSE]
+  if (!nrow(x) || !identical(unique(as.character(x$boundary)), boundary)) {
+    stop(path, " failed to isolate requested boundary '",boundary,"'.")
+  }
   x
 }
 dom_ext <- read_extension(DOM_EXT_FILE, "scope_production")
@@ -390,7 +477,9 @@ io_ghg_from_direct_vectors <- function(endpoint,dom_direct,imp_direct) {
     imported_direct_kgCO2e=e_imp,
     total_kgCO2e=e_dom+e_imp,
     domestic_output_MEUR=sum(x_dom),
-    imported_use_MEUR=sum(imp_use)
+    imported_use_MEUR=sum(imp_use),
+    domestic_output_vector_MEUR=x_dom,
+    imported_use_vector_MEUR=imp_use
   )
 }
 channel_ghg_for_biofuel <- function(endpoint,channel,bio_sector) {
@@ -435,6 +524,7 @@ feed_detail <- list()
 feed_recon <- list()
 io_detail <- list()
 hybrid_rows <- list()
+recursion_support <- list()
 fc <- rc <- ic <- hc <- 1L
 
 for (year in benchmark_years) {
@@ -472,6 +562,8 @@ for (year in benchmark_years) {
       feed_phys <- 0
       feed_io <- 0
       flags <- character()
+      fuel_energy_MJ <- 0
+      fallback_domestic_output_MEUR <- numeric(length(NONBIO))
 
       for (ivc_id in names(weights)) {
         w <- weights[[ivc_id]]
@@ -483,6 +575,13 @@ for (year in benchmark_years) {
         ivc_value_eur <- fuel_cfg$abs_market_value*w
         ivc_value_MEUR <- ivc_value_eur/SCENARIO_EUR_TO_IO_UNIT
         fuel_tonnes <- ivc_value_eur/tech$market_price
+
+        energy_factor <- energy_factor_for(fuel_name,ivc_id)
+        fuel_energy_MJ <- fuel_energy_MJ +
+          fuel_tonnes*1000*energy_factor$lhv_mj_per_kg[1]
+        if (energy_factor$basis_quality[1] != "direct") {
+          flags <- c(flags,paste0(ivc_id,":energy_basis_",energy_factor$basis_quality[1]))
+        }
 
         physical <- NULL
         physical_method <- NA_character_
@@ -604,6 +703,8 @@ for (year in benchmark_years) {
         if (needs_fallback) {
           fb <- feedstock_io_fallback(endpoint,fuel_cfg,ivc_id,ivc_value_MEUR)
           feed_io <- feed_io+fb$total_kgCO2e
+          fallback_domestic_output_MEUR <- fallback_domestic_output_MEUR +
+            fb$domestic_output_vector_MEUR
           flags <- c(flags,paste0(ivc_id,":IO_feedstock_fallback"))
 
           feed_detail[[fc]] <- data.frame(
@@ -625,21 +726,34 @@ for (year in benchmark_years) {
         }
       }
 
-      hybrid <- feed_phys+feed_io+opex$total_kgCO2e+capex$total_kgCO2e
+      stage_no_capex <- feed_phys+feed_io+opex$total_kgCO2e
+      hybrid <- stage_no_capex+capex$total_kgCO2e
       xfuel <- endpoint$X_bio[bio_sector]
+      if (xfuel>0 && (!is.finite(fuel_energy_MJ) || fuel_energy_MJ<=0)) {
+        stop("Positive fuel output has no valid physical-energy denominator for ",
+             year,"/",scenario_name,"/",fuel_name,".")
+      }
 
       hybrid_rows[[hc]] <- data.frame(
         year=as.integer(year), scenario=scenario_name,
         biofuel=fuel_name, bio_sector=bio_sector,
         fuel_market_value_MEUR=xfuel,
+        fuel_energy_MJ=fuel_energy_MJ,
         feedstock_physical_kgCO2e=feed_phys,
         feedstock_IO_fallback_kgCO2e=feed_io,
         feedstock_total_kgCO2e=feed_phys+feed_io,
         opex_kgCO2e=opex$total_kgCO2e,
         capex_kgCO2e=capex$total_kgCO2e,
+        stage_hybrid_no_capex_kgCO2e=stage_no_capex,
         hybrid_total_kgCO2e=hybrid,
         hybrid_kgCO2e_per_MEUR_fuel=
           ifelse(xfuel>0,hybrid/xfuel,NA_real_),
+        stage_hybrid_no_capex_kgCO2e_per_MEUR_fuel=
+          ifelse(xfuel>0,stage_no_capex/xfuel,NA_real_),
+        stage_hybrid_gCO2e_per_MJ=
+          ifelse(fuel_energy_MJ>0,hybrid*1000/fuel_energy_MJ,NA_real_),
+        stage_hybrid_no_capex_gCO2e_per_MJ=
+          ifelse(fuel_energy_MJ>0,stage_no_capex*1000/fuel_energy_MJ,NA_real_),
         method_flags=paste(unique(flags),collapse=";"),
         stringsAsFactors=FALSE
       )
@@ -652,6 +766,158 @@ feed_detail_df <- if (length(feed_detail)) do.call(rbind,feed_detail) else data.
 feed_recon_df <- if (length(feed_recon)) do.call(rbind,feed_recon) else data.frame()
 io_detail_df <- if (length(io_detail)) do.call(rbind,io_detail) else data.frame()
 hybrid_df <- if (length(hybrid_rows)) do.call(rbind,hybrid_rows) else data.frame()
+
+# ===================================================================
+# Domestic BIO-to-BIO recursion for per-fuel lifecycle validation
+# ===================================================================
+# Stage-attributed totals are additive accounting components. For comparison
+# against per-unit-fuel JEC/RED/CORSIA values, domestic model bioenergy
+# intermediates must carry the upstream footprint of their producer stage.
+recursive_bio_intensity <- function(A_BB, stage_intensity) {
+  if (!is.matrix(A_BB) || nrow(A_BB)!=ncol(A_BB) ||
+      nrow(A_BB)!=length(stage_intensity)) {
+    stop("Invalid BIO recursion dimensions.")
+  }
+  if (any(!is.finite(A_BB)) || any(!is.finite(stage_intensity))) {
+    stop("BIO recursion received non-finite values.")
+  }
+  M <- diag(nrow(A_BB))-A_BB
+  condition <- rcond(M)
+  if (!is.finite(condition) || condition < 1e-12) {
+    stop("Domestic BIO intermediate system is singular/ill-conditioned for GHG recursion.")
+  }
+  as.numeric(stage_intensity %*% solve(M))
+}
+
+hybrid_df$recursive_hybrid_kgCO2e_per_MEUR_fuel <- NA_real_
+hybrid_df$recursive_hybrid_no_capex_kgCO2e_per_MEUR_fuel <- NA_real_
+hybrid_df$recursive_hybrid_total_kgCO2e <- NA_real_
+hybrid_df$recursive_hybrid_no_capex_total_kgCO2e <- NA_real_
+hybrid_df$recursive_hybrid_gCO2e_per_MJ <- NA_real_
+hybrid_df$recursive_hybrid_no_capex_gCO2e_per_MJ <- NA_real_
+
+for (year in benchmark_years) {
+  for (scenario_name in scenario_names) {
+    endpoint <- results[[year]][[scenario_name]]
+    idx <- which(hybrid_df$year==as.integer(year) & hybrid_df$scenario==scenario_name)
+    if (!length(idx)) next
+
+    A_BB_imp <- endpoint$A_imp_tech[BIO,BIO,drop=FALSE]
+    if (any(abs(A_BB_imp)>1e-12)) {
+      stop("Recursive external-validation footprint found imported BIO-to-BIO intermediate coefficients for ",
+           year,"/",scenario_name,
+           ". A foreign biofuel upstream closure is not available; refusing to treat them as domestic or zero.")
+    }
+
+    stage_full <- numeric(length(BIO))
+    stage_no_capex <- numeric(length(BIO))
+    for (k in seq_along(BIO)) {
+      bio_sector <- BIO[k]
+      xfuel <- endpoint$X_bio[bio_sector]
+      fuel_name <- names(BIOFUEL_SECTORS)[match(bio_sector,unname(BIOFUEL_SECTORS))]
+      row <- idx[hybrid_df$biofuel[idx]==fuel_name]
+      if (length(row)>1) stop("Duplicate hybrid row for ",year,"/",scenario_name,"/",fuel_name)
+      if (is.finite(xfuel) && xfuel>1e-12) {
+        if (length(row)!=1) stop("Missing hybrid row for positive BIO output ",fuel_name)
+        stage_full[k] <- hybrid_df$hybrid_total_kgCO2e[row]/xfuel
+        stage_no_capex[k] <- hybrid_df$stage_hybrid_no_capex_kgCO2e[row]/xfuel
+      }
+    }
+
+    A_BB <- endpoint$A_dom_tech[BIO,BIO,drop=FALSE]
+    recursive_full <- recursive_bio_intensity(A_BB,stage_full)
+    recursive_no_capex <- recursive_bio_intensity(A_BB,stage_no_capex)
+
+    for (row in idx) {
+      bio_sector <- hybrid_df$bio_sector[row]
+      k <- match(bio_sector,BIO)
+      if (is.na(k)) stop("Hybrid row bio_sector is not in BIO.")
+      xfuel <- hybrid_df$fuel_market_value_MEUR[row]
+      hybrid_df$recursive_hybrid_kgCO2e_per_MEUR_fuel[row] <- recursive_full[k]
+      hybrid_df$recursive_hybrid_no_capex_kgCO2e_per_MEUR_fuel[row] <- recursive_no_capex[k]
+      hybrid_df$recursive_hybrid_total_kgCO2e[row] <- recursive_full[k]*xfuel
+      hybrid_df$recursive_hybrid_no_capex_total_kgCO2e[row] <- recursive_no_capex[k]*xfuel
+      if (hybrid_df$fuel_energy_MJ[row]>0) {
+        hybrid_df$recursive_hybrid_gCO2e_per_MJ[row] <-
+          hybrid_df$recursive_hybrid_total_kgCO2e[row]*1000/hybrid_df$fuel_energy_MJ[row]
+        hybrid_df$recursive_hybrid_no_capex_gCO2e_per_MJ[row] <-
+          hybrid_df$recursive_hybrid_no_capex_total_kgCO2e[row]*1000/hybrid_df$fuel_energy_MJ[row]
+      }
+    }
+  }
+}
+
+if (any(!is.finite(hybrid_df$recursive_hybrid_kgCO2e_per_MEUR_fuel[
+      hybrid_df$fuel_market_value_MEUR>0]))) {
+  stop("Non-finite recursive hybrid GHG intensity for positive fuel output.")
+}
+
+method_comparison <- rbind(
+  data.frame(
+    hybrid_df[c("year","scenario","biofuel","bio_sector","fuel_market_value_MEUR","fuel_energy_MJ")],
+    method="stage_hybrid_full",
+    kgCO2e_per_MEUR=hybrid_df$hybrid_kgCO2e_per_MEUR_fuel,
+    gCO2e_per_MJ=hybrid_df$stage_hybrid_gCO2e_per_MJ,
+    boundary_note="Stage-attributed physical feedstock + IO OPEX + IO CAPEX; domestic BIO intermediates not recursively embodied.",
+    stringsAsFactors=FALSE
+  ),
+  data.frame(
+    hybrid_df[c("year","scenario","biofuel","bio_sector","fuel_market_value_MEUR","fuel_energy_MJ")],
+    method="stage_hybrid_no_capex",
+    kgCO2e_per_MEUR=hybrid_df$stage_hybrid_no_capex_kgCO2e_per_MEUR_fuel,
+    gCO2e_per_MJ=hybrid_df$stage_hybrid_no_capex_gCO2e_per_MJ,
+    boundary_note="Stage-attributed physical feedstock + IO OPEX; CAPEX excluded for closer fuel-cycle comparison.",
+    stringsAsFactors=FALSE
+  ),
+  data.frame(
+    hybrid_df[c("year","scenario","biofuel","bio_sector","fuel_market_value_MEUR","fuel_energy_MJ")],
+    method="recursive_hybrid_full",
+    kgCO2e_per_MEUR=hybrid_df$recursive_hybrid_kgCO2e_per_MEUR_fuel,
+    gCO2e_per_MJ=hybrid_df$recursive_hybrid_gCO2e_per_MJ,
+    boundary_note="Stage full footprint recursively embodies domestic BIO-to-BIO intermediates through (I-A_BB)^-1.",
+    stringsAsFactors=FALSE
+  ),
+  data.frame(
+    hybrid_df[c("year","scenario","biofuel","bio_sector","fuel_market_value_MEUR","fuel_energy_MJ")],
+    method="recursive_hybrid_no_capex",
+    kgCO2e_per_MEUR=hybrid_df$recursive_hybrid_no_capex_kgCO2e_per_MEUR_fuel,
+    gCO2e_per_MJ=hybrid_df$recursive_hybrid_no_capex_gCO2e_per_MJ,
+    boundary_note="Stage no-CAPEX footprint recursively embodies domestic BIO-to-BIO intermediates; preferred internal comparator for JEC/RED/CORSIA, subject to pathway-boundary matching.",
+    stringsAsFactors=FALSE
+  )
+)
+
+validation_comparison <- merge(
+  hybrid_df[,c(
+    "year","scenario","biofuel","bio_sector","fuel_market_value_MEUR","fuel_energy_MJ",
+    "recursive_hybrid_no_capex_gCO2e_per_MJ","recursive_hybrid_gCO2e_per_MJ",
+    "stage_hybrid_no_capex_gCO2e_per_MJ","stage_hybrid_gCO2e_per_MJ"
+  )],
+  external_benchmarks[external_benchmarks$model_biofuel!="ALL_CONTEXT",,drop=FALSE],
+  by.x="biofuel", by.y="model_biofuel", all=FALSE, sort=FALSE
+)
+validation_comparison$scenario_ivc_weight <- mapply(
+  function(year,scenario_name,fuel_name,model_ivc) {
+    if (is.na(model_ivc) || !nzchar(model_ivc) || grepl("/",model_ivc,fixed=TRUE)) return(NA_real_)
+    cfg <- SCENARIO_CONFIGS[[as.character(year)]][[scenario_name]][[fuel_name]]
+    if (is.null(cfg) || is.null(cfg$weights) || !model_ivc %in% names(cfg$weights)) return(0)
+    as.numeric(cfg$weights[[model_ivc]])
+  },
+  validation_comparison$year,
+  validation_comparison$scenario,
+  validation_comparison$biofuel,
+  validation_comparison$model_ivc
+)
+validation_comparison$scenario_route_status <- ifelse(
+  is.na(validation_comparison$scenario_ivc_weight),
+  "context_or_composite_route",
+  ifelse(validation_comparison$scenario_ivc_weight>0,"route_present_in_scenario","route_absent_in_scenario")
+)
+validation_comparison$internal_preferred_method <- "recursive_hybrid_no_capex"
+validation_comparison$interpretation_note <- paste(
+  "No pass/fail range test is applied. Compare only after checking feedstock, allocation/credit,",
+  "geography, electricity, capital and lifecycle boundaries; benchmark rows can be proxies or secondary syntheses."
+)
 
 if (!nrow(feed_detail_df) || !nrow(io_detail_df) || !nrow(hybrid_df)) {
   stop("GHG analysis produced empty output.")
@@ -672,6 +938,21 @@ write.csv(io_detail_df,
 write.csv(hybrid_df,
           file.path(OUTPUT_DIR,"ghg_hybrid_benchmark.csv"),
           row.names=FALSE)
+write.csv(method_comparison,
+          file.path(OUTPUT_DIR,"ghg_method_comparison_benchmark.csv"),
+          row.names=FALSE)
+write.csv(validation_comparison,
+          file.path(OUTPUT_DIR,"ghg_external_validation_comparison.csv"),
+          row.names=FALSE)
+write.csv(external_benchmarks,
+          file.path(OUTPUT_DIR,"ghg_external_benchmarks_used.csv"),
+          row.names=FALSE)
+write.csv(validation_sources,
+          file.path(OUTPUT_DIR,"ghg_validation_sources_used.csv"),
+          row.names=FALSE)
+write.csv(energy_factors,
+          file.path(OUTPUT_DIR,"ghg_fuel_energy_factors_used.csv"),
+          row.names=FALSE)
 
 notes <- c(
   "HYBRID GHG METHOD NOTES",
@@ -680,19 +961,30 @@ notes <- c(
   "2. Primary feedstock identity/quantity is reconstructed at IVC level from Providing sectors.xlsx.",
   "3. The aggregate Eurostat feedstock vector is NOT reverse-split into straw/wood/etc after the solve.",
   "4. Model dist_feed is used for reconciliation and explicit IO fallback only.",
-  "5. Intermediate bioenergy carriers receive no second feedstock factor at the consuming IVC.",
+  "5. Intermediate bioenergy carriers receive no second primary-feedstock factor at the consuming IVC.",
   "6. OPEX/CAPEX domestic upstream output uses the scenario NONBIO Leontief inverse.",
   "7. Imports include direct channel imports plus imports induced by the domestic upstream chain.",
   "8. Imported GHG uses external_imports_direct, so it is a lower bound without a foreign Leontief system.",
-  "9. The 68-sector extension is explicitly crosswalked to the 73-sector model.",
-  "10. Direct biogenic CO2 is zero-characterized; CH4/N2O/SF6 use IPCC AR6 GWP100; HFC/PFC use source-native kg CO2-eq.",
-  "11. Missing physical coefficients are never guessed: they become explicit IO_feedstock_fallback rows.",
-  "12. Feedstock factor boundaries vary. Some include logistics while model OPEX contains land transport; test this overlap before publication.",
-  "13. This minimal implementation reports 2030/2035/2040 only. The current model comments state that the 2023 feedstock/OPEX diagnostic split is incomplete for adv_biogas and conv_biogasoline, so annual 2023-2040 GHG should not silently inherit that baseline gap."
+  "9. The domestic extension file contains multiple valid boundaries; this analysis explicitly filters scope_production and excludes scope_final_demand_direct.",
+  "10. The 68-sector extension is explicitly crosswalked to the 73-sector model.",
+  "11. Direct biogenic CO2 is zero-characterized; CH4/N2O/SF6 use IPCC AR6 GWP100; HFC/PFC use source-native kg CO2-eq.",
+  "12. Missing physical coefficients are never guessed: they become explicit IO_feedstock_fallback rows.",
+  "13. Feedstock factor boundaries vary. Some include logistics while model OPEX contains land transport; test this overlap before publication.",
+  "14. Stage-attributed hybrid columns are retained. Recursive hybrid columns additionally embody domestic BIO-to-BIO intermediates through t' = c'(I-A_BB)^-1.",
+  "15. Recursive results are per-fuel lifecycle diagnostics and must not be summed across all BIO outputs because that would double-count intermediates.",
+  "16. Imported BIO-to-BIO intermediate coefficients cause an explicit failure because no foreign recursive biofuel closure is available.",
+  "17. gCO2e/MJ denominators use versioned RED III lower heating values; proxy energy mappings are flagged in method_flags and ghg_fuel_energy_factors.csv.",
+  "18. No-CAPEX recursive intensity is the preferred internal quantity for JEC/RED/CORSIA side-by-side comparison, but it is not assumed boundary-identical.",
+  "19. ghg_external_benchmarks.csv is a frozen evidence catalogue, not a calibration target. No automatic pass/fail comparison is made.",
+  "20. EC Annex 4 GHG values often reproduce JEC/RED/CORSIA values; their source and circularity/comparability notes are preserved in the benchmark/source CSVs.",
+  "21. BEST Matschegg et al. 2026 is context-only for feedstocks already sourced from that paper and is not treated as independent validation at that level.",
+  "22. This implementation reports 2030/2035/2040 only. The current model comments state that the 2023 feedstock/OPEX diagnostic split is incomplete for adv_biogas and conv_biogasoline, so annual 2023-2040 GHG should not silently inherit that baseline gap."
 )
 writeLines(notes,file.path(OUTPUT_DIR,"ghg_method_notes.txt"))
 
 cat("GHG analysis complete.\n",
     "Output directory: ",OUTPUT_DIR,"\n",
     "Hybrid rows: ",nrow(hybrid_df),"\n",
-    "Feedstock detail rows: ",nrow(feed_detail_df),"\n",sep="")
+    "Feedstock detail rows: ",nrow(feed_detail_df),"\n",
+    "Method-comparison rows: ",nrow(method_comparison),"\n",
+    "External-validation rows: ",nrow(validation_comparison),"\n",sep="")

@@ -24,6 +24,12 @@ extract_assignment <- function(path, object_name) {
 read_extension <- extract_assignment("GHG_Analysis.R", "read_extension")
 recursive_bio_intensity <- extract_assignment("GHG_Analysis.R", "recursive_bio_intensity")
 num <- extract_assignment("GHG_Analysis.R", "num")
+workbook_mix_column_for <- extract_assignment(
+  "GHG_Analysis.R", "workbook_mix_column_for"
+)
+is_pure_recursive_ivc <- extract_assignment(
+  "GHG_Analysis.R", "is_pure_recursive_ivc"
+)
 
 # R compiles this TRE pattern only when num() executes, not while parsing.
 stop_if_not(
@@ -33,6 +39,27 @@ stop_if_not(
 stop_if_not(
   isTRUE(all.equal(num("+2.5E+3 kg"), 2.5e3)),
   "num() failed to parse a signed scientific-notation value."
+)
+
+expected_mix_sources <- c(
+  "2030/S1"="F", "2030/S2"="I", "2030/S3"="I",
+  "2035/S1"="F", "2035/S2"="I", "2035/S3"="I",
+  "2040/S1"="K", "2040/S2"="M", "2040/S3"="M"
+)
+for (key in names(expected_mix_sources)) {
+  parts <- strsplit(key, "/", fixed=TRUE)[[1]]
+  stop_if_not(
+    identical(workbook_mix_column_for(parts[1],parts[2]),expected_mix_sources[[key]]),
+    paste0("Wrong workbook feedstock-mix source mapping for ",key,".")
+  )
+}
+stop_if_not(
+  all(is_pure_recursive_ivc(c("IVC6","IVC8b","IVC12"))),
+  "Known BIO-intermediate-only IVCs must bypass primary-feedstock reconstruction."
+)
+stop_if_not(
+  !is_pure_recursive_ivc("IVC11a_SAF"),
+  "A primary-feedstock IVC was incorrectly classified as pure recursive."
 )
 
 # Regression for the production failure: a valid file can contain multiple

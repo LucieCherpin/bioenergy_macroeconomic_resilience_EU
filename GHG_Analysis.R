@@ -293,7 +293,23 @@ advanced_blocks <- list(
   IVC13a=84:91, IVC13b_road=102:109,
   IVC13b_mar=111:118, IVC13b_SAF=111:118
 )
-candidate_share_cols <- c(F=6L, I=9L, K=11L)
+candidate_share_cols <- c(F=6L, I=9L, K=11L, M=13L)
+
+workbook_mix_column_for <- function(year, scenario_name) {
+  key <- paste(as.character(year), scenario_name, sep="/")
+  mapping <- c(
+    "2030/S1"="F", "2030/S2"="I", "2030/S3"="I",
+    "2035/S1"="F", "2035/S2"="I", "2035/S3"="I",
+    "2040/S1"="K", "2040/S2"="M", "2040/S3"="M"
+  )
+  selected <- unname(mapping[[key]])
+  if (is.null(selected)) stop("No workbook feedstock-mix source mapping for ",key)
+  selected
+}
+
+is_pure_recursive_ivc <- function(ivc_id) {
+  ivc_id %in% c("IVC6","IVC8b","IVC12")
+}
 
 feedstock_key_from_label <- function(label) {
   z <- norm_label(label)
@@ -366,24 +382,21 @@ get_ivc_alpha <- function(fuel_cfg,ivc_id) {
   if (is.null(z) || is.null(z[["feed"]])) stop("Missing feed alpha for ",ivc_id)
   z
 }
-choose_advanced_mix <- function(fuel_cfg,ivc_id) {
+choose_advanced_mix <- function(fuel_cfg,ivc_id,year,scenario_name) {
   target <- get_ivc_prod_cost(fuel_cfg,ivc_id) * get_ivc_alpha(fuel_cfg,ivc_id)[["feed"]]
-  candidates <- lapply(names(candidate_share_cols), function(nm) {
-    tab <- advanced_candidate_mix(ivc_id,candidate_share_cols[[nm]])
-    if (is.null(tab)) return(NULL)
-    cost <- sum(tab$cost_eur_per_t_fuel,na.rm=TRUE)
-    list(name=nm,table=tab,cost=cost,error=abs(cost-target))
-  })
-  candidates <- Filter(Negate(is.null),candidates)
-  if (!length(candidates)) return(NULL)
-  best <- candidates[[which.min(vapply(candidates,`[[`,numeric(1),"error"))]]
+  source_name <- workbook_mix_column_for(year,scenario_name)
+  tab <- advanced_candidate_mix(ivc_id,candidate_share_cols[[source_name]])
+  if (is.null(tab)) return(NULL)
+  cost <- sum(tab$cost_eur_per_t_fuel,na.rm=TRUE)
+  selected <- list(name=source_name,table=tab,cost=cost,error=abs(cost-target))
   tol <- max(5,0.025*max(1,abs(target)))
-  if (!is.finite(best$error) || best$error>tol) {
+  if (!is.finite(selected$error) || selected$error>tol) {
     stop("No workbook mix reconciles with model for ",ivc_id,
-         ": target=",signif(target,8),", best=",signif(best$cost,8))
+         " using source column ",source_name," for ",year,"/",scenario_name,
+         ": target=",signif(target,8),", workbook=",signif(selected$cost,8))
   }
-  best$target_cost <- target
-  best
+  selected$target_cost <- target
+  selected
 }
 
 # Conventional source workbook. Numeric values remain in Excel.
@@ -586,8 +599,9 @@ for (year in benchmark_years) {
         physical <- NULL
         physical_method <- NA_character_
 
-        if (ivc_id %in% names(advanced_blocks)) {
-          choice <- choose_advanced_mix(fuel_cfg,ivc_id)
+        pure_recursive <- is_pure_recursive_ivc(ivc_id)
+        if (ivc_id %in% names(advanced_blocks) && !pure_recursive) {
+          choice <- choose_advanced_mix(fuel_cfg,ivc_id,year,scenario_name)
           if (!is.null(choice)) {
             physical <- choice$table
             physical_method <- paste0(
@@ -696,7 +710,6 @@ for (year in benchmark_years) {
 
         # IO fallback only when the physical primary-feedstock route is
         # unresolved, or for RFNBO H2+CO2 composite feedstocks.
-        pure_recursive <- ivc_id %in% c("IVC6","IVC8b","IVC12")
         rfnbio_process <- ivc_id %in% c("IVC8c","IVC9b")
         needs_fallback <- (!has_primary && !pure_recursive) || rfnbio_process
 

@@ -19,6 +19,13 @@ E_stage,j = E_feedstock,physical,j
 
 Primary-feedstock identity and physical quantity are reconstructed at IVC level from `Providing sectors.xlsx`; no aggregate agriculture/forestry IO row is reverse-disaggregated after solving. OPEX and CAPEX use the model's saved domestic/import channel matrices and the NONBIO domestic Leontief system. Imported emissions remain a lower bound because the repository has direct external-import extensions but no foreign Leontief system.
 
+The workbook source case is selected from its explicit scenario-sheet links,
+not by choosing whichever physical reconstruction is closest to a model monetary
+total. Those links select F for S1 and I for S2/S3 in 2030 and 2035, then K for
+S1 and M for S2/S3 in 2040. Pure recursive intermediate routes IVC6, IVC8b and
+IVC12 receive no second primary-feedstock reconstruction at the consuming stage;
+their domestic upstream burden enters through the BIO-to-BIO recursion below.
+
 The legacy columns in `ghg_hybrid_benchmark.csv` remain stage-attributed for backward compatibility. A second stage metric excludes CAPEX because JEC/CORSIA/RED fuel-cycle comparators generally do not share the repo's explicit capital-goods boundary.
 
 ## 3. Domestic bioenergy-intermediate recursion

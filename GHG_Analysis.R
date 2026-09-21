@@ -73,7 +73,7 @@ num <- function(x) {
   if (is.numeric(x)) return(as.numeric(x))
   z <- trimws(as.character(x))
   z <- gsub(",", ".", z, fixed=TRUE)
-  z <- gsub("[^0-9eE+\\-.]", "", z)
+  z <- gsub("[^0-9eE+.-]", "", z)
   if (!nzchar(z) || z %in% c("-",".","-.")) return(NA_real_)
   suppressWarnings(as.numeric(z))
 }

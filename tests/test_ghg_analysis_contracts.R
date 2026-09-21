@@ -23,6 +23,17 @@ extract_assignment <- function(path, object_name) {
 
 read_extension <- extract_assignment("GHG_Analysis.R", "read_extension")
 recursive_bio_intensity <- extract_assignment("GHG_Analysis.R", "recursive_bio_intensity")
+num <- extract_assignment("GHG_Analysis.R", "num")
+
+# R compiles this TRE pattern only when num() executes, not while parsing.
+stop_if_not(
+  isTRUE(all.equal(num("-1.23e-4 kg"), -1.23e-4)),
+  "num() failed to parse a negative scientific-notation value with a unit."
+)
+stop_if_not(
+  isTRUE(all.equal(num("+2.5E+3 kg"), 2.5e3)),
+  "num() failed to parse a signed scientific-notation value."
+)
 
 # Regression for the production failure: a valid file can contain multiple
 # boundary roles, and the reader must select the requested role rather than

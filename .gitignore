@@ -1,3 +1,6 @@
 # Temporary working files and directories
 tmp/
+
+# Generated GHG-analysis artefacts
+ghg_outputs/
 *.rds

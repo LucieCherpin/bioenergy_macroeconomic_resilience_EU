@@ -114,6 +114,17 @@ keys <- paste(energy$model_biofuel, energy$ivc_id, sep = "||")
 stop_if_not(!anyDuplicated(keys), "Energy-factor model_biofuel/ivc_id keys must be unique.")
 stop_if_not(all(energy$basis_quality %in% c("direct", "proxy")),
             "Energy-factor basis_quality must be direct or proxy.")
+aviation_lipid_in_diesel <- energy[
+  energy$model_biofuel == "conv_biodiesel" &
+    energy$ivc_id == "IVC_HT_lipids_SAF",
+  , drop = FALSE
+]
+stop_if_not(
+  nrow(aviation_lipid_in_diesel) == 1L &&
+    aviation_lipid_in_diesel$lhv_mj_per_kg[[1L]] == 44 &&
+    aviation_lipid_in_diesel$basis_quality[[1L]] == "direct",
+  "The 2035 S1 aviation-tagged lipid route lacks its direct 44 MJ/kg product mapping."
+)
 
 sources <- read.csv("ghg_validation_sources.csv", stringsAsFactors = FALSE, check.names = FALSE)
 source_req <- c("source_id", "authors_or_institution", "year", "title", "doi", "url",

@@ -24,6 +24,7 @@ conv_biodiesel,IVC_T_CC,37,"Biodiesel (FAME)",direct,RED_III_2023,"replacement A
 conv_biodiesel,IVC_HT_CC,44,"Hydrotreated vegetable oil (diesel)",direct,RED_III_2023,"replacement Annex III","Cover-crop hydrotreatment."
 conv_biodiesel,IVC_T_lipids,37,"Biodiesel (FAME)",direct,RED_III_2023,"replacement Annex III","Waste/residual lipid transesterification."
 conv_biodiesel,IVC_HT_lipids,44,"Hydrotreated vegetable oil (diesel)",direct,RED_III_2023,"replacement Annex III","Waste/residual lipid hydrotreatment."
+conv_biodiesel,IVC_HT_lipids_SAF,44,"Hydrotreated vegetable oil (diesel/jet hydrocarbon)",direct,RED_III_2023,"replacement Annex III","The 2035 S1 source assigns the aviation-tagged UCO/animal-fat hydrotreatment route to the conventional-biodiesel model product; both hydrotreated diesel and jet products use the same 44 MJ/kg RED III lower heating value."
 conv_biogasoline,IVC_EF_FF,27,"Ethanol",direct,RED_III_2023,"replacement Annex III","Conventional crop ethanol."
 conv_bio_kerosene,IVC_HT_lipids_SAF,44,"Hydrotreated vegetable oil (jet fuel)",direct,RED_III_2023,"replacement Annex III","Conventional/waste lipid HEFA jet route."
 conv_bio_kerosene,IVC_HT_CC_SAF,44,"Hydrotreated vegetable oil (jet fuel)",direct,RED_III_2023,"replacement Annex III","Cover-crop HEFA jet route."

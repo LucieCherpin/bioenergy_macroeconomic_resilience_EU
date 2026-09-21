@@ -26,6 +26,21 @@ S1 and M for S2/S3 in 2040. Pure recursive intermediate routes IVC6, IVC8b and
 IVC12 receive no second primary-feedstock reconstruction at the consuming stage;
 their domestic upstream burden enters through the BIO-to-BIO recursion below.
 
+For IVC11a_SAF, workbook row 78 lists FPBO at EUR/t feedstock and a conversion
+yield in t SAF/t feedstock, but its cached monetary formula uses price times
+yield. Dimensional consistency and the neighbouring rows require price divided
+by yield. `Final_main_code.R` therefore replaces only the source-derived FPBO
+expenditure before constructing scenario endpoints. Absolute CAPEX, OPEX and
+all non-FPBO feedstock expenditures are held fixed. The single FPBO amount is
+split across its existing model BIO-sector mapping, correcting a separate 2040
+double allocation in which the whole cached amount had been assigned to each of
+two sectors. This raises recurrent FPBO intermediate use at fixed scenario
+biofuel output. In the economic accounts it raises intermediate consumption and
+reduces residual value added in the affected fuel column; the model keeps BIO
+output exogenous. In the lifecycle diagnostic it raises the recursively embodied
+upstream burden. It does not alter physical yields, GHG factors, lifecycle
+boundaries or scenario fuel volumes.
+
 The legacy columns in `ghg_hybrid_benchmark.csv` remain stage-attributed for backward compatibility. A second stage metric excludes CAPEX because JEC/CORSIA/RED fuel-cycle comparators generally do not share the repo's explicit capital-goods boundary.
 
 ## 3. Domestic bioenergy-intermediate recursion
@@ -55,6 +70,11 @@ gCO2e_per_MJ = kgCO2e * 1000 g/kg / MJ_fuel .
 ```
 
 `ghg_fuel_energy_factors.csv` contains the lower heating values. Direct matches use RED III replacement Annex III values; non-identical product categories are explicitly marked `proxy` rather than hidden.
+The 2035 S1 source places the aviation-tagged UCO/animal-fat hydrotreatment
+route in the conventional-biodiesel model pool. Its product-specific entry is
+still a direct 44 MJ/kg mapping because RED III assigns that lower heating value
+to both hydrotreated diesel and hydrotreated jet hydrocarbons; no route weight
+or modeled fuel identity is changed by the denominator lookup.
 
 ## 5. External benchmark catalogue
 

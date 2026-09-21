@@ -1,2 +1,3 @@
 # Temporary working files and directories
 tmp/
+*.rds

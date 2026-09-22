@@ -109,3 +109,44 @@ The script intentionally does **not** classify a model result as "passing" or "f
 - Giuntoli, J. et al. (2019), *Definition of input data to assess GHG default emissions from biofuels in EU legislation*, JRC115952, doi:10.2760/69179.
 
 Full URLs, editions, locators, scope notes and independence/circularity notes are stored in `ghg_validation_sources.csv` and `ghg_external_benchmarks.csv` so generated comparison tables remain auditable.
+
+## 7. Workbook, geographic-channel and external-comparator figures
+
+`GHG_Workbook_Comparison.R` is read-only post-processing of the saved benchmark
+artifacts. It does not rerun or modify the economic model, the GHG production
+analysis, or `Providing sectors.xlsx`. Numerical comparison CSVs are written
+before the PNG/PDF figures. `--inspect` exports nonempty-cell censuses for the
+workbook's `Weighetd emission intensities` and `Emission intensities` sheets and
+the verified source-cell manifest used by the renderer.
+
+Workbook intensities are mapped at model-fuel and IVC level, after checking the
+source row's IVC and product labels. Scenario values use modeled route energy
+(`tonnes fuel * LHV`), not route monetary shares. Multiple workbook rows for an
+IVC/feedstock family remain lower/upper bounds; they are not silently averaged
+or treated as a proven feedstock match. Negative biomethane values retain their
+avoided-emission credit. Workbook capital-goods coverage remains `unknown`, so
+the comparison shows both the model's recursive no-CAPEX lifecycle result and
+its recursively embodied CAPEX increment instead of claiming a shared capital
+boundary.
+
+The geographic-channel figure is an additive stage decomposition. OPEX and
+CAPEX are separated into the domestic production chain and direct external
+imports using `ghg_io_channels_benchmark.csv`. Physical feedstock emissions and
+the saved IO feedstock fallback lack a complete origin split and therefore stay
+explicitly **origin unallocated**. Imported emissions remain a lower-bound
+direct-extension result because no foreign Leontief system is available. These
+components must not be interpreted as a territorial inventory or as a complete
+domestic/import split of the recursive lifecycle footprint.
+
+The external comparison uses recursive hybrid GHG excluding CAPEX, which still
+includes operating inputs. JEC/RED/CORSIA route ranges are weighted by covered
+scenario-route energy; proxy, unresolved-range and coverage fractions remain in
+the output table. Avoided-emission-credit benchmarks are displayed as separate
+alternatives rather than merged into the ordinary interval. Feedstock-only
+values are shown solely as a non-lifecycle diagnostic. No figure applies a
+pass/fail range judgement.
+
+Workbook and external gross-output lifecycle values, and the model's recursive
+per-fuel totals, are diagnostics for one unit or gross output of a final fuel.
+They must not be summed across interdependent biofuel sectors. Only the existing
+stage-attributed hybrid accounting remains additive across the nine BIO sectors.

@@ -1432,7 +1432,7 @@ S2_2030 <- list(
 
     alpha = list(
       IVC8a = c(feed = 0.248012, capex = 0.502517, opex = 0.249470),
-      IVC8b = c(feed = 0.756410, capex = 0.145299, opex = 0.098291),
+      IVC8b = c(feed = 0.459319, capex = 0.270340, opex = 0.270340),
       IVC13b_mar = c(feed = 0.343122, capex = 0.341494, opex = 0.315384)
     ),
 
@@ -1592,7 +1592,7 @@ S3_2030 <- list(
 
     alpha = list(
       IVC8a = c(feed = 0.248012, capex = 0.502517, opex = 0.249470),
-      IVC8b = c(feed = 0.756410, capex = 0.145299, opex = 0.098291),
+      IVC8b = c(feed = 0.459319, capex = 0.270340, opex = 0.270340),
       IVC13b_mar = c(feed = 0.343122, capex = 0.341494, opex = 0.315384)
     ),
 
@@ -1978,7 +1978,7 @@ S2_2035 <- list(
 
     alpha = list(
       IVC8a = c(feed = 0.248012, capex = 0.502517, opex = 0.249470),
-      IVC8b = c(feed = 0.756410, capex = 0.145299, opex = 0.098291),
+      IVC8b = c(feed = 0.459319, capex = 0.270340, opex = 0.270340),
       IVC13b_mar = c(feed = 0.343122, capex = 0.341494, opex = 0.315384)
     ),
 
@@ -2133,7 +2133,7 @@ S3_2035 <- list(
 
     alpha = list(
       IVC8a = c(feed = 0.248012, capex = 0.502517, opex = 0.249470),
-      IVC8b = c(feed = 0.756410, capex = 0.145299, opex = 0.098291),
+      IVC8b = c(feed = 0.459319, capex = 0.270340, opex = 0.270340),
       IVC13b_mar = c(feed = 0.343122, capex = 0.341494, opex = 0.315384)
     ),
 
@@ -2352,7 +2352,7 @@ S1_2040 <- list(
 
     alpha = list(
       IVC8a = c(feed = 0.248819, capex = 0.501978, opex = 0.249203),
-      IVC8b = c(feed = 0.756410, capex = 0.145299, opex = 0.098291),
+      IVC8b = c(feed = 0.459319, capex = 0.270340, opex = 0.270340),
       IVC13b_mar = c(feed = 0.343801, capex = 0.341141, opex = 0.315058)
     ),
 

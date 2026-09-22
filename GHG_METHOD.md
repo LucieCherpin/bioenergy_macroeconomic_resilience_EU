@@ -29,17 +29,26 @@ their domestic upstream burden enters through the BIO-to-BIO recursion below.
 For IVC11a_SAF, workbook row 78 lists FPBO at EUR/t feedstock and a conversion
 yield in t SAF/t feedstock, but its cached monetary formula uses price times
 yield. Dimensional consistency and the neighbouring rows require price divided
-by yield. `Final_main_code.R` therefore replaces only the source-derived FPBO
-expenditure before constructing scenario endpoints. Absolute CAPEX, OPEX and
-all non-FPBO feedstock expenditures are held fixed. The single FPBO amount is
-split across its existing model BIO-sector mapping, correcting a separate 2040
-double allocation in which the whole cached amount had been assigned to each of
-two sectors. This raises recurrent FPBO intermediate use at fixed scenario
+by yield. The binary workbook remains unchanged as provenance, while
+`source_data_corrections.csv` records the exact source formula correction.
+`Final_main_code.R` uses the corrected F/I/K/M feed costs and distributions
+before constructing scenario endpoints. Source CAPEX remains 1,445 EUR/t SAF,
+source OPEX remains 716.25 EUR/t SAF, and the existing equal FPBO proxy split
+between advanced biodiesel and advanced biogasoline is unchanged. This raises
+recurrent FPBO intermediate use at fixed scenario
 biofuel output. In the economic accounts it raises intermediate consumption and
 reduces residual value added in the affected fuel column; the model keeps BIO
 output exogenous. In the lifecycle diagnostic it raises the recursively embodied
 upstream burden. It does not alter physical yields, GHG factors, lifecycle
 boundaries or scenario fuel volumes.
+
+IVC8b is not changed by this correction. Its workbook contains an explicit
+allocation uncertainty: some cases assign approximately 708 EUR/t methanol to
+the biomethane feed component, while the physical price/yield calculation gives
+approximately 429.923 EUR/t. `ivc8b_allocation_diagnostic.csv` reports every
+year/scenario route weight, both coefficients, their monetary residual, and the
+effect on the aggregate advanced-bio-HFO biomethane coefficient. This is a
+read-only sensitivity record, not a corrected baseline or a calibration target.
 
 The legacy columns in `ghg_hybrid_benchmark.csv` remain stage-attributed for backward compatibility. A second stage metric excludes CAPEX because JEC/CORSIA/RED fuel-cycle comparators generally do not share the repo's explicit capital-goods boundary.
 

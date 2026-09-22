@@ -2822,84 +2822,90 @@ dist_feed = list(
 # Its cached unit-cost formula multiplies price by yield, whereas the
 # dimensional conversion used by every neighbouring feedstock row is
 # price / yield.  The scenario configurations above inherited that
-# understated monetary input.  In addition, the 2040 configurations
-# assigned the whole cached FPBO cost share to each of two model BIO
-# sectors, duplicating that intermediate rather than splitting it.
+# understated monetary input.  source_data_corrections.csv records the
+# original and corrected formulas while preserving the workbook unchanged.
 #
 # This correction is deliberately made before endpoint construction.
-# It preserves, in absolute EUR/t SAF, CAPEX, OPEX, and every non-FPBO
-# feedstock component.  Only the residual FPBO intermediate expenditure
-# is replaced.  The corrected production cost and cost shares are then
-# closed arithmetically, so the resulting technical coefficients carry
-# the corrected recurrent input through the economic model.
+# It retains the source CAPEX of 1445 EUR/t and OPEX of 716.25 EUR/t and
+# derives the F/I/K/M feed costs and distributions from the corrected
+# workbook rows.  The workbook's existing equal FPBO proxy split between
+# advanced biodiesel and advanced biogasoline is unchanged.
 
-correct_ivc11a_saf_fpbo_cost <- function(
-    fuel_cfg,
-    corrected_feed_cost_eur_per_t
-) {
+IVC11A_SAF_SOURCE_CORRECTION <- list(
+  capex_eur_per_t = 1445,
+  opex_eur_per_t = 716.25,
+  cases = list(
+    F = list(
+      feed_eur_per_t = 670.7543057818431,
+      dist_feed = c(
+        agriculture = 0.5361055713873335,
+        forestry = 0.1854571912826874,
+        paper = 0.1528455715696207,
+        food_bev = 0.0120578893224190,
+        sewerage = 0.0250935686083273,
+        adv_biodiesel = 0.0442201039148060,
+        adv_biogasoline = 0.0442201039148060
+      )
+    ),
+    I = list(
+      feed_eur_per_t = 682.0541117568854,
+      dist_feed = c(
+        agriculture = 0.5977174489773023,
+        forestry = 0.1291999141222632,
+        paper = 0.1491890105485317,
+        food_bev = 0.0126003062014807,
+        sewerage = 0.0233087890295587,
+        adv_biodiesel = 0.0439922655604317,
+        adv_biogasoline = 0.0439922655604317
+      )
+    ),
+    K = list(
+      feed_eur_per_t = 703.6097408241184,
+      dist_feed = c(
+        agriculture = 0.5658595974183722,
+        forestry = 0.1401485877145482,
+        paper = 0.1352960865214111,
+        food_bev = 0.0099997037162571,
+        sewerage = 0.0230730617004885,
+        adv_biodiesel = 0.0628114814644615,
+        adv_biogasoline = 0.0628114814644615
+      )
+    ),
+    M = list(
+      feed_eur_per_t = 709.2596438116395,
+      dist_feed = c(
+        agriculture = 0.5952468747616493,
+        forestry = 0.1134598221090937,
+        paper = 0.1336777322816437,
+        food_bev = 0.0102769045721717,
+        sewerage = 0.0222309970738944,
+        adv_biodiesel = 0.0625538346007737,
+        adv_biogasoline = 0.0625538346007737
+      )
+    )
+  )
+)
+
+correct_ivc11a_saf_source_lineage <- function(fuel_cfg, source_case) {
 
   ivc_id <- "IVC11a_SAF"
-  bio_intermediates <- c("adv_biodiesel", "adv_biogasoline")
-
-  old_prod_cost <- fuel_cfg$prod_cost[[ivc_id]]
-  old_alpha <- fuel_cfg$alpha[[ivc_id]]
-  old_dist <- fuel_cfg$dist_feed[[ivc_id]]
-
-  if (
-    is.null(old_prod_cost) ||
-    is.null(old_alpha) ||
-    is.null(old_dist) ||
-    !all(c("feed", "capex", "opex") %in% names(old_alpha))
-  ) {
-    stop("Incomplete IVC11a_SAF scenario cost configuration.")
+  correction <- IVC11A_SAF_SOURCE_CORRECTION$cases[[source_case]]
+  if (is.null(correction)) {
+    stop("Unknown IVC11a_SAF source case: ", source_case)
   }
 
-  intermediate_names <- intersect(bio_intermediates, names(old_dist))
-  if (!length(intermediate_names)) {
-    stop("IVC11a_SAF has no model BIO sector for its FPBO intermediate.")
-  }
+  feed_cost <- correction$feed_eur_per_t
+  capex_cost <- IVC11A_SAF_SOURCE_CORRECTION$capex_eur_per_t
+  opex_cost <- IVC11A_SAF_SOURCE_CORRECTION$opex_eur_per_t
+  prod_cost <- feed_cost + capex_cost + opex_cost
 
-  old_feed_cost <- old_prod_cost * old_alpha[["feed"]]
-  old_components <- old_feed_cost * old_dist
-  non_intermediate_names <- setdiff(names(old_components), intermediate_names)
-  non_intermediate_cost <- sum(old_components[non_intermediate_names])
-  corrected_fpbo_cost <- corrected_feed_cost_eur_per_t - non_intermediate_cost
-
-  if (
-    !is.finite(corrected_feed_cost_eur_per_t) ||
-    corrected_feed_cost_eur_per_t <= 0 ||
-    !is.finite(corrected_fpbo_cost) ||
-    corrected_fpbo_cost <= 0
-  ) {
-    stop("Invalid corrected IVC11a_SAF feedstock or FPBO cost.")
-  }
-
-  # Preserve the pre-existing mapping between the workbook's single FPBO
-  # row and model BIO sectors, but make those sector shares sum to the one
-  # corrected FPBO amount.  This also removes the 2040 double allocation.
-  intermediate_split <- old_components[intermediate_names]
-  if (any(intermediate_split < 0) || sum(intermediate_split) <= 0) {
-    stop("Invalid IVC11a_SAF FPBO sector allocation.")
-  }
-  intermediate_split <- intermediate_split / sum(intermediate_split)
-
-  corrected_components <- old_components
-  corrected_components[intermediate_names] <-
-    corrected_fpbo_cost * intermediate_split
-
-  old_capex_cost <- old_prod_cost * old_alpha[["capex"]]
-  old_opex_cost <- old_prod_cost * old_alpha[["opex"]]
-  corrected_prod_cost <-
-    corrected_feed_cost_eur_per_t + old_capex_cost + old_opex_cost
-
-  fuel_cfg$prod_cost[[ivc_id]] <- corrected_prod_cost
+  fuel_cfg$prod_cost[[ivc_id]] <- prod_cost
   fuel_cfg$alpha[[ivc_id]] <- c(
-    feed = corrected_feed_cost_eur_per_t,
-    capex = old_capex_cost,
-    opex = old_opex_cost
-  ) / corrected_prod_cost
-  fuel_cfg$dist_feed[[ivc_id]] <-
-    corrected_components / corrected_feed_cost_eur_per_t
+    feed = feed_cost,
+    capex = capex_cost,
+    opex = opex_cost
+  ) / prod_cost
+  fuel_cfg$dist_feed[[ivc_id]] <- correction$dist_feed
 
   stopifnot(
     isTRUE(all.equal(sum(fuel_cfg$alpha[[ivc_id]]), 1, tolerance = 1e-12)),
@@ -2909,42 +2915,26 @@ correct_ivc11a_saf_fpbo_cost <- function(
   fuel_cfg
 }
 
-# Correct totals recomputed from workbook rows 69:78 as
-# sum(mix share * EUR/t feedstock / t fuel per t feedstock).
-IVC11A_SAF_CORRECTED_FEED_COST_EUR_PER_T <- c(
-  F = 670.7543057818430,
-  I = 682.0541117568853,
-  K = 703.6097408241184,
-  M = 709.2596438116395
+S1_2030$adv_bio_kerosene <- correct_ivc11a_saf_source_lineage(
+  S1_2030$adv_bio_kerosene, "F"
 )
-
-S1_2030$adv_bio_kerosene <- correct_ivc11a_saf_fpbo_cost(
-  S1_2030$adv_bio_kerosene,
-  IVC11A_SAF_CORRECTED_FEED_COST_EUR_PER_T[["F"]]
+S1_2035$adv_bio_kerosene <- correct_ivc11a_saf_source_lineage(
+  S1_2035$adv_bio_kerosene, "F"
 )
-S1_2035$adv_bio_kerosene <- correct_ivc11a_saf_fpbo_cost(
-  S1_2035$adv_bio_kerosene,
-  IVC11A_SAF_CORRECTED_FEED_COST_EUR_PER_T[["F"]]
+S2_2035$adv_bio_kerosene <- correct_ivc11a_saf_source_lineage(
+  S2_2035$adv_bio_kerosene, "I"
 )
-S2_2035$adv_bio_kerosene <- correct_ivc11a_saf_fpbo_cost(
-  S2_2035$adv_bio_kerosene,
-  IVC11A_SAF_CORRECTED_FEED_COST_EUR_PER_T[["I"]]
+S3_2035$adv_bio_kerosene <- correct_ivc11a_saf_source_lineage(
+  S3_2035$adv_bio_kerosene, "I"
 )
-S3_2035$adv_bio_kerosene <- correct_ivc11a_saf_fpbo_cost(
-  S3_2035$adv_bio_kerosene,
-  IVC11A_SAF_CORRECTED_FEED_COST_EUR_PER_T[["I"]]
+S1_2040$adv_bio_kerosene <- correct_ivc11a_saf_source_lineage(
+  S1_2040$adv_bio_kerosene, "K"
 )
-S1_2040$adv_bio_kerosene <- correct_ivc11a_saf_fpbo_cost(
-  S1_2040$adv_bio_kerosene,
-  IVC11A_SAF_CORRECTED_FEED_COST_EUR_PER_T[["K"]]
+S2_2040$adv_bio_kerosene <- correct_ivc11a_saf_source_lineage(
+  S2_2040$adv_bio_kerosene, "M"
 )
-S2_2040$adv_bio_kerosene <- correct_ivc11a_saf_fpbo_cost(
-  S2_2040$adv_bio_kerosene,
-  IVC11A_SAF_CORRECTED_FEED_COST_EUR_PER_T[["M"]]
-)
-S3_2040$adv_bio_kerosene <- correct_ivc11a_saf_fpbo_cost(
-  S3_2040$adv_bio_kerosene,
-  IVC11A_SAF_CORRECTED_FEED_COST_EUR_PER_T[["M"]]
+S3_2040$adv_bio_kerosene <- correct_ivc11a_saf_source_lineage(
+  S3_2040$adv_bio_kerosene, "M"
 )
  
 

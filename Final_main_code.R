@@ -2245,10 +2245,10 @@ S3_exports_2035 <- c(
   conv_biodiesel    = 0,
   adv_biodiesel     = 0,
   conv_biogasoline  = 0,
-  adv_biogasoline   = 42698721669.95,
+  adv_biogasoline   = 44743872167.92,
   conv_bio_kerosene = 0,
-  adv_bio_kerosene  = 7341873991.52,
-  adv_bio_hfo       = 44735575368.87,
+  adv_bio_kerosene  = 15520204319.817,
+  adv_bio_hfo       = 39573842271.04,
   RFNBOs            = 4871514959.82,
   adv_biogas        = 26315422128.06
 )

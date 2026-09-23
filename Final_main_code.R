@@ -2107,27 +2107,29 @@ S3_2035 <- list(
   adv_bio_kerosene = list(
     abs_market_value = 22292239597.26,
 
-    weights = c(IVC2_HEFA = 0.144782, IVC6 = 0.639978, IVC11a_SAF = 0.215240),
+    weights = c(IVC2_HEFA = 0.122619414, IVC6 = 0.542012121, IVC11a_SAF = 0.182292052, IVC13b_SAF = 0.153076413),
 
-    prod_cost = list(IVC2_HEFA = 2356.102815, IVC6 = 2513.829787, IVC11a_SAF = 2843.304112),
+    prod_cost = list(IVC2_HEFA = 2356.102815, IVC6 = 2513.829787, IVC11a_SAF = 2843.304112, IVC13b_SAF = 2005.89108),
 
     alpha = list(
       IVC2_HEFA = c(feed = 0.660244, capex = 0.159586, opex = 0.180170),
       IVC6 = c(feed = 0.423191, capex = 0.298350, opex = 0.278460),
-      IVC11a_SAF = c(feed = 0.239880816, capex = 0.508211554, opex = 0.251907630)
+      IVC11a_SAF = c(feed = 0.239880816, capex = 0.508211554, opex = 0.251907630),
+      IVC13b_SAF = c(feed = 0.343801, capex = 0.341141, opex = 0.315058)
     ),
 
     dist_feed = list(
       IVC2_HEFA = c(agriculture = 0.430907, adv_biogasoline = 0.142273, chemicals = 0.284546, adv_biodiesel = 0.142273),
       IVC6 = c(adv_bio_hfo = 1.000000),
-      IVC11a_SAF = c(sewerage =  0.02331, food_bev =  0.01260, agriculture =  0.59772, forestry =  0.12920, paper =  0.14919, adv_biodiesel =  0.04399, adv_biogasoline =  0.04399)
+      IVC11a_SAF = c(sewerage =  0.02331, food_bev =  0.01260, agriculture =  0.59772, forestry =  0.12920, paper =  0.14919, adv_biodiesel =  0.04399, adv_biogasoline =  0.04399),
+      IVC13b_SAF =  c(food_bev = 0.013572, agriculture = 0.669460, forestry = 0.135131, paper = 0.160695, sewerage = 0.021142)
     )
   ),
 
   adv_bio_hfo = list(
     abs_market_value = 69072668587.09,
 
-    weights = c(IVC8a = 0.377418, IVC8b = 0.566210, IVC13b_mar = 0.056372),
+    weights = c(IVC8a = 0.388364122, IVC8b = 0.582632457, IVC13b_mar = 0.02900342),
 
     prod_cost = list(IVC8a = 559.184571, IVC8b = 936.000000, IVC13b_mar = 2005.891082),
 
@@ -2243,10 +2245,10 @@ S3_exports_2035 <- c(
   conv_biodiesel    = 0,
   adv_biodiesel     = 0,
   conv_biogasoline  = 0,
-  adv_biogasoline   = 42698721669.95,
+  adv_biogasoline   = 44743872167.92,
   conv_bio_kerosene = 0,
-  adv_bio_kerosene  = 7341873991.52,
-  adv_bio_hfo       = 44735575368.87,
+  adv_bio_kerosene  = 15520204319.817,
+  adv_bio_hfo       = 39573842271.04,
   RFNBOs            = 4871514959.82,
   adv_biogas        = 26315422128.06
 )

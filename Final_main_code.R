@@ -2210,8 +2210,8 @@ S1_imports_2035 <- c(
   adv_biogasoline   = 2658381656.52,
   conv_bio_kerosene = 0,
   adv_bio_kerosene  = 8222014081.21,
-  adv_bio_hfo       = 762619367.67,
-  RFNBOs            = 35603837506.48,
+  adv_bio_hfo       = 728594026.63,
+  RFNBOs            = 17801918753.24,
   adv_biogas        = 0
 )
 S1_exports_2035 <- setNames(rep(0, length(BIOFUEL_SECTORS)), names(BIOFUEL_SECTORS))

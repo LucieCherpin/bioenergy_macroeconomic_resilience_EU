@@ -170,3 +170,57 @@ Workbook and external gross-output lifecycle values, and the model's recursive
 per-fuel totals, are diagnostics for one unit or gross output of a final fuel.
 They must not be summed across interdependent biofuel sectors. Only the existing
 stage-attributed hybrid accounting remains additive across the nine BIO sectors.
+
+## 8. Finished-product import emissions addendum
+
+`GHG_Finished_Import_Comparison.R` is a read-only addendum for finished biofuel
+imports. It reads `Imports_Exports_All_Scenarios.xlsx` and writes
+`ghg_finished_import_workbook.csv`,
+`ghg_finished_import_exiobase.csv`, `ghg_finished_import_comparison.csv` and
+the auditable `ghg_finished_import_mapping.csv` under `ghg_outputs/`. These
+files do not replace or alter the domestic production accounting in
+`GHG_Analysis.R`; they make the two available finished-import constructions
+explicit so that they can be tabulated by year, scenario and fuel.
+
+The workbook construction reproduces the `Import Emissions` sheet of
+`Imports_Exports_All_Scenarios.xlsx`:
+
+`E_import [Mt CO2e] = M_import [Mtoe] x EI [g CO2e/MJ] x 41,868 [MJ/toe] / 10^6`.
+
+The EI values are the cached workbook inputs, including the workbook's route
+averages and avoided-emission credits. They are not recomputed from the
+domestic model and the circular source formulas described in the workbook are
+therefore provenance information, not an additional uncertainty interval.
+
+The EXIOBASE construction uses the imported finished-use endpoint `Y_imp_FCE`
+from the saved model results (MEUR) and the imported environmental-extension
+boundary `external_imports_direct`. For a mapped sector `s`,
+
+`E_import [Mt CO2e] = Y_imp_FCE [MEUR] x e_s [kg CO2e/MEUR] / 10^9`,
+
+where `e_s` is the sum of the extension stressors after the existing AR6
+100-year characterization factors. The normalized value is then
+`E_import x 10^9 x 1000 / (M_import x 41,868,000,000)` in g CO2e/MJ. A zero
+import quantity has no defined normalized EXIOBASE value and is recorded as
+unavailable rather than as zero. This is a direct imported-sector extension
+estimate, not a foreign Leontief lifecycle: it excludes the unobserved foreign
+upstream supply chain.
+
+The mapping manifest is deliberately explicit. Biodiesel, biogasoline and
+biogas use their corresponding CPA sectors, while kerosene, HFO and RFNBO
+categories use labelled product proxies where the extension has no exact
+product row. Conventional and advanced products are pooled where the CPA
+sector itself does not distinguish them. The model stores RFNBO finished-import
+value as one aggregate endpoint; the script allocates that value between
+e-methanol and e-methane in proportion to their workbook imported Mtoe and
+flags the allocation in every output row. That allocation is a diagnostic, not
+a claim about foreign route composition.
+
+Consequently, the two normalized columns answer different questions. The
+workbook column is a cached pathway life-cycle intensity, while the EXIOBASE
+column is a direct imported-use extension intensity at a mapped sector or
+explicit proxy. Differences are expected from route composition, boundary,
+capital treatment, geographic scope and the absence of foreign recursive
+accounting. They must not be interpreted as a pass/fail test, and neither set
+of finished-import values should be added to the domestic recursive footprint
+without first resolving overlap in the accounting boundary.

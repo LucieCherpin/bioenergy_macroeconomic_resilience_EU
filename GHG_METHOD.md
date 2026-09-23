@@ -19,6 +19,16 @@ E_stage,j = E_feedstock,physical,j
 
 Primary-feedstock identity and physical quantity are reconstructed at IVC level from `Providing sectors.xlsx`; no aggregate agriculture/forestry IO row is reverse-disaggregated after solving. OPEX and CAPEX use the model's saved domestic/import channel matrices and the NONBIO domestic Leontief system. Imported emissions remain a lower bound because the repository has direct external-import extensions but no foreign Leontief system.
 
+Physical feedstock GHG is also reported by domestic and imported origin. This is
+an allocation using the model's positive purchased-feedstock monetary
+coefficients in `dist_feed`, not an observation of physical tonnes by origin.
+For an IVC with positive feedstock coefficients `d_k`, the allocated share is
+`d_k / sum(d_k)` within the domestic or `_imp` channel. Negative gate-fee or
+revenue entries are excluded because they do not enter the purchased-input
+technical coefficient. IO-fallback feedstock GHG instead retains its exact
+domestic and direct-import environmental-extension channels. Both splits are
+required to reconstruct their unsplit parent totals.
+
 The workbook source case is selected from its explicit scenario-sheet links,
 not by choosing whichever physical reconstruction is closest to a model monetary
 total. Those links select F for S1 and I for S2/S3 in 2030 and 2035, then K for
@@ -27,28 +37,26 @@ IVC12 receive no second primary-feedstock reconstruction at the consuming stage;
 their domestic upstream burden enters through the BIO-to-BIO recursion below.
 
 For IVC11a_SAF, workbook row 78 lists FPBO at EUR/t feedstock and a conversion
-yield in t SAF/t feedstock, but its cached monetary formula uses price times
-yield. Dimensional consistency and the neighbouring rows require price divided
-by yield. The binary workbook remains unchanged as provenance, while
-`source_data_corrections.csv` records the exact source formula correction.
-`Final_main_code.R` uses the corrected F/I/K/M feed costs and distributions
-before constructing scenario endpoints. Source CAPEX remains 1,445 EUR/t SAF,
-source OPEX remains 716.25 EUR/t SAF, and the existing equal FPBO proxy split
-between advanced biodiesel and advanced biogasoline is unchanged. This raises
-recurrent FPBO intermediate use at fixed scenario
-biofuel output. In the economic accounts it raises intermediate consumption and
-reduces residual value added in the affected fuel column; the model keeps BIO
-output exogenous. In the lifecycle diagnostic it raises the recursively embodied
-upstream burden. It does not alter physical yields, GHG factors, lifecycle
-boundaries or scenario fuel volumes.
+yield in t SAF/t feedstock. The workbook now uses the dimensionally consistent
+price divided by yield identity: `300 / 0.157085 = 1,909.783 EUR/t SAF` in the
+base source case. `Final_main_code.R` stores the resulting F/I/K/M feed costs and
+cost shares directly in the seven scenario endpoints that use IVC11a_SAF; there
+is no post-hoc runtime overlay. Source CAPEX remains 1,445 EUR/t SAF, source OPEX
+remains 716.25 EUR/t SAF, and the existing equal FPBO proxy split between
+advanced biodiesel and advanced biogasoline is unchanged. At fixed biofuel
+output, the corrected recurrent FPBO coefficient raises intermediate demand and
+reduces residual value added in the affected fuel column relative to the former
+understated feed budget. It also raises recursively embodied upstream GHG. The
+correction does not alter physical yields, GHG factors, lifecycle boundaries or
+scenario fuel volumes.
 
-IVC8b is not changed by this correction. Its workbook contains an explicit
-allocation uncertainty: some cases assign approximately 708 EUR/t methanol to
-the biomethane feed component, while the physical price/yield calculation gives
-approximately 429.923 EUR/t. `ivc8b_allocation_diagnostic.csv` reports every
-year/scenario route weight, both coefficients, their monetary residual, and the
-effect on the aggregate advanced-bio-HFO biomethane coefficient. This is a
-read-only sensitivity record, not a corrected baseline or a calibration target.
+IVC8b uses one biomethane intermediate and is already consistent with the
+workbook identity. Its stored feed component is `936 * 0.459319 = 429.922584
+EUR/t methanol`, while the source price/yield calculation is `900 / 2.0934 =
+429.922614 EUR/t methanol`; the difference is only decimal rounding. All nine
+benchmark endpoints preserve that identity. No alternative 708 EUR/t allocation
+is used in the model, so no unresolved IVC8b sensitivity or separate diagnostic
+enters the baseline GHG accounting.
 
 The legacy columns in `ghg_hybrid_benchmark.csv` remain stage-attributed for backward compatibility. A second stage metric excludes CAPEX because JEC/CORSIA/RED fuel-cycle comparators generally do not share the repo's explicit capital-goods boundary.
 
@@ -119,32 +127,44 @@ before the PNG/PDF figures. `--inspect` exports nonempty-cell censuses for the
 workbook's `Weighetd emission intensities` and `Emission intensities` sheets and
 the verified source-cell manifest used by the renderer.
 
-Workbook intensities are mapped at model-fuel and IVC level, after checking the
-source row's IVC and product labels. Scenario values use modeled route energy
-(`tonnes fuel * LHV`), not route monetary shares. Multiple workbook rows for an
-IVC/feedstock family remain lower/upper bounds; they are not silently averaged
-or treated as a proven feedstock match. Negative biomethane values retain their
-avoided-emission credit. Workbook capital-goods coverage remains `unknown`, so
-the comparison shows both the model's recursive no-CAPEX lifecycle result and
-its recursively embodied CAPEX increment instead of claiming a shared capital
-boundary.
+Workbook intensities are mapped at model-fuel, IVC and, where the workbook has
+more than one row for an IVC, feedstock level after checking the source row's
+IVC and product labels. These are fixed pathway values, not statistical ranges.
+For route `r`, the scenario-specific workbook intensity is
+`I_r = sum_f m_rf I_rf`, where `m_rf` is the explicit workbook feedstock-mix
+share used by the model. The fuel value is then
+`I_fuel = sum_r Q_r I_r / sum_r Q_r`, where `Q_r = tonnes_r * LHV_r`.
+Accordingly, workbook results are plotted as bars without error bars. A value is
+left unavailable if any positive-energy modeled route lacks a verified mapping.
+Negative biomethane values retain their avoided-emission credit. Workbook
+capital-goods coverage remains `unknown`; the model/workbook figure displays the
+model's recursively embodied full result but labels this boundary mismatch and
+does not claim a like-for-like validation.
 
-The geographic-channel figure is an additive stage decomposition. OPEX and
-CAPEX are separated into the domestic production chain and direct external
-imports using `ghg_io_channels_benchmark.csv`. Physical feedstock emissions and
-the saved IO feedstock fallback lack a complete origin split and therefore stay
-explicitly **origin unallocated**. Imported emissions remain a lower-bound
-direct-extension result because no foreign Leontief system is available. These
-components must not be interpreted as a territorial inventory or as a complete
-domestic/import split of the recursive lifecycle footprint.
+The model component figures are an additive stage decomposition. Physical
+feedstock GHG is split by the positive monetary sourcing shares described
+above. IO-fallback feedstock, OPEX and CAPEX retain separate domestic-chain and
+direct-import channels. Imported IO remains a lower-bound direct-extension
+result because no foreign Leontief system is available. These components must
+not be interpreted as a territorial inventory, as observed physical origin, or
+as a geographic split of the recursive lifecycle footprint.
 
 The external comparison uses recursive hybrid GHG excluding CAPEX, which still
-includes operating inputs. JEC/RED/CORSIA route ranges are weighted by covered
-scenario-route energy; proxy, unresolved-range and coverage fractions remain in
-the output table. Avoided-emission-credit benchmarks are displayed as separate
-alternatives rather than merged into the ordinary interval. Feedstock-only
-values are shown solely as a non-lifecycle diagnostic. No figure applies a
-pass/fail range judgement.
+includes feedstock and operating supply chains. JEC/RED/CORSIA pathway ranges
+are shown only when every positive-energy scenario route is mapped; partial or
+zero coverage is unavailable rather than a zero or partial-total bar. Proxy,
+range and coverage fractions remain in the output table. Avoided-manure-storage
+credits are displayed as separate counterfactual alternatives rather than
+merged into the ordinary pathway range. No figure applies a pass/fail range
+judgement.
+
+Each family is exported as separate `_total` and `_normalized` PNG/PDF files.
+The workbook-comparison and model-only figures follow the same visual grammar:
+S1/S2/S3 columns, 2030/2035/2040 on the horizontal axis, and a stable colour per
+fuel. The model-only bars use the stage-attributed full footprint because that
+quantity is additive across fuel sectors. The recursive comparison bars are
+per-fuel lifecycle diagnostics and remain nonadditive across interdependent
+fuel sectors.
 
 Workbook and external gross-output lifecycle values, and the model's recursive
 per-fuel totals, are diagnostics for one unit or gross output of a final fuel.

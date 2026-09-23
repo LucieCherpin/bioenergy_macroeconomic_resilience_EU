@@ -530,6 +530,27 @@ feedstock_io_fallback <- function(endpoint,fuel_cfg,ivc_id,ivc_value_MEUR) {
   }
   io_ghg_from_direct_vectors(endpoint,dom,imp)
 }
+
+# Allocate physically estimated feedstock GHG to the domestic/import sourcing
+# boundary already used by the economic model. dist_feed is a monetary
+# technical-coefficient distribution; only positive purchased inputs enter A,
+# so gate-fee/revenue entries must not be treated as physical sourcing shares.
+feedstock_sourcing_shares <- function(dist_feed) {
+  if (is.null(dist_feed) || !length(dist_feed) || is.null(names(dist_feed))) {
+    stop("Feedstock sourcing distribution is missing or unnamed.")
+  }
+  purchased <- pmax(as.numeric(dist_feed),0)
+  names(purchased) <- names(dist_feed)
+  total <- sum(purchased)
+  if (!is.finite(total) || total<=0) {
+    stop("Feedstock sourcing distribution has no positive purchased inputs.")
+  }
+  imported <- grepl("_imp$",names(purchased))
+  c(
+    domestic=sum(purchased[!imported])/total,
+    imported=sum(purchased[imported])/total
+  )
+}
 # ===================================================================
 # Benchmark-year analysis (2030/2035/2040)
 # ===================================================================
@@ -574,6 +595,10 @@ for (year in benchmark_years) {
 
       feed_phys <- 0
       feed_io <- 0
+      feed_phys_domestic <- 0
+      feed_phys_imported <- 0
+      feed_io_domestic <- 0
+      feed_io_imported <- 0
       flags <- character()
       fuel_energy_MJ <- 0
       fallback_domestic_output_MEUR <- numeric(length(NONBIO))
@@ -588,6 +613,7 @@ for (year in benchmark_years) {
         ivc_value_eur <- fuel_cfg$abs_market_value*w
         ivc_value_MEUR <- ivc_value_eur/SCENARIO_EUR_TO_IO_UNIT
         fuel_tonnes <- ivc_value_eur/tech$market_price
+        sourcing <- feedstock_sourcing_shares(fuel_cfg$dist_feed[[ivc_id]])
 
         energy_factor <- energy_factor_for(fuel_name,ivc_id)
         fuel_energy_MJ <- fuel_energy_MJ +
@@ -649,6 +675,8 @@ for (year in benchmark_years) {
               feed_tonnes <- fuel_tonnes*q
               e <- feed_tonnes*fac$factor_value[1]
               feed_phys <- feed_phys+e
+              feed_phys_domestic <- feed_phys_domestic+e*sourcing[["domestic"]]
+              feed_phys_imported <- feed_phys_imported+e*sourcing[["imported"]]
               ivc_primary_ghg <- ivc_primary_ghg+e
               has_primary <- TRUE
 
@@ -661,12 +689,18 @@ for (year in benchmark_years) {
                 feedstock_key=key,
                 feedstock_label=inv$workbook_label[1],
                 q_t_feedstock_per_t_fuel=q,
+                feedstock_mix_share=physical$mix_share[j],
                 feedstock_tonnes=feed_tonnes,
                 factor_id=fac$preferred_factor_id[1],
                 factor_value=fac$factor_value[1],
                 factor_unit=fac$factor_unit[1],
                 quality_flag=fac$quality_flag[1],
                 feedstock_kgCO2e=e,
+                feedstock_domestic_share=sourcing[["domestic"]],
+                feedstock_imported_share=sourcing[["imported"]],
+                feedstock_domestic_kgCO2e=e*sourcing[["domestic"]],
+                feedstock_imported_direct_kgCO2e=e*sourcing[["imported"]],
+                origin_allocation_basis="model_positive_feedstock_expenditure_share",
                 treatment="physical_feedstock_factor",
                 physical_source=physical_method,
                 stringsAsFactors=FALSE
@@ -694,11 +728,17 @@ for (year in benchmark_years) {
                 feedstock_key=key,
                 feedstock_label=inv$workbook_label[1],
                 q_t_feedstock_per_t_fuel=q,
+                feedstock_mix_share=physical$mix_share[j],
                 feedstock_tonnes=fuel_tonnes*q,
                 factor_id=NA_character_, factor_value=NA_real_,
                 factor_unit=NA_character_,
                 quality_flag="recursive_intermediate_no_extra_factor",
                 feedstock_kgCO2e=0,
+                feedstock_domestic_share=sourcing[["domestic"]],
+                feedstock_imported_share=sourcing[["imported"]],
+                feedstock_domestic_kgCO2e=0,
+                feedstock_imported_direct_kgCO2e=0,
+                origin_allocation_basis="model_positive_feedstock_expenditure_share",
                 treatment="recursive_intermediate_counted_at_producer_sector",
                 physical_source=physical_method,
                 stringsAsFactors=FALSE
@@ -716,6 +756,8 @@ for (year in benchmark_years) {
         if (needs_fallback) {
           fb <- feedstock_io_fallback(endpoint,fuel_cfg,ivc_id,ivc_value_MEUR)
           feed_io <- feed_io+fb$total_kgCO2e
+          feed_io_domestic <- feed_io_domestic+fb$domestic_kgCO2e
+          feed_io_imported <- feed_io_imported+fb$imported_direct_kgCO2e
           fallback_domestic_output_MEUR <- fallback_domestic_output_MEUR +
             fb$domestic_output_vector_MEUR
           flags <- c(flags,paste0(ivc_id,":IO_feedstock_fallback"))
@@ -727,10 +769,18 @@ for (year in benchmark_years) {
             ivc_market_value_eur=ivc_value_eur,
             ivc_fuel_tonnes=fuel_tonnes,
             feedstock_key=NA_character_, feedstock_label=NA_character_,
-            q_t_feedstock_per_t_fuel=NA_real_, feedstock_tonnes=NA_real_,
+            q_t_feedstock_per_t_fuel=NA_real_, feedstock_mix_share=NA_real_,
+            feedstock_tonnes=NA_real_,
             factor_id=NA_character_, factor_value=NA_real_,
             factor_unit=NA_character_, quality_flag="IO_fallback",
             feedstock_kgCO2e=fb$total_kgCO2e,
+            feedstock_domestic_share=
+              ifelse(fb$total_kgCO2e!=0,fb$domestic_kgCO2e/fb$total_kgCO2e,NA_real_),
+            feedstock_imported_share=
+              ifelse(fb$total_kgCO2e!=0,fb$imported_direct_kgCO2e/fb$total_kgCO2e,NA_real_),
+            feedstock_domestic_kgCO2e=fb$domestic_kgCO2e,
+            feedstock_imported_direct_kgCO2e=fb$imported_direct_kgCO2e,
+            origin_allocation_basis="exact_IO_environmental_channel",
             treatment="IO_feedstock_fallback",
             physical_source="model dist_feed + environmental extensions",
             stringsAsFactors=FALSE
@@ -753,7 +803,11 @@ for (year in benchmark_years) {
         fuel_market_value_MEUR=xfuel,
         fuel_energy_MJ=fuel_energy_MJ,
         feedstock_physical_kgCO2e=feed_phys,
+        feedstock_physical_domestic_kgCO2e=feed_phys_domestic,
+        feedstock_physical_imported_kgCO2e=feed_phys_imported,
         feedstock_IO_fallback_kgCO2e=feed_io,
+        feedstock_IO_fallback_domestic_kgCO2e=feed_io_domestic,
+        feedstock_IO_fallback_imported_direct_kgCO2e=feed_io_imported,
         feedstock_total_kgCO2e=feed_phys+feed_io,
         opex_kgCO2e=opex$total_kgCO2e,
         capex_kgCO2e=capex$total_kgCO2e,
@@ -779,6 +833,24 @@ feed_detail_df <- if (length(feed_detail)) do.call(rbind,feed_detail) else data.
 feed_recon_df <- if (length(feed_recon)) do.call(rbind,feed_recon) else data.frame()
 io_detail_df <- if (length(io_detail)) do.call(rbind,io_detail) else data.frame()
 hybrid_df <- if (length(hybrid_rows)) do.call(rbind,hybrid_rows) else data.frame()
+
+# Every feedstock origin split must reconstruct its parent accounting channel.
+# The physical split is an allocation by positive model expenditure shares;
+# the IO-fallback split is observed directly from the two extension channels.
+physical_reconstructed <- hybrid_df$feedstock_physical_domestic_kgCO2e +
+  hybrid_df$feedstock_physical_imported_kgCO2e
+fallback_reconstructed <- hybrid_df$feedstock_IO_fallback_domestic_kgCO2e +
+  hybrid_df$feedstock_IO_fallback_imported_direct_kgCO2e
+physical_tolerance <- pmax(1e-3,1e-9*abs(hybrid_df$feedstock_physical_kgCO2e))
+fallback_tolerance <- pmax(1e-3,1e-9*abs(hybrid_df$feedstock_IO_fallback_kgCO2e))
+if (any(abs(physical_reconstructed-hybrid_df$feedstock_physical_kgCO2e)>
+        physical_tolerance)) {
+  stop("Domestic plus imported physical-feedstock GHG does not reconcile.")
+}
+if (any(abs(fallback_reconstructed-hybrid_df$feedstock_IO_fallback_kgCO2e)>
+        fallback_tolerance)) {
+  stop("Domestic plus imported IO-fallback feedstock GHG does not reconcile.")
+}
 
 # ===================================================================
 # Domestic BIO-to-BIO recursion for per-fuel lifecycle validation
@@ -973,7 +1045,7 @@ notes <- c(
   "1. Economic solver unchanged; GHG is optional post-processing.",
   "2. Primary feedstock identity/quantity is reconstructed at IVC level from Providing sectors.xlsx.",
   "3. The aggregate Eurostat feedstock vector is NOT reverse-split into straw/wood/etc after the solve.",
-  "4. Model dist_feed is used for reconciliation and explicit IO fallback only.",
+  "4. Model dist_feed is used for reconciliation, explicit IO fallback, and allocation of physical feedstock GHG between domestic/import sourcing using positive purchased-input expenditure shares; this is not an observed physical-tonnage origin split.",
   "5. Intermediate bioenergy carriers receive no second primary-feedstock factor at the consuming IVC.",
   "6. OPEX/CAPEX domestic upstream output uses the scenario NONBIO Leontief inverse.",
   "7. Imports include direct channel imports plus imports induced by the domestic upstream chain.",

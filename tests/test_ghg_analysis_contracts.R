@@ -30,6 +30,9 @@ workbook_mix_column_for <- extract_assignment(
 is_pure_recursive_ivc <- extract_assignment(
   "GHG_Analysis.R", "is_pure_recursive_ivc"
 )
+feedstock_sourcing_shares <- extract_assignment(
+  "GHG_Analysis.R", "feedstock_sourcing_shares"
+)
 
 # R compiles this TRE pattern only when num() executes, not while parsing.
 stop_if_not(
@@ -60,6 +63,17 @@ stop_if_not(
 stop_if_not(
   !is_pure_recursive_ivc("IVC11a_SAF"),
   "A primary-feedstock IVC was incorrectly classified as pure recursive."
+)
+
+# Domestic/import feedstock allocation follows the model's positive purchased
+# input coefficients. Negative gate-fee entries are revenues and must not enter
+# the sourcing denominator.
+sourcing <- feedstock_sourcing_shares(c(
+  agriculture=-0.5, sewerage=0.6, food_bev_imp=0.4
+))
+stop_if_not(
+  isTRUE(all.equal(unname(sourcing),c(0.6,0.4))),
+  "Feedstock sourcing shares did not preserve the model's domestic/import split."
 )
 
 # Regression for the production failure: a valid file can contain multiple

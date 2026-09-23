@@ -99,8 +99,9 @@ scan_sheet <- function(workbook, sheet) {
 }
 
 # This crosswalk records exact source cells and explicit model-route mappings.
-# Several source rows are legitimate alternative feedstock cases for one IVC;
-# they are retained as an interval rather than averaged without route evidence.
+# Several source rows are fixed feedstock-specific values for one IVC. They are
+# matched to the scenario's explicit workbook feedstock mix before route-energy
+# aggregation; they are neither uncertainty bounds nor error bars.
 workbook_manifest_definition <- function() {
   rows <- list(
     c("adv_biodiesel", "IVC1", 2, "1", "FAME", "UCO / animal fat", "direct_candidate"),
@@ -146,6 +147,16 @@ workbook_manifest_definition <- function() {
   )
   manifest$row <- as.integer(manifest$row)
   manifest$cell <- paste0("D", manifest$row)
+  manifest$feedstock_key <- NA_character_
+  manifest$feedstock_key[manifest$row == 2L] <- "used_cooking_oil_or_animal_fat"
+  manifest$feedstock_key[manifest$row == 3L] <- "palm_oil_mill_effluent_raw"
+  manifest$feedstock_key[manifest$row == 4L] <- "used_cooking_oil_or_animal_fat"
+  manifest$feedstock_key[manifest$row == 5L] <- "tall_oil"
+  manifest$feedstock_key[manifest$row == 6L] <- "fpbo_biocrude_intermediate"
+  manifest$feedstock_key[manifest$row == 7L] <- "oil_crops_abandoned_degraded"
+  manifest$feedstock_key[manifest$row == 8L] <- "used_cooking_oil_or_animal_fat"
+  manifest$feedstock_key[manifest$row == 9L] <- "tall_oil"
+  manifest$feedstock_key[manifest$row == 10L] <- "fpbo_biocrude_intermediate"
   manifest$unit <- "gCO2e/MJ"
   manifest$capital_boundary <- "unknown"
   manifest$source_note <- paste0(
@@ -391,8 +402,8 @@ aggregate_route_ranges <- function(route_energy, route_factors, prefix) {
       } else NA_real_,
       min_gCO2e_per_MJ = if (covered_energy > 0) lower_grams / covered_energy else NA_real_,
       max_gCO2e_per_MJ = if (covered_energy > 0) upper_grams / covered_energy else NA_real_,
-      covered_Mt_min = lower_grams / 1e12,
-      covered_Mt_max = upper_grams / 1e12,
+      covered_Mt_min = if (covered_energy > 0) lower_grams / 1e12 else NA_real_,
+      covered_Mt_max = if (covered_energy > 0) upper_grams / 1e12 else NA_real_,
       missing_ivcs = paste(selected$ivc_id[!mapped & selected$route_energy_MJ > 0], collapse = ";"),
       stringsAsFactors = FALSE
     )
@@ -402,11 +413,117 @@ aggregate_route_ranges <- function(route_energy, route_factors, prefix) {
   result
 }
 
-build_workbook_comparison <- function(hybrid, route_energy, workbook_factors) {
-  route_factors <- summarise_factor_candidates(
-    workbook_factors, "workbook_gCO2e_per_MJ"
+resolve_workbook_route_values <- function(route_energy, workbook_factors,
+                                          feedstock_detail) {
+  require_columns(
+    feedstock_detail,
+    c("year", "scenario", "biofuel", "ivc_id", "feedstock_key",
+      "feedstock_mix_share"),
+    "Feedstock detail"
   )
-  workbook <- aggregate_route_ranges(route_energy, route_factors, "workbook")
+  rows <- vector("list", nrow(route_energy))
+  for (i in seq_len(nrow(route_energy))) {
+    route <- route_energy[i, ]
+    candidates <- workbook_factors[
+      workbook_factors$model_biofuel == route$biofuel &
+        workbook_factors$model_ivc == route$ivc_id,
+      , drop = FALSE
+    ]
+    value <- NA_real_
+    cells <- ""
+    status <- "unavailable"
+    if (nrow(candidates) == 1L) {
+      value <- candidates$workbook_gCO2e_per_MJ[[1L]]
+      cells <- candidates$cell[[1L]]
+      status <- candidates$mapping_status[[1L]]
+    } else if (nrow(candidates) > 1L) {
+      mix <- feedstock_detail[
+        feedstock_detail$year == route$year &
+          feedstock_detail$scenario == route$scenario &
+          feedstock_detail$biofuel == route$biofuel &
+          feedstock_detail$ivc_id == route$ivc_id &
+          is.finite(feedstock_detail$feedstock_mix_share),
+        c("feedstock_key", "feedstock_mix_share"), drop = FALSE
+      ]
+      mix <- aggregate(feedstock_mix_share ~ feedstock_key, data = mix, FUN = sum)
+      matched <- merge(
+        mix, candidates,
+        by = "feedstock_key", all.x = TRUE, all.y = FALSE, sort = FALSE
+      )
+      assert(nrow(matched) == nrow(mix) &&
+               all(is.finite(matched$workbook_gCO2e_per_MJ)), paste0(
+        "Workbook fixed feedstock values do not cover the modeled mix for ",
+        route$year, "/", route$scenario, "/", route$biofuel, "/", route$ivc_id
+      ))
+      share_sum <- sum(matched$feedstock_mix_share)
+      assert(abs(share_sum - 1) < 1e-8, paste0(
+        "Workbook feedstock mix does not sum to one for ", route$year, "/",
+        route$scenario, "/", route$biofuel, "/", route$ivc_id,
+        ": ", signif(share_sum, 12)
+      ))
+      value <- sum(
+        matched$feedstock_mix_share * matched$workbook_gCO2e_per_MJ
+      ) / share_sum
+      cells <- paste(matched$cell, collapse = ";")
+      status <- "feedstock_mix_weighted_fixed_values"
+    }
+    rows[[i]] <- data.frame(
+      route,
+      workbook_gCO2e_per_MJ = value,
+      workbook_source_cells = cells,
+      workbook_route_mapping_status = status,
+      stringsAsFactors = FALSE
+    )
+  }
+  do.call(rbind, rows)
+}
+
+aggregate_workbook_values <- function(resolved_routes) {
+  keys <- unique(resolved_routes[c("year", "scenario", "biofuel")])
+  rows <- vector("list", nrow(keys))
+  for (i in seq_len(nrow(keys))) {
+    selected <- resolved_routes[
+      resolved_routes$year == keys$year[i] &
+        resolved_routes$scenario == keys$scenario[i] &
+        resolved_routes$biofuel == keys$biofuel[i],
+      , drop = FALSE
+    ]
+    mapped <- is.finite(selected$workbook_gCO2e_per_MJ) &
+      selected$route_energy_MJ > 0
+    total_energy <- sum(selected$route_energy_MJ)
+    covered_energy <- sum(selected$route_energy_MJ[mapped])
+    grams <- sum(
+      selected$route_energy_MJ[mapped] * selected$workbook_gCO2e_per_MJ[mapped]
+    )
+    complete <- total_energy > 0 &&
+      abs(covered_energy - total_energy) <= max(1e-3, 1e-10 * total_energy)
+    rows[[i]] <- data.frame(
+      year = keys$year[i], scenario = keys$scenario[i], biofuel = keys$biofuel[i],
+      workbook_total_energy_MJ = total_energy,
+      workbook_covered_energy_MJ = covered_energy,
+      workbook_coverage_energy_fraction = if (total_energy > 0) {
+        covered_energy / total_energy
+      } else NA_real_,
+      workbook_gCO2e_per_MJ = if (complete) grams / total_energy else NA_real_,
+      workbook_Mt = if (complete) grams / 1e12 else NA_real_,
+      workbook_missing_ivcs = paste(
+        selected$ivc_id[!mapped & selected$route_energy_MJ > 0], collapse = ";"
+      ),
+      workbook_source_cells = paste(
+        unique(selected$workbook_source_cells[mapped]), collapse = ";"
+      ),
+      stringsAsFactors = FALSE
+    )
+  }
+  do.call(rbind, rows)
+}
+
+build_workbook_comparison <- function(hybrid, route_energy, workbook_factors,
+                                      feedstock_detail) {
+  resolved_routes <- resolve_workbook_route_values(
+    route_energy, workbook_factors, feedstock_detail
+  )
+  workbook <- aggregate_workbook_values(resolved_routes)
   result <- merge(hybrid, workbook, by = c("year", "scenario", "biofuel"),
                   all.x = TRUE, sort = FALSE)
   assert(nrow(result) == nrow(hybrid),
@@ -424,9 +541,11 @@ build_workbook_comparison <- function(hybrid, route_energy, workbook_factors) {
   )
   result$workbook_capital_boundary <- "unknown"
   result$comparison_note <- paste(
-    "Workbook route values are energy-weighted; multiple feedstock rows form",
-    "unresolved bounds. Workbook capital-goods coverage is unknown."
+    "Fixed workbook feedstock values are weighted by the explicit scenario",
+    "feedstock mix, then IVC values are weighted by modeled route energy.",
+    "Workbook capital-goods coverage is unknown."
   )
+  attr(result, "resolved_routes") <- resolved_routes
   result
 }
 
@@ -451,7 +570,11 @@ build_geographic_components <- function(hybrid, io_channels) {
   assert(nrow(result) == nrow(hybrid),
          "IO-channel merge changed endpoint/fuel cardinality.")
   numeric_components <- c(
-    "feedstock_total_kgCO2e", "opex_domestic_kgCO2e",
+    "feedstock_physical_domestic_kgCO2e",
+    "feedstock_physical_imported_kgCO2e",
+    "feedstock_IO_fallback_domestic_kgCO2e",
+    "feedstock_IO_fallback_imported_direct_kgCO2e",
+    "opex_domestic_kgCO2e",
     "opex_imported_direct_kgCO2e", "capex_domestic_kgCO2e",
     "capex_imported_direct_kgCO2e"
   )
@@ -467,14 +590,22 @@ build_geographic_components <- function(hybrid, io_channels) {
          "Domestic plus imported-direct OPEX does not reconcile.")
   assert(all(abs(reconstructed_capex - result$capex_kgCO2e) <= tolerance_capex),
          "Domestic plus imported-direct CAPEX does not reconcile.")
-  reconstructed_total <- result$feedstock_total_kgCO2e +
+  reconstructed_physical <- result$feedstock_physical_domestic_kgCO2e +
+    result$feedstock_physical_imported_kgCO2e
+  reconstructed_fallback <- result$feedstock_IO_fallback_domestic_kgCO2e +
+    result$feedstock_IO_fallback_imported_direct_kgCO2e
+  tolerance_feedstock <- pmax(1e-3, 1e-9 * abs(result$feedstock_total_kgCO2e))
+  assert(all(abs(reconstructed_physical + reconstructed_fallback -
+                   result$feedstock_total_kgCO2e) <= tolerance_feedstock),
+         "Domestic plus imported feedstock components do not reconcile.")
+  reconstructed_total <- reconstructed_physical + reconstructed_fallback +
     reconstructed_opex + reconstructed_capex
   tolerance_total <- pmax(1e-3, 1e-9 * abs(result$hybrid_total_kgCO2e))
   assert(all(abs(reconstructed_total - result$hybrid_total_kgCO2e) <= tolerance_total),
          "Geographic stage components do not reconstruct the saved hybrid total.")
   result$feedstock_origin_status <- paste(
-    "Origin unallocated: physical factors and the saved IO fallback do not",
-    "provide a complete domestic/import provenance split."
+    "Physical-feedstock GHG allocated by positive model feedstock expenditure",
+    "shares; IO fallback uses exact domestic/import environmental channels."
   )
   result
 }
@@ -574,12 +705,56 @@ plot_theme <- function() {
       legend.position = "bottom",
       legend.box = "vertical",
       strip.text = ggplot2::element_text(face = "bold", size = 9),
+      strip.background = ggplot2::element_rect(fill = "#F0F0F0", colour = NA),
       panel.grid.minor = ggplot2::element_blank(),
-      axis.text.x = ggplot2::element_text(size = 7),
+      axis.text.x = ggplot2::element_text(size = 8),
       plot.title = ggplot2::element_text(face = "bold"),
       plot.subtitle = ggplot2::element_text(size = 9),
       plot.caption = ggplot2::element_text(size = 8, hjust = 0)
     )
+}
+
+fuel_colours <- c(
+  adv_biodiesel = "#1BA875", adv_biogasoline = "#E9A12B",
+  adv_bio_kerosene = "#9448BE", adv_bio_hfo = "#C94B4B",
+  adv_biogas = "#3268A8", RFNBOs = "#777777",
+  conv_biodiesel = "#70C5A0", conv_biogasoline = "#F1CB75",
+  conv_bio_kerosene = "#B98BD2"
+)
+
+prepare_template_data <- function(data) {
+  data$scenario <- factor(data$scenario, levels = c("S1", "S2", "S3"))
+  data$year <- factor(data$year, levels = c(2030, 2035, 2040))
+  data$biofuel <- factor(data$biofuel, levels = fuel_order)
+  data
+}
+
+plot_template_bars <- function(data, y_label, title, subtitle, caption,
+                               facet_rows = NULL) {
+  data <- prepare_template_data(data)
+  mapping <- ggplot2::aes(x = year, y = value, fill = biofuel)
+  plot <- ggplot2::ggplot(data, mapping) +
+    ggplot2::geom_col(
+      position = ggplot2::position_dodge2(width = 0.9, preserve = "single"),
+      width = 0.82
+    ) +
+    ggplot2::geom_hline(yintercept = 0, colour = "#555555", linewidth = 0.3)
+  if (is.null(facet_rows)) {
+    plot <- plot + ggplot2::facet_grid(cols = ggplot2::vars(scenario), drop = FALSE)
+  } else {
+    plot <- plot + ggplot2::facet_grid(
+      rows = ggplot2::vars(method), cols = ggplot2::vars(scenario), drop = FALSE
+    )
+  }
+  plot +
+    ggplot2::scale_fill_manual(
+      values = fuel_colours, breaks = fuel_order,
+      labels = unname(fuel_labels[fuel_order]), name = NULL, drop = FALSE
+    ) +
+    ggplot2::labs(
+      x = "Benchmark year", y = y_label, title = title,
+      subtitle = subtitle, caption = caption
+    ) + plot_theme()
 }
 
 facet_fuels <- function() {
@@ -609,92 +784,71 @@ scenario_separators <- function() {
 
 plot_workbook_measure <- function(comparison, measure = c("absolute", "intensity")) {
   measure <- match.arg(measure)
-  data <- add_endpoint_fields(comparison)
   if (measure == "absolute") {
-    no_capex <- data$model_recursive_no_capex_Mt
-    capex <- data$model_recursive_capex_increment_Mt
-    benchmark_min <- data$workbook_covered_Mt_min
-    benchmark_max <- data$workbook_covered_Mt_max
-    y_label <- "Mt CO2e per fuel"
-    title <- "Workbook lifecycle reconstruction and model per-fuel emissions"
+    model_value <- comparison$model_recursive_full_Mt
+    workbook_value <- comparison$workbook_Mt
+    y_label <- "Absolute emissions [Mt CO2e]"
+    title <- "Model and workbook lifecycle emissions"
   } else {
-    no_capex <- data$recursive_hybrid_no_capex_gCO2e_per_MJ
-    capex <- data$model_recursive_capex_increment_gCO2e_per_MJ
-    benchmark_min <- data$workbook_min_gCO2e_per_MJ
-    benchmark_max <- data$workbook_max_gCO2e_per_MJ
-    y_label <- "g CO2e / MJ"
-    title <- "Workbook lifecycle reconstruction and model emission intensity"
+    model_value <- comparison$recursive_hybrid_gCO2e_per_MJ
+    workbook_value <- comparison$workbook_gCO2e_per_MJ
+    y_label <- "Normalised emission intensity [g CO2e / MJ]"
+    title <- "Model and workbook lifecycle emission intensities"
   }
-  model <- rbind(
-    data.frame(data, component = "Model lifecycle excluding CAPEX", value = no_capex),
-    data.frame(data, component = "Model CAPEX increment", value = capex)
+  data <- rbind(
+    data.frame(
+      comparison,
+      method = "Model: supply-chain emissions including capital goods",
+      value = model_value
+    ),
+    data.frame(
+      comparison,
+      method = "Workbook: fixed pathway values weighted by scenario mix",
+      value = workbook_value
+    )
   )
-  model$component <- factor(
-    model$component,
-    levels = c("Model lifecycle excluding CAPEX", "Model CAPEX increment")
+  data$method <- factor(
+    data$method,
+    levels = c(
+      "Model: supply-chain emissions including capital goods",
+      "Workbook: fixed pathway values weighted by scenario mix"
+    )
   )
-  model <- model[is.finite(model$value), , drop = FALSE]
-  benchmark <- data.frame(
-    data,
-    benchmark_min = benchmark_min,
-    benchmark_max = benchmark_max,
-    benchmark_mid = (benchmark_min + benchmark_max) / 2
+  data <- data[is.finite(data$value), , drop = FALSE]
+  plot_template_bars(
+    data, y_label, title,
+    paste(
+      "Each workbook bar is one fixed value: feedstock cells are weighted by",
+      "the explicit scenario mix, then IVCs by modeled fuel energy."
+    ),
+    paste(
+      "Model bars recursively embody domestic bioenergy intermediates and include",
+      "CAPEX. Workbook capital-goods coverage is undocumented, so differences",
+      "are descriptive rather than a like-for-like validation. Negative values",
+      "retain avoided-emission credits."
+    ),
+    facet_rows = "method"
   )
-  ggplot2::ggplot() +
-    ggplot2::geom_col(
-      data = model,
-      ggplot2::aes(x = endpoint_index - 0.12, y = value, fill = component),
-      width = 0.46
-    ) +
-    ggplot2::geom_linerange(
-      data = benchmark[is.finite(benchmark$benchmark_min), ],
-      ggplot2::aes(
-        x = endpoint_index + 0.2,
-        ymin = benchmark_min,
-        ymax = benchmark_max,
-        colour = "Workbook lifecycle range"
-      ),
-      linewidth = 1.05
-    ) +
-    ggplot2::geom_point(
-      data = benchmark[is.finite(benchmark$benchmark_mid), ],
-      ggplot2::aes(
-        x = endpoint_index + 0.2,
-        y = benchmark_mid,
-        colour = "Workbook lifecycle range"
-      ),
-      size = 1.8
-    ) +
-    ggplot2::geom_hline(yintercept = 0, colour = "#555555", linewidth = 0.3) +
-    scenario_separators() +
-    facet_fuels() + endpoint_scale() +
-    ggplot2::scale_fill_manual(values = c("#2878B5", "#9ECAE1"), name = NULL) +
-    ggplot2::scale_colour_manual(values = c("Workbook lifecycle range" = "#D95F02"), name = NULL) +
-    ggplot2::labs(
-      x = "Benchmark year within scenario", y = y_label, title = title,
-      subtitle = paste(
-        "Workbook factors are weighted by modeled route energy; multiple",
-        "feedstock rows remain ranges. The model bar stacks no-CAPEX lifecycle",
-        "GHG and the recursively embodied CAPEX increment."
-      ),
-      caption = paste(
-        "Workbook capital-goods coverage is unknown. Negative biogas values",
-        "retain avoided-emission credits. Per-fuel recursive and workbook gross",
-        "emissions are not additive across interdependent fuel sectors."
-      )
-    ) + plot_theme()
 }
 
 geographic_long <- function(components, measure = c("absolute", "intensity")) {
   measure <- match.arg(measure)
   data <- add_endpoint_fields(components)
   columns <- c(
-    "feedstock_total_kgCO2e", "opex_domestic_kgCO2e",
+    "feedstock_physical_domestic_kgCO2e",
+    "feedstock_physical_imported_kgCO2e",
+    "feedstock_IO_fallback_domestic_kgCO2e",
+    "feedstock_IO_fallback_imported_direct_kgCO2e",
+    "opex_domestic_kgCO2e",
     "opex_imported_direct_kgCO2e", "capex_domestic_kgCO2e",
     "capex_imported_direct_kgCO2e"
   )
   labels <- c(
-    "Feedstock: origin unallocated", "OPEX: domestic production chain",
+    "Feedstock physical: domestic allocation",
+    "Feedstock physical: imported allocation",
+    "Feedstock IO fallback: domestic chain",
+    "Feedstock IO fallback: imported direct",
+    "OPEX: domestic production chain",
     "OPEX: imported direct", "CAPEX: domestic production chain",
     "CAPEX: imported direct"
   )
@@ -713,57 +867,91 @@ geographic_long <- function(components, measure = c("absolute", "intensity")) {
 plot_geographic_measure <- function(components, measure = c("absolute", "intensity")) {
   measure <- match.arg(measure)
   data <- geographic_long(components, measure)
+  data$scenario <- factor(data$scenario, levels = c("S1", "S2", "S3"))
+  data$year <- factor(data$year, levels = c(2030, 2035, 2040))
   y_label <- if (measure == "absolute") "Mt CO2e (stage-attributed)" else "g CO2e / MJ (stage-attributed)"
   title <- if (measure == "absolute") {
-    "Stage-attributed emissions by domestic, imported-direct and unallocated origin"
+    "Model stage emissions by source and domestic/import channel"
   } else {
-    "Stage-attributed emission intensity by domestic, imported-direct and unallocated origin"
+    "Model stage emission intensity by source and domestic/import channel"
   }
   ggplot2::ggplot(
-    data, ggplot2::aes(x = endpoint_index, y = value, fill = component)
+    data, ggplot2::aes(x = year, y = value, fill = component)
   ) +
     ggplot2::geom_col(width = 0.68) +
     ggplot2::geom_hline(yintercept = 0, colour = "#555555", linewidth = 0.3) +
-    scenario_separators() + facet_fuels() + endpoint_scale() +
+    ggplot2::facet_grid(
+      rows = ggplot2::vars(fuel_label), cols = ggplot2::vars(scenario),
+      scales = "free_y", drop = FALSE
+    ) +
     ggplot2::scale_fill_manual(
-      values = c("#7B3294", "#008837", "#80CDC1", "#C2A5CF", "#F6E8C3"),
+      values = c(
+        "#1B7837", "#7FBF7B", "#2166AC", "#92C5DE",
+        "#762A83", "#C2A5CF", "#B35806", "#F1A340"
+      ),
       name = NULL
     ) +
     ggplot2::labs(
-      x = "Benchmark year within scenario", y = y_label, title = title,
+      x = "Benchmark year", y = y_label, title = title,
       subtitle = paste(
-        "Domestic and imported-direct labels apply only to saved IO OPEX/CAPEX",
-        "channels. Physical and IO-fallback feedstock GHG remains origin-unallocated."
+        "Physical feedstock is allocated using positive model feedstock-expenditure",
+        "shares; IO feedstock fallback, OPEX and CAPEX use environmental channels."
       ),
       caption = paste(
-        "Imported IO is direct external-import GHG with no foreign Leontief",
-        "closure. This is an additive stage decomposition, not a territorial",
-        "inventory and not a geographic split of the recursive lifecycle total."
+        "The physical split is not observed tonnes by origin. Imported IO is",
+        "direct external-import GHG without foreign Leontief closure. Components",
+        "reconstruct the additive stage footprint, not a territorial inventory."
       )
     ) + plot_theme()
+}
+
+plot_model_measure <- function(hybrid, measure = c("absolute", "intensity")) {
+  measure <- match.arg(measure)
+  if (measure == "absolute") {
+    value <- hybrid$hybrid_total_kgCO2e / 1e9
+    y_label <- "Absolute emissions [Mt CO2e]"
+    title <- "Model stage-attributed GHG emissions"
+  } else {
+    value <- hybrid$stage_hybrid_gCO2e_per_MJ
+    y_label <- "Normalised emission intensity [g CO2e / MJ]"
+    title <- "Model stage-attributed GHG emission intensity"
+  }
+  data <- data.frame(hybrid, value = value)
+  data <- data[is.finite(data$value), , drop = FALSE]
+  plot_template_bars(
+    data, y_label, title,
+    "All nine modeled fuel sectors are shown separately for each year and scenario.",
+    paste(
+      "Bars use the additive stage footprint: physical and IO-fallback feedstock",
+      "+ OPEX + CAPEX. Domestic bioenergy-intermediate recursion is excluded here",
+      "so absolute emissions can be summed across fuel sectors without double counting."
+    )
+  )
 }
 
 plot_external_measure <- function(comparison, measure = c("absolute", "intensity")) {
   measure <- match.arg(measure)
   data <- add_endpoint_fields(comparison)
+  full_coverage <- is.finite(data$external_coverage_energy_fraction) &
+    data$external_coverage_energy_fraction >= 1 - 1e-10
+  full_credit_coverage <- is.finite(data$credit_case_coverage_energy_fraction) &
+    data$credit_case_coverage_energy_fraction >= 1 - 1e-10
   if (measure == "absolute") {
     model <- data$model_recursive_no_capex_Mt
-    feedstock <- data$feedstock_only_Mt
-    external_min <- data$external_covered_Mt_min
-    external_max <- data$external_covered_Mt_max
-    credit_min <- data$credit_case_covered_Mt_min
-    credit_max <- data$credit_case_covered_Mt_max
+    external_min <- ifelse(full_coverage, data$external_covered_Mt_min, NA_real_)
+    external_max <- ifelse(full_coverage, data$external_covered_Mt_max, NA_real_)
+    credit_min <- ifelse(full_credit_coverage, data$credit_case_covered_Mt_min, NA_real_)
+    credit_max <- ifelse(full_credit_coverage, data$credit_case_covered_Mt_max, NA_real_)
     y_label <- "Mt CO2e per fuel"
-    title <- "Model and official pathway-comparator emissions excluding model CAPEX"
+    title <- "Model emissions and published lifecycle ranges excluding model CAPEX"
   } else {
     model <- data$recursive_hybrid_no_capex_gCO2e_per_MJ
-    feedstock <- data$feedstock_only_gCO2e_per_MJ
-    external_min <- data$external_min_gCO2e_per_MJ
-    external_max <- data$external_max_gCO2e_per_MJ
-    credit_min <- data$credit_case_min_gCO2e_per_MJ
-    credit_max <- data$credit_case_max_gCO2e_per_MJ
+    external_min <- ifelse(full_coverage, data$external_min_gCO2e_per_MJ, NA_real_)
+    external_max <- ifelse(full_coverage, data$external_max_gCO2e_per_MJ, NA_real_)
+    credit_min <- ifelse(full_credit_coverage, data$credit_case_min_gCO2e_per_MJ, NA_real_)
+    credit_max <- ifelse(full_credit_coverage, data$credit_case_max_gCO2e_per_MJ, NA_real_)
     y_label <- "g CO2e / MJ"
-    title <- "Model and official pathway-comparator emission intensity"
+    title <- "Model and published lifecycle emission intensity"
   }
   ordinary <- data.frame(
     data, lower = external_min, upper = external_max,
@@ -773,31 +961,22 @@ plot_external_measure <- function(comparison, measure = c("absolute", "intensity
     data, lower = credit_min, upper = credit_max,
     midpoint = (credit_min + credit_max) / 2
   )
-  model_data <- data.frame(data, model = model, feedstock = feedstock)
+  model_data <- data.frame(data, model = model)
   model_bars <- model_data[is.finite(model_data$model), , drop = FALSE]
-  feedstock_points <- model_data[is.finite(model_data$feedstock), , drop = FALSE]
   ggplot2::ggplot() +
     ggplot2::geom_col(
       data = model_bars,
       ggplot2::aes(
         x = endpoint_index - 0.16, y = model,
-        fill = "Model recursive lifecycle excluding CAPEX"
+        fill = "Model supply-chain emissions excluding capital goods"
       ),
       width = 0.42
-    ) +
-    ggplot2::geom_point(
-      data = feedstock_points,
-      ggplot2::aes(
-        x = endpoint_index - 0.16, y = feedstock,
-        colour = "Model feedstock-only diagnostic"
-      ),
-      shape = 4, size = 1.8, stroke = 0.7
     ) +
     ggplot2::geom_linerange(
       data = ordinary[is.finite(ordinary$lower), ],
       ggplot2::aes(
         x = endpoint_index + 0.15, ymin = lower, ymax = upper,
-        colour = "JEC/RED/CORSIA ordinary interval"
+        colour = "Published lifecycle range for matched pathways"
       ),
       linewidth = 1
     ) +
@@ -805,7 +984,7 @@ plot_external_measure <- function(comparison, measure = c("absolute", "intensity
       data = ordinary[is.finite(ordinary$midpoint), ],
       ggplot2::aes(
         x = endpoint_index + 0.15, y = midpoint,
-        colour = "JEC/RED/CORSIA ordinary interval"
+        colour = "Published lifecycle range for matched pathways"
       ),
       size = 1.7
     ) +
@@ -813,7 +992,7 @@ plot_external_measure <- function(comparison, measure = c("absolute", "intensity
       data = credit[credit$credit_case_available & is.finite(credit$lower), ],
       ggplot2::aes(
         x = endpoint_index + 0.31, ymin = lower, ymax = upper,
-        colour = "Avoided-emission-credit alternative"
+        colour = "Published estimate including avoided manure-storage emissions"
       ),
       linewidth = 0.8
     ) +
@@ -821,56 +1000,47 @@ plot_external_measure <- function(comparison, measure = c("absolute", "intensity
       data = credit[credit$credit_case_available & is.finite(credit$midpoint), ],
       ggplot2::aes(
         x = endpoint_index + 0.31, y = midpoint,
-        colour = "Avoided-emission-credit alternative"
+        colour = "Published estimate including avoided manure-storage emissions"
       ),
       shape = 18, size = 2
     ) +
     ggplot2::geom_hline(yintercept = 0, colour = "#555555", linewidth = 0.3) +
     scenario_separators() + facet_fuels() + endpoint_scale() +
     ggplot2::scale_fill_manual(
-      values = c("Model recursive lifecycle excluding CAPEX" = "#2878B5"),
+      values = c("Model supply-chain emissions excluding capital goods" = "#2878B5"),
       name = NULL
     ) +
     ggplot2::scale_colour_manual(
       values = c(
-        "Model feedstock-only diagnostic" = "#E69F00",
-        "JEC/RED/CORSIA ordinary interval" = "#7A3E9D",
-        "Avoided-emission-credit alternative" = "#C44E52"
+        "Published lifecycle range for matched pathways" = "#7A3E9D",
+        "Published estimate including avoided manure-storage emissions" = "#C44E52"
       ),
       name = NULL
     ) +
     ggplot2::labs(
       x = "Benchmark year within scenario", y = y_label, title = title,
       subtitle = paste(
-        "Official route intervals are energy-weighted over covered scenario",
-        "routes. The model comparator includes operating inputs but excludes CAPEX."
+        "Published JEC/RED/CORSIA pathway ranges are shown only when every",
+        "positive-energy modeled route has a mapped comparator. The model includes",
+        "feedstock and operating supply chains but excludes capital goods."
       ),
       caption = paste(
-        "Feedstock-only crosses are not lifecycle estimates. Proxy and route",
-        "coverage are reported in the companion CSV. Avoided-methane credits",
-        "are separate alternatives; no pass/fail range judgement is applied."
+        "Unmapped or partially covered fuel-scenarios are left unavailable rather",
+        "than plotted as zero. Avoided manure-storage emissions are a separate",
+        "counterfactual case. Proxy and route coverage remain in the companion CSV."
       )
     ) + plot_theme()
 }
 
-save_two_panel <- function(top, bottom, output_base, width = 18, height = 20) {
-  draw <- function() {
-    grid::grid.newpage()
-    layout <- grid::grid.layout(2, 1, heights = grid::unit(c(1, 1), "null"))
-    grid::pushViewport(grid::viewport(layout = layout))
-    print(top, vp = grid::viewport(layout.pos.row = 1, layout.pos.col = 1))
-    print(bottom, vp = grid::viewport(layout.pos.row = 2, layout.pos.col = 1))
-    grid::popViewport()
-  }
-  grDevices::png(
-    paste0(output_base, ".png"), width = width, height = height,
-    units = "in", res = 180
+save_plot <- function(plot, output_base, width = 16, height = 8) {
+  ggplot2::ggsave(
+    paste0(output_base, ".png"), plot = plot, width = width, height = height,
+    units = "in", dpi = 180, bg = "white"
   )
-  draw()
-  grDevices::dev.off()
-  grDevices::pdf(paste0(output_base, ".pdf"), width = width, height = height)
-  draw()
-  grDevices::dev.off()
+  ggplot2::ggsave(
+    paste0(output_base, ".pdf"), plot = plot, width = width, height = height,
+    units = "in", device = grDevices::cairo_pdf, bg = "white"
+  )
 }
 
 render_all <- function(workbook = "Providing sectors.xlsx",
@@ -879,6 +1049,7 @@ render_all <- function(workbook = "Providing sectors.xlsx",
     workbook,
     "model_results_CAPEX_separate.rds",
     file.path(output_dir, "ghg_hybrid_benchmark.csv"),
+    file.path(output_dir, "ghg_feedstock_detail_benchmark.csv"),
     file.path(output_dir, "ghg_io_channels_benchmark.csv"),
     file.path(output_dir, "ghg_fuel_energy_factors_used.csv"),
     file.path(output_dir, "ghg_external_benchmarks_used.csv")
@@ -892,6 +1063,10 @@ render_all <- function(workbook = "Providing sectors.xlsx",
 
   hybrid <- read.csv(
     file.path(output_dir, "ghg_hybrid_benchmark.csv"),
+    stringsAsFactors = FALSE, check.names = FALSE
+  )
+  feedstock_detail <- read.csv(
+    file.path(output_dir, "ghg_feedstock_detail_benchmark.csv"),
     stringsAsFactors = FALSE, check.names = FALSE
   )
   io_channels <- read.csv(
@@ -917,7 +1092,7 @@ render_all <- function(workbook = "Providing sectors.xlsx",
   workbook_factors <- load_workbook_factors(workbook)
   route_energy <- route_energy_table(hybrid, results, energy_factors)
   workbook_comparison <- build_workbook_comparison(
-    hybrid, route_energy, workbook_factors
+    hybrid, route_energy, workbook_factors, feedstock_detail
   )
   geographic_components <- build_geographic_components(hybrid, io_channels)
   external_comparison <- build_external_comparison(
@@ -932,6 +1107,11 @@ render_all <- function(workbook = "Providing sectors.xlsx",
   write.csv(
     route_energy,
     file.path(output_dir, "ghg_scenario_route_energy.csv"),
+    row.names = FALSE, na = ""
+  )
+  write.csv(
+    attr(workbook_comparison, "resolved_routes"),
+    file.path(output_dir, "ghg_workbook_route_values.csv"),
     row.names = FALSE, na = ""
   )
   write.csv(
@@ -950,20 +1130,43 @@ render_all <- function(workbook = "Providing sectors.xlsx",
     row.names = FALSE, na = ""
   )
 
-  save_two_panel(
+  save_plot(
     plot_workbook_measure(workbook_comparison, "absolute"),
+    file.path(output_dir, "ghg_workbook_lifecycle_comparison_total"),
+    height = 11
+  )
+  save_plot(
     plot_workbook_measure(workbook_comparison, "intensity"),
-    file.path(output_dir, "ghg_workbook_lifecycle_comparison")
+    file.path(output_dir, "ghg_workbook_lifecycle_comparison_normalized"),
+    height = 11
   )
-  save_two_panel(
+  save_plot(
+    plot_model_measure(hybrid, "absolute"),
+    file.path(output_dir, "ghg_model_stage_emissions_total")
+  )
+  save_plot(
+    plot_model_measure(hybrid, "intensity"),
+    file.path(output_dir, "ghg_model_stage_emissions_normalized")
+  )
+  save_plot(
     plot_geographic_measure(geographic_components, "absolute"),
-    plot_geographic_measure(geographic_components, "intensity"),
-    file.path(output_dir, "ghg_geographic_component_comparison")
+    file.path(output_dir, "ghg_model_components_total"),
+    height = 22
   )
-  save_two_panel(
+  save_plot(
+    plot_geographic_measure(geographic_components, "intensity"),
+    file.path(output_dir, "ghg_model_components_normalized"),
+    height = 22
+  )
+  save_plot(
     plot_external_measure(external_comparison, "absolute"),
+    file.path(output_dir, "ghg_external_lifecycle_comparison_total"),
+    height = 11
+  )
+  save_plot(
     plot_external_measure(external_comparison, "intensity"),
-    file.path(output_dir, "ghg_external_lifecycle_comparison")
+    file.path(output_dir, "ghg_external_lifecycle_comparison_normalized"),
+    height = 11
   )
 
   cat("GHG workbook/geographic/external plotting complete.\n")

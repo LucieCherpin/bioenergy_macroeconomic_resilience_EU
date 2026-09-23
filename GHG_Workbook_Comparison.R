@@ -7,6 +7,8 @@
 
 options(scipen = 999)
 
+MTOE_TO_MJ <- 41868000000
+
 assert <- function(ok, message) {
   if (!isTRUE(ok)) stop(message, call. = FALSE)
 }
@@ -700,17 +702,20 @@ build_external_comparison <- function(hybrid, route_energy, benchmarks) {
 }
 
 plot_theme <- function() {
-  ggplot2::theme_minimal(base_size = 10) +
+  ggplot2::theme_minimal(base_size = 15) +
     ggplot2::theme(
       legend.position = "bottom",
       legend.box = "vertical",
-      strip.text = ggplot2::element_text(face = "bold", size = 9),
+      legend.text = ggplot2::element_text(size = 12),
+      strip.text = ggplot2::element_text(face = "bold", size = 14),
       strip.background = ggplot2::element_rect(fill = "#F0F0F0", colour = NA),
       panel.grid.minor = ggplot2::element_blank(),
-      axis.text.x = ggplot2::element_text(size = 8),
-      plot.title = ggplot2::element_text(face = "bold"),
-      plot.subtitle = ggplot2::element_text(size = 9),
-      plot.caption = ggplot2::element_text(size = 8, hjust = 0)
+      axis.text.x = ggplot2::element_text(size = 12),
+      axis.text.y = ggplot2::element_text(size = 12),
+      axis.title = ggplot2::element_text(size = 14),
+      plot.title = ggplot2::element_text(face = "bold", size = 17),
+      plot.subtitle = ggplot2::element_text(size = 12),
+      plot.caption = ggplot2::element_text(size = 10, hjust = 0)
     )
 }
 
@@ -720,6 +725,25 @@ fuel_colours <- c(
   adv_biogas = "#3268A8", RFNBOs = "#777777",
   conv_biodiesel = "#70C5A0", conv_biogasoline = "#F1CB75",
   conv_bio_kerosene = "#B98BD2"
+)
+
+# Fuel identity is always colour. Component identity uses a stable opacity
+# grammar because the plotting environment does not require a pattern package:
+# feedstock is solid, then operations, capital and imported fuel become
+# progressively lighter. The legend names the accounting components.
+component_alpha <- c(
+  "Feedstock" = 1.00,
+  "Operations" = 0.72,
+  "Capital" = 0.48,
+  "Imported fuel" = 0.30,
+  "JEC" = 1.00,
+  "Lifecycle range" = 1.00
+)
+
+component_colours <- c(
+  "Feedstock" = "#333333", "Operations" = "#333333",
+  "Capital" = "#333333", "Imported fuel" = "#333333",
+  "JEC" = "#333333", "Lifecycle range" = "#333333"
 )
 
 prepare_template_data <- function(data) {
@@ -784,51 +808,105 @@ scenario_separators <- function() {
 
 plot_workbook_measure <- function(comparison, measure = c("absolute", "intensity")) {
   measure <- match.arg(measure)
+  model_feed <- comparison$feedstock_total_kgCO2e
+  model_opex <- comparison$opex_kgCO2e
   if (measure == "absolute") {
-    model_value <- comparison$model_recursive_full_Mt
-    workbook_value <- comparison$workbook_Mt
+    model_feed <- model_feed / 1e9
+    model_opex <- model_opex / 1e9
+    jec <- comparison$workbook_Mt
     y_label <- "Absolute emissions [Mt CO2e]"
-    title <- "Model and workbook lifecycle emissions"
+    title <- "Domestic production and JEC pathway emissions"
   } else {
-    model_value <- comparison$recursive_hybrid_gCO2e_per_MJ
-    workbook_value <- comparison$workbook_gCO2e_per_MJ
-    y_label <- "Normalised emission intensity [g CO2e / MJ]"
-    title <- "Model and workbook lifecycle emission intensities"
+    model_feed <- model_feed * 1000 / comparison$fuel_energy_MJ
+    model_opex <- model_opex * 1000 / comparison$fuel_energy_MJ
+    jec <- comparison$workbook_gCO2e_per_MJ
+    y_label <- "Emission intensity [g CO2e / MJ]"
+    title <- "Domestic production and JEC pathway intensities"
   }
-  data <- rbind(
-    data.frame(
-      comparison,
-      method = "Model: supply-chain emissions including capital goods",
-      value = model_value
-    ),
-    data.frame(
-      comparison,
-      method = "Workbook: fixed pathway values weighted by scenario mix",
-      value = workbook_value
-    )
-  )
-  data$method <- factor(
-    data$method,
-    levels = c(
-      "Model: supply-chain emissions including capital goods",
-      "Workbook: fixed pathway values weighted by scenario mix"
-    )
-  )
+  rows <- list(); k <- 1L
+  for (i in seq_len(nrow(comparison))) {
+    base <- comparison[i, , drop = FALSE]
+    components <- c(Feedstock = model_feed[i], Operations = model_opex[i])
+    for (component in names(components)) {
+      rows[[k]] <- data.frame(base, method = "Model", component = component,
+                              value = components[[component]])
+      k <- k + 1L
+    }
+    rows[[k]] <- data.frame(base, method = "JEC", component = "JEC",
+                            value = jec[i])
+    k <- k + 1L
+  }
+  data <- do.call(rbind, rows)
   data <- data[is.finite(data$value), , drop = FALSE]
-  plot_template_bars(
-    data, y_label, title,
-    paste(
-      "Each workbook bar is one fixed value: feedstock cells are weighted by",
-      "the explicit scenario mix, then IVCs by modeled fuel energy."
-    ),
-    paste(
-      "Model bars recursively embody domestic bioenergy intermediates and include",
-      "CAPEX. Workbook capital-goods coverage is undocumented, so differences",
-      "are descriptive rather than a like-for-like validation. Negative values",
-      "retain avoided-emission credits."
-    ),
-    facet_rows = "method"
-  )
+  data$method <- factor(data$method, levels = c("Model", "JEC"))
+  data$component <- factor(data$component,
+                           levels = c("Feedstock", "Operations", "JEC"))
+  stacked <- stack_rectangles(data, method_offsets = c(Model = -0.025, JEC = 0.025),
+                              method_width = 0.04)
+  ggplot2::ggplot(stacked) +
+    ggplot2::geom_rect(
+      ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+                   fill = biofuel, alpha = component),
+      colour = "white", linewidth = 0.2
+    ) +
+    ggplot2::geom_hline(yintercept = 0, colour = "#555555", linewidth = 0.3) +
+    ggplot2::facet_grid(cols = ggplot2::vars(scenario), drop = FALSE) +
+    ggplot2::scale_fill_manual(
+      values = fuel_colours, breaks = fuel_order,
+      labels = unname(fuel_labels[fuel_order]), name = "Fuel", drop = FALSE
+    ) +
+    ggplot2::scale_alpha_manual(values = component_alpha[c("Feedstock", "Operations", "JEC")],
+                                breaks = c("Feedstock", "Operations", "JEC"),
+                                name = "Quantity") +
+    ggplot2::scale_x_continuous(breaks = c(2030, 2035, 2040),
+                                labels = c("2030", "2035", "2040")) +
+    ggplot2::labs(
+      x = "Benchmark year", y = y_label, title = title,
+      subtitle = "Model bars decompose feedstock and operations; JEC bars are exact workbook pathway values.",
+      caption = "CAPEX and finished-product imports are excluded from this pathway comparison. JEC values retain signed credits."
+    ) + plot_theme()
+}
+
+stack_rectangles <- function(data, method_offsets = NULL, method_width = 0.08,
+                             fuel_offsets = NULL, fuel_width = 0.07) {
+  data$year <- as.numeric(as.character(data$year))
+  data$biofuel <- factor(data$biofuel, levels = fuel_order)
+  if (is.null(fuel_offsets)) {
+    fuel_offsets <- seq(-0.38, 0.38, length.out = length(fuel_order))
+    names(fuel_offsets) <- fuel_order
+  }
+  if (is.null(method_offsets)) method_offsets <- c(Model = 0)
+  data$x <- data$year + unname(fuel_offsets[as.character(data$biofuel)]) +
+    unname(method_offsets[as.character(data$method)])
+  data$xmin <- data$x - ifelse(length(method_offsets) > 1L, method_width / 2, fuel_width / 2)
+  data$xmax <- data$x + ifelse(length(method_offsets) > 1L, method_width / 2, fuel_width / 2)
+  data <- data[order(data$year, data$scenario, data$biofuel, data$method,
+                     data$component), , drop = FALSE]
+  data$ymin <- data$ymax <- NA_real_
+  groups <- interaction(data$year, data$scenario, data$biofuel, data$method,
+                        drop = TRUE)
+  for (g in levels(groups)) {
+    idx <- which(groups == g)
+    positive <- idx[data$value[idx] >= 0]
+    negative <- idx[data$value[idx] < 0]
+    if (length(positive)) {
+      top <- 0
+      for (i in positive) {
+        data$ymin[i] <- top
+        top <- top + data$value[i]
+        data$ymax[i] <- top
+      }
+    }
+    if (length(negative)) {
+      bottom <- 0
+      for (i in negative) {
+        data$ymax[i] <- bottom
+        bottom <- bottom + data$value[i]
+        data$ymin[i] <- bottom
+      }
+    }
+  }
+  data
 }
 
 geographic_long <- function(components, measure = c("absolute", "intensity")) {
@@ -905,28 +983,83 @@ plot_geographic_measure <- function(components, measure = c("absolute", "intensi
     ) + plot_theme()
 }
 
-plot_model_measure <- function(hybrid, measure = c("absolute", "intensity")) {
-  measure <- match.arg(measure)
-  if (measure == "absolute") {
-    value <- hybrid$hybrid_total_kgCO2e / 1e9
-    y_label <- "Absolute emissions [Mt CO2e]"
-    title <- "Model stage-attributed GHG emissions"
-  } else {
-    value <- hybrid$stage_hybrid_gCO2e_per_MJ
-    y_label <- "Normalised emission intensity [g CO2e / MJ]"
-    title <- "Model stage-attributed GHG emission intensity"
-  }
-  data <- data.frame(hybrid, value = value)
-  data <- data[is.finite(data$value), , drop = FALSE]
-  plot_template_bars(
-    data, y_label, title,
-    "All nine modeled fuel sectors are shown separately for each year and scenario.",
-    paste(
-      "Bars use the additive stage footprint: physical and IO-fallback feedstock",
-      "+ OPEX + CAPEX. Domestic bioenergy-intermediate recursion is excluded here",
-      "so absolute emissions can be summed across fuel sectors without double counting."
-    )
+read_finished_import_workbook <- function(path) {
+  assert(file.exists(path), paste("Missing finished-import workbook output:", path))
+  x <- read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
+  require_columns(
+    x, c("year", "scenario", "model_biofuel", "imported_Mtoe",
+          "workbook_MtCO2e"), "Finished-import workbook output"
   )
+  aggregate(cbind(imported_Mtoe, workbook_MtCO2e) ~ year + scenario + model_biofuel,
+            x, sum)
+}
+
+model_plot_components <- function(hybrid, finished_import, measure) {
+  keys <- c("year", "scenario", "biofuel")
+  imports <- finished_import
+  names(imports)[names(imports) == "model_biofuel"] <- "biofuel"
+  imports <- imports[c("year", "scenario", "biofuel", "imported_Mtoe",
+                       "workbook_MtCO2e")]
+  result <- merge(hybrid, imports, by = keys, all.x = TRUE, sort = FALSE)
+  result$imported_Mtoe[is.na(result$imported_Mtoe)] <- 0
+  result$workbook_MtCO2e[is.na(result$workbook_MtCO2e)] <- 0
+  result$total_supply_energy_MJ <- result$fuel_energy_MJ +
+    result$imported_Mtoe * MTOE_TO_MJ
+  result$total_supply_energy_MJ[result$total_supply_energy_MJ <= 0] <- NA_real_
+  rows <- list(); k <- 1L
+  for (i in seq_len(nrow(result))) {
+    base <- result[i, , drop = FALSE]
+    values <- c(
+      Feedstock = result$feedstock_total_kgCO2e[i],
+      Operations = result$opex_kgCO2e[i],
+      Capital = result$capex_kgCO2e[i],
+      `Imported fuel` = result$workbook_MtCO2e[i] * 1e9
+    )
+    if (measure == "absolute") values <- values / 1e9
+    else values <- values * 1000 / result$total_supply_energy_MJ[i]
+    for (component in names(values)) {
+      rows[[k]] <- data.frame(base, method = "Model", component = component,
+                              value = values[[component]])
+      k <- k + 1L
+    }
+  }
+  do.call(rbind, rows)
+}
+
+plot_model_measure <- function(hybrid, finished_import, measure = c("absolute", "intensity")) {
+  measure <- match.arg(measure)
+  data <- model_plot_components(hybrid, finished_import, measure)
+  data$biofuel <- factor(data$biofuel, levels = fuel_order)
+  data$scenario <- factor(data$scenario, levels = c("S1", "S2", "S3"))
+  data$year <- factor(data$year, levels = c(2030, 2035, 2040))
+  y_label <- if (measure == "absolute") "Absolute emissions [Mt CO2e]" else
+    "Emission intensity [g CO2e / MJ]"
+  title <- if (measure == "absolute") "Model fuel-supply emissions" else
+    "Model fuel-supply emission intensity"
+  data <- data[is.finite(data$value), , drop = FALSE]
+  stacked <- stack_rectangles(data, method_offsets = c(Model = 0),
+                              fuel_width = 0.07)
+  ggplot2::ggplot(stacked) +
+    ggplot2::geom_rect(
+      ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
+                   fill = biofuel, alpha = component),
+      colour = "white", linewidth = 0.2
+    ) +
+    ggplot2::geom_hline(yintercept = 0, colour = "#555555", linewidth = 0.3) +
+    ggplot2::facet_grid(cols = ggplot2::vars(scenario), drop = FALSE) +
+    ggplot2::scale_fill_manual(values = fuel_colours, breaks = fuel_order,
+                               labels = unname(fuel_labels[fuel_order]),
+                               name = "Fuel", drop = FALSE) +
+    ggplot2::scale_alpha_manual(values = component_alpha[c("Feedstock", "Operations", "Capital", "Imported fuel")],
+                                breaks = c("Feedstock", "Operations", "Capital", "Imported fuel"),
+                                name = "Component") +
+    ggplot2::scale_x_continuous(breaks = c(2030, 2035, 2040),
+                                labels = c("2030", "2035", "2040")) +
+    ggplot2::labs(
+      x = "Benchmark year", y = y_label, title = title,
+      subtitle = "Domestic production components and finished-product imports are shown as one supply-accounting bar.",
+      caption = "Normalized values use total domestic-plus-imported fuel energy as denominator. Imported fuel uses workbook factors."
+    ) + plot_theme()
 }
 
 plot_external_measure <- function(comparison, measure = c("absolute", "intensity")) {
@@ -961,16 +1094,34 @@ plot_external_measure <- function(comparison, measure = c("absolute", "intensity
     data, lower = credit_min, upper = credit_max,
     midpoint = (credit_min + credit_max) / 2
   )
-  model_data <- data.frame(data, model = model)
-  model_bars <- model_data[is.finite(model_data$model), , drop = FALSE]
+  model_components <- rbind(
+    data.frame(data, method = "Model", component = "Feedstock",
+               value = if (measure == "absolute") {
+                 data$feedstock_total_kgCO2e / 1e9
+               } else {
+                 data$feedstock_total_kgCO2e * 1000 / data$fuel_energy_MJ
+               }),
+    data.frame(data, method = "Model", component = "Operations",
+               value = if (measure == "absolute") {
+                 data$opex_kgCO2e / 1e9
+               } else {
+                 data$opex_kgCO2e * 1000 / data$fuel_energy_MJ
+               })
+  )
+  model_components <- model_components[is.finite(model_components$value), , drop = FALSE]
+  model_components$biofuel <- factor(model_components$biofuel, levels = fuel_order)
+  model_components <- stack_rectangles(
+    model_components, method_offsets = c(Model = -0.16), method_width = 0.13
+  )
   ggplot2::ggplot() +
-    ggplot2::geom_col(
-      data = model_bars,
+    ggplot2::geom_rect(
+      data = model_components,
       ggplot2::aes(
-        x = endpoint_index - 0.16, y = model,
-        fill = "Model supply-chain emissions excluding capital goods"
+        xmin = endpoint_index - 0.16 - 0.065,
+        xmax = endpoint_index - 0.16 + 0.065,
+        ymin = ymin, ymax = ymax, fill = biofuel, alpha = component
       ),
-      width = 0.42
+      colour = "white", linewidth = 0.2
     ) +
     ggplot2::geom_linerange(
       data = ordinary[is.finite(ordinary$lower), ],
@@ -1006,10 +1157,12 @@ plot_external_measure <- function(comparison, measure = c("absolute", "intensity
     ) +
     ggplot2::geom_hline(yintercept = 0, colour = "#555555", linewidth = 0.3) +
     scenario_separators() + facet_fuels() + endpoint_scale() +
-    ggplot2::scale_fill_manual(
-      values = c("Model supply-chain emissions excluding capital goods" = "#2878B5"),
-      name = NULL
-    ) +
+    ggplot2::scale_fill_manual(values = fuel_colours, breaks = fuel_order,
+                               labels = unname(fuel_labels[fuel_order]),
+                               name = "Fuel", drop = FALSE) +
+    ggplot2::scale_alpha_manual(values = component_alpha[c("Feedstock", "Operations")],
+                                breaks = c("Feedstock", "Operations"),
+                                name = "Component") +
     ggplot2::scale_colour_manual(
       values = c(
         "Published lifecycle range for matched pathways" = "#7A3E9D",
@@ -1020,9 +1173,8 @@ plot_external_measure <- function(comparison, measure = c("absolute", "intensity
     ggplot2::labs(
       x = "Benchmark year within scenario", y = y_label, title = title,
       subtitle = paste(
-        "Published JEC/RED/CORSIA pathway ranges are shown only when every",
-        "positive-energy modeled route has a mapped comparator. The model includes",
-        "feedstock and operating supply chains but excludes capital goods."
+        "The model bar contains feedstock and operations; the benchmark is an",
+        "energy-weighted interval from JEC, RED and related pathway sources."
       ),
       caption = paste(
         "Unmapped or partially covered fuel-scenarios are left unavailable rather",
@@ -1051,6 +1203,7 @@ render_all <- function(workbook = "Providing sectors.xlsx",
     file.path(output_dir, "ghg_hybrid_benchmark.csv"),
     file.path(output_dir, "ghg_feedstock_detail_benchmark.csv"),
     file.path(output_dir, "ghg_io_channels_benchmark.csv"),
+    file.path(output_dir, "ghg_finished_import_workbook.csv"),
     file.path(output_dir, "ghg_fuel_energy_factors_used.csv"),
     file.path(output_dir, "ghg_external_benchmarks_used.csv")
   )
@@ -1072,6 +1225,9 @@ render_all <- function(workbook = "Providing sectors.xlsx",
   io_channels <- read.csv(
     file.path(output_dir, "ghg_io_channels_benchmark.csv"),
     stringsAsFactors = FALSE, check.names = FALSE
+  )
+  finished_import <- read_finished_import_workbook(
+    file.path(output_dir, "ghg_finished_import_workbook.csv")
   )
   energy_factors <- read.csv(
     file.path(output_dir, "ghg_fuel_energy_factors_used.csv"),
@@ -1129,6 +1285,16 @@ render_all <- function(workbook = "Providing sectors.xlsx",
     file.path(output_dir, "ghg_external_lifecycle_plot_data.csv"),
     row.names = FALSE, na = ""
   )
+  write.csv(
+    model_plot_components(hybrid, finished_import, "absolute"),
+    file.path(output_dir, "ghg_model_supply_components_total.csv"),
+    row.names = FALSE, na = ""
+  )
+  write.csv(
+    model_plot_components(hybrid, finished_import, "intensity"),
+    file.path(output_dir, "ghg_model_supply_components_normalized.csv"),
+    row.names = FALSE, na = ""
+  )
 
   save_plot(
     plot_workbook_measure(workbook_comparison, "absolute"),
@@ -1141,11 +1307,11 @@ render_all <- function(workbook = "Providing sectors.xlsx",
     height = 11
   )
   save_plot(
-    plot_model_measure(hybrid, "absolute"),
+    plot_model_measure(hybrid, finished_import, "absolute"),
     file.path(output_dir, "ghg_model_stage_emissions_total")
   )
   save_plot(
-    plot_model_measure(hybrid, "intensity"),
+    plot_model_measure(hybrid, finished_import, "intensity"),
     file.path(output_dir, "ghg_model_stage_emissions_normalized")
   )
   save_plot(

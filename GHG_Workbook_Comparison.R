@@ -21,10 +21,17 @@ require_columns <- function(x, required, object_name) {
 }
 
 fuel_order <- c(
-  "adv_biodiesel", "adv_biogasoline", "adv_bio_kerosene",
-  "adv_bio_hfo", "adv_biogas", "RFNBOs",
-  "conv_biodiesel", "conv_biogasoline", "conv_bio_kerosene"
+  "adv_biodiesel", "conv_biodiesel",
+  "adv_biogasoline", "conv_biogasoline",
+  "adv_bio_kerosene", "conv_bio_kerosene",
+  "adv_bio_hfo", "adv_biogas", "RFNBOs"
 )
+
+# Plot-only block centres: a nine-fuel comparison occupies more horizontal
+# space than the five-year calendar interval, so literal years would overlap.
+# The displayed axis retains the benchmark-year labels below these blocks.
+plot_year_centres <- c("2030" = 10.5, "2035" = 31.5, "2040" = 52.5)
+plot_year_separators <- c(21, 42)
 
 fuel_labels <- c(
   adv_biodiesel = "Advanced biodiesel",
@@ -706,16 +713,16 @@ plot_theme <- function() {
     ggplot2::theme(
       legend.position = "bottom",
       legend.box = "vertical",
-      legend.text = ggplot2::element_text(size = 12),
-      strip.text = ggplot2::element_text(face = "bold", size = 14),
+      legend.text = ggplot2::element_text(size = 16),
+      strip.text = ggplot2::element_text(face = "bold", size = 18),
       strip.background = ggplot2::element_rect(fill = "#F0F0F0", colour = NA),
       panel.grid.minor = ggplot2::element_blank(),
-      axis.text.x = ggplot2::element_text(size = 12),
-      axis.text.y = ggplot2::element_text(size = 12),
-      axis.title = ggplot2::element_text(size = 14),
-      plot.title = ggplot2::element_text(face = "bold", size = 17),
-      plot.subtitle = ggplot2::element_text(size = 12),
-      plot.caption = ggplot2::element_text(size = 10, hjust = 0)
+      axis.text.x = ggplot2::element_text(size = 16),
+      axis.text.y = ggplot2::element_text(size = 16),
+      axis.title = ggplot2::element_text(size = 17),
+      plot.title = ggplot2::element_text(face = "bold", size = 21),
+      plot.subtitle = ggplot2::element_text(size = 16),
+      plot.caption = ggplot2::element_text(size = 13, hjust = 0)
     )
 }
 
@@ -841,42 +848,47 @@ plot_workbook_measure <- function(comparison, measure = c("absolute", "intensity
   data$method <- factor(data$method, levels = c("Model", "JEC"))
   data$component <- factor(data$component,
                            levels = c("Feedstock", "Operations", "JEC"))
-  stacked <- stack_rectangles(data, method_offsets = c(Model = -0.025, JEC = 0.025),
-                              method_width = 0.04)
-  ggplot2::ggplot(stacked) +
-    ggplot2::geom_rect(
-      ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
-                   fill = biofuel, alpha = component),
-      colour = "white", linewidth = 0.2
-    ) +
-    ggplot2::geom_hline(yintercept = 0, colour = "#555555", linewidth = 0.3) +
-    ggplot2::facet_grid(cols = ggplot2::vars(scenario), drop = FALSE) +
-    ggplot2::scale_fill_manual(
-      values = fuel_colours, breaks = fuel_order,
-      labels = unname(fuel_labels[fuel_order]), name = "Fuel", drop = FALSE
-    ) +
-    ggplot2::scale_alpha_manual(values = component_alpha[c("Feedstock", "Operations", "JEC")],
-                                breaks = c("Feedstock", "Operations", "JEC"),
-                                name = "Quantity") +
-    ggplot2::scale_x_continuous(breaks = c(2030, 2035, 2040),
-                                labels = c("2030", "2035", "2040")) +
-    ggplot2::labs(
-      x = "Benchmark year", y = y_label, title = title,
-      subtitle = "Model bars decompose feedstock and operations; JEC bars are exact workbook pathway values.",
-      caption = "CAPEX and finished-product imports are excluded from this pathway comparison. JEC values retain signed credits."
-    ) + plot_theme()
+  # Two methods share each fuel slot; each bar is deliberately broad enough
+  # to retain the visual weight of the earlier single-bar figure.
+  stacked <- stack_rectangles(data, method_offsets = c(Model = -0.50, JEC = 0.50),
+                              method_width = 1.00,
+                              # Comparison pairs need their own wider fuel
+                              # slots so Model/JEC bars interleave without
+                              # colliding with the neighbouring fuel pair.
+                              fuel_offsets = seq(-8.8, 8.8, length.out = length(fuel_order)))
+  native_stack_spec(
+    stacked, title = title,
+    subtitle = "Within each fuel slot, the left bar is the decomposed model footprint and the right solid bar is the JEC pathway value.",
+    caption = "CAPEX and finished-product imports are excluded from this pathway comparison. JEC values retain signed credits.",
+    y_label = y_label, xlim = c(0, 63),
+    reference = list(type = "crosshatch", label = "JEC pathway (right-hand cross-hatched bar)"),
+    legend_key_scale = 4, legend_height = 1.2, text_scale = 1.25,
+    legend_text_scale = 1.08
+  )
 }
 
 stack_rectangles <- function(data, method_offsets = NULL, method_width = 0.08,
-                             fuel_offsets = NULL, fuel_width = 0.07) {
+                             fuel_offsets = NULL, fuel_width = 0.86) {
   data$year <- as.numeric(as.character(data$year))
   data$biofuel <- factor(data$biofuel, levels = fuel_order)
+  data$component <- factor(
+    data$component,
+    levels = c("Feedstock", "Operations", "Capital", "Imported fuel", "JEC")
+  )
   if (is.null(fuel_offsets)) {
-    fuel_offsets <- seq(-0.38, 0.38, length.out = length(fuel_order))
+    # Fivefold bars require fivefold slot spacing to remain distinct. The
+    # wider slots preserve the same bar-per-fuel grammar without overlap.
+    fuel_offsets <- seq(-4.00, 4.00, length.out = length(fuel_order))
+    names(fuel_offsets) <- fuel_order
+  } else if (is.null(names(fuel_offsets))) {
+    assert(length(fuel_offsets) == length(fuel_order),
+           "Custom fuel offsets must contain one value per fuel.")
     names(fuel_offsets) <- fuel_order
   }
   if (is.null(method_offsets)) method_offsets <- c(Model = 0)
-  data$x <- data$year + unname(fuel_offsets[as.character(data$biofuel)]) +
+  plot_year <- unname(plot_year_centres[as.character(data$year)])
+  assert(!anyNA(plot_year), "Plot input contains a year outside the three benchmark blocks.")
+  data$x <- plot_year + unname(fuel_offsets[as.character(data$biofuel)]) +
     unname(method_offsets[as.character(data$method)])
   data$xmin <- data$x - ifelse(length(method_offsets) > 1L, method_width / 2, fuel_width / 2)
   data$xmax <- data$x + ifelse(length(method_offsets) > 1L, method_width / 2, fuel_width / 2)
@@ -907,6 +919,166 @@ stack_rectangles <- function(data, method_offsets = NULL, method_width = 0.08,
     }
   }
   data
+}
+
+# Native R hatch drawing.  The coloured rectangle is drawn first; a transparent
+# second rectangle supplies the hatch.  Imported fuel receives both diagonal
+# directions, reproducing a true crossed hatch without a plotting dependency.
+draw_native_component <- function(row) {
+  fill <- unname(fuel_colours[as.character(row$biofuel)])
+  graphics::rect(row$xmin, row$ymin, row$xmax, row$ymax,
+                 col = fill, border = "black", lwd = 0.6)
+  component <- as.character(row$component)
+  if (component == "Operations") {
+    graphics::rect(row$xmin, row$ymin, row$xmax, row$ymax,
+                   col = "black", border = NA, density = 16, angle = 45)
+  } else if (component == "Capital") {
+    graphics::rect(row$xmin, row$ymin, row$xmax, row$ymax,
+                   col = "black", border = NA, density = 16, angle = 135)
+  } else if (component == "Imported fuel") {
+    graphics::rect(row$xmin, row$ymin, row$xmax, row$ymax,
+                   col = "black", border = NA, density = 16, angle = 45)
+    graphics::rect(row$xmin, row$ymin, row$xmax, row$ymax,
+                   col = "black", border = NA, density = 16, angle = 135)
+  } else if (component == "JEC") {
+    graphics::rect(row$xmin, row$ymin, row$xmax, row$ymax,
+                   col = "black", border = NA, density = 16, angle = 45)
+    graphics::rect(row$xmin, row$ymin, row$xmax, row$ymax,
+                   col = "black", border = NA, density = 16, angle = 135)
+  }
+}
+
+native_stack_spec <- function(stacked, title, subtitle, caption, y_label,
+                              ranges = NULL, xlim = c(2025.2, 2044.8),
+                              reference = NULL, show_subtitle = TRUE,
+                              legend_key_scale = 1, legend_height = 1.8,
+                              text_scale = 1, legend_text_scale = 1,
+                              nonnegative_lower_pad = 0.08) {
+  structure(list(
+    stacked = stacked, title = title, subtitle = subtitle,
+    caption = caption, y_label = y_label, ranges = ranges, xlim = xlim,
+    reference = reference, show_subtitle = show_subtitle,
+    legend_key_scale = legend_key_scale, legend_height = legend_height,
+    text_scale = text_scale, legend_text_scale = legend_text_scale,
+    nonnegative_lower_pad = nonnegative_lower_pad
+  ), class = "native_stack_spec")
+}
+
+draw_native_stack_spec <- function(spec) {
+  stacked <- spec$stacked
+  range_values <- c(stacked$ymin, stacked$ymax)
+  if (!is.null(spec$ranges)) range_values <- c(range_values, spec$ranges$lower, spec$ranges$upper)
+  ylim <- range(range_values[is.finite(range_values)], 0)
+  pad <- diff(ylim) * 0.08
+  if (!is.finite(pad) || pad == 0) pad <- 1
+  lower_pad <- if (ylim[1L] >= 0) diff(ylim) * spec$nonnegative_lower_pad else pad
+  ylim <- ylim + c(-lower_pad, pad)
+  scenarios <- c("S1", "S2", "S3")
+  text_scale <- spec$text_scale
+  legend_text_scale <- spec$legend_text_scale
+  graphics::layout(matrix(c(1, 2, 3, 4, 4, 4), nrow = 2, byrow = TRUE),
+                   heights = c(8, spec$legend_height))
+  old <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(old), add = TRUE)
+  for (scenario in scenarios) {
+    d <- stacked[as.character(stacked$scenario) == scenario, , drop = FALSE]
+    graphics::par(mar = if (scenario == "S1") c(6.3, 3.8, 4.4, 1.0) else c(6.3, 0.7, 4.4, 1.0),
+                  cex.axis = 1.8 * text_scale, cex.lab = 1.95 * text_scale,
+                  cex.main = 2.0 * text_scale)
+    graphics::plot(NA, xlim = spec$xlim, ylim = ylim, xlab = "", ylab = "",
+                   axes = FALSE, main = scenario)
+    graphics::abline(h = 0, col = "grey55", lwd = 0.8)
+    graphics::abline(v = plot_year_separators, col = "grey75", lwd = 1)
+    graphics::axis(1, at = unname(plot_year_centres), labels = names(plot_year_centres))
+    if (scenario == "S1") graphics::axis(2, las = 1)
+    if (scenario == "S2") {
+      graphics::mtext("Benchmark year", side = 1, line = 4.1, cex = 1.8 * text_scale)
+    }
+    for (i in seq_len(nrow(d))) draw_native_component(d[i, , drop = FALSE])
+    if (!is.null(spec$ranges)) {
+      r <- spec$ranges[as.character(spec$ranges$scenario) == scenario & is.finite(spec$ranges$lower), , drop = FALSE]
+      if (nrow(r)) {
+        graphics::segments(r$x, r$lower, r$x, r$upper, col = "#7A3E9D", lwd = 3)
+        graphics::points(r$x, (r$lower + r$upper) / 2, pch = 16, col = "#7A3E9D", cex = 1.15)
+      }
+    }
+  }
+  panel_pin <- graphics::par("pin")
+  bar_width <- stats::median(stacked$xmax - stacked$xmin)
+  graphics::par(mar = c(0, 0, 0, 0))
+  graphics::plot(NA, xlim = c(0, 1), ylim = c(0, 1), axes = FALSE,
+                 xlab = "", ylab = "")
+  legend_pin <- graphics::par("pin")
+  key_inches <- bar_width / diff(spec$xlim) * panel_pin[1L] * spec$legend_key_scale
+  key_width <- key_inches / legend_pin[1L]
+  key_height <- key_inches / legend_pin[2L]
+  graphics::text(0.015, 0.80, "Fuel", adj = c(0, 0.5), font = 2,
+                 cex = 1.8 * legend_text_scale)
+  fuel_grid <- matrix(c(
+    "adv_biodiesel", "adv_biogasoline", "adv_bio_kerosene", "adv_bio_hfo", "adv_biogas",
+    "conv_biodiesel", "conv_biogasoline", "conv_bio_kerosene", "RFNBOs", NA_character_
+  ), nrow = 2L, byrow = TRUE)
+  fuel_x <- c(0.14, 0.32, 0.50, 0.68, 0.85)
+  fuel_y <- c(0.82, 0.54)
+  for (row in seq_len(nrow(fuel_grid))) for (column in seq_len(ncol(fuel_grid))) {
+    fuel <- fuel_grid[row, column]
+    if (is.na(fuel)) next
+    left <- fuel_x[column]
+    bottom <- fuel_y[row] - key_height / 2
+    graphics::rect(left, bottom, left + key_width, bottom + key_height,
+                   col = unname(fuel_colours[fuel]), border = "black", lwd = 1)
+    legend_label <- sub(" ", "\n", unname(fuel_labels[fuel]), fixed = TRUE)
+    graphics::text(left + key_width + 0.012, fuel_y[row], legend_label,
+                   adj = c(0, 0.5), cex = 1.7 * legend_text_scale)
+  }
+  component_labels <- intersect(
+    c("Feedstock", "Operations", "Capital", "Imported fuel"),
+    unique(as.character(stacked$component))
+  )
+  if (!is.null(spec$reference)) component_labels <- c(component_labels, spec$reference$label)
+  component_x <- if (length(component_labels) == 4L) c(0.14, 0.39, 0.61, 0.80) else
+    if (length(component_labels) == 3L) c(0.14, 0.43, 0.72) else c(0.14, 0.55)
+  graphics::text(0.015, 0.23,
+                 "Component",
+                 adj = c(0, 0.5), font = 2, cex = 1.8 * legend_text_scale)
+  for (i in seq_along(component_labels)) {
+    left <- component_x[i]
+    bottom <- 0.23 - key_height / 2
+    graphics::rect(left, bottom, left + key_width, bottom + key_height,
+                   col = "#E6E6E6", border = "black", lwd = 1)
+    if (component_labels[i] == "Operations") {
+      graphics::rect(left, bottom, left + key_width, bottom + key_height,
+                     col = "black", border = NA, density = 16, angle = 45)
+    } else if (component_labels[i] == "Capital") {
+      graphics::rect(left, bottom, left + key_width, bottom + key_height,
+                     col = "black", border = NA, density = 16, angle = 135)
+    } else if (component_labels[i] == "Imported fuel") {
+      graphics::rect(left, bottom, left + key_width, bottom + key_height,
+                     col = "black", border = NA, density = 16, angle = 45)
+      graphics::rect(left, bottom, left + key_width, bottom + key_height,
+                     col = "black", border = NA, density = 16, angle = 135)
+    } else if (!is.null(spec$reference) &&
+               component_labels[i] == spec$reference$label &&
+               spec$reference$type == "range") {
+      graphics::segments(left + key_width / 2, bottom + key_height * 0.1,
+                         left + key_width / 2, bottom + key_height * 0.9,
+                         col = "#7A3E9D", lwd = 3)
+    } else if (!is.null(spec$reference) &&
+               component_labels[i] == spec$reference$label &&
+               spec$reference$type == "crosshatch") {
+      graphics::rect(left, bottom, left + key_width, bottom + key_height,
+                     col = "black", border = NA, density = 16, angle = 45)
+      graphics::rect(left, bottom, left + key_width, bottom + key_height,
+                     col = "black", border = NA, density = 16, angle = 135)
+    }
+    graphics::text(left + key_width + 0.012, 0.23, component_labels[i], adj = c(0, 0.5),
+                   cex = 1.7 * legend_text_scale)
+  }
+  graphics::mtext(spec$y_label, side = 2, outer = TRUE, line = 2.8, cex = 1.95 * text_scale)
+  graphics::mtext(spec$title, side = 3, outer = TRUE, line = 1.5, font = 2, cex = 2.4)
+  if (nzchar(spec$caption)) {
+    graphics::mtext(spec$caption, side = 1, outer = TRUE, line = 0.45, cex = 1.3)
+  }
 }
 
 geographic_long <- function(components, measure = c("absolute", "intensity")) {
@@ -946,7 +1118,7 @@ plot_geographic_measure <- function(components, measure = c("absolute", "intensi
   measure <- match.arg(measure)
   data <- geographic_long(components, measure)
   data$scenario <- factor(data$scenario, levels = c("S1", "S2", "S3"))
-  data$year <- factor(data$year, levels = c(2030, 2035, 2040))
+  data$year <- as.numeric(as.character(data$year))
   y_label <- if (measure == "absolute") "Mt CO2e (stage-attributed)" else "g CO2e / MJ (stage-attributed)"
   title <- if (measure == "absolute") {
     "Model stage emissions by source and domestic/import channel"
@@ -956,7 +1128,7 @@ plot_geographic_measure <- function(components, measure = c("absolute", "intensi
   ggplot2::ggplot(
     data, ggplot2::aes(x = year, y = value, fill = component)
   ) +
-    ggplot2::geom_col(width = 0.68) +
+    ggplot2::geom_col(width = 4.40) +
     ggplot2::geom_hline(yintercept = 0, colour = "#555555", linewidth = 0.3) +
     ggplot2::facet_grid(
       rows = ggplot2::vars(fuel_label), cols = ggplot2::vars(scenario),
@@ -971,10 +1143,6 @@ plot_geographic_measure <- function(components, measure = c("absolute", "intensi
     ) +
     ggplot2::labs(
       x = "Benchmark year", y = y_label, title = title,
-      subtitle = paste(
-        "Physical feedstock is allocated using positive model feedstock-expenditure",
-        "shares; IO feedstock fallback, OPEX and CAPEX use environmental channels."
-      ),
       caption = paste(
         "The physical split is not observed tonnes by origin. Imported IO is",
         "direct external-import GHG without foreign Leontief closure. Components",
@@ -1034,32 +1202,19 @@ plot_model_measure <- function(hybrid, finished_import, measure = c("absolute", 
   data$year <- factor(data$year, levels = c(2030, 2035, 2040))
   y_label <- if (measure == "absolute") "Absolute emissions [Mt CO2e]" else
     "Emission intensity [g CO2e / MJ]"
-  title <- if (measure == "absolute") "Model fuel-supply emissions" else
-    "Model fuel-supply emission intensity"
+  title <- if (measure == "absolute") "Production-side GHG emissions" else
+    "Production-side GHG emission intensity"
   data <- data[is.finite(data$value), , drop = FALSE]
   stacked <- stack_rectangles(data, method_offsets = c(Model = 0),
-                              fuel_width = 0.07)
-  ggplot2::ggplot(stacked) +
-    ggplot2::geom_rect(
-      ggplot2::aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax,
-                   fill = biofuel, alpha = component),
-      colour = "white", linewidth = 0.2
-    ) +
-    ggplot2::geom_hline(yintercept = 0, colour = "#555555", linewidth = 0.3) +
-    ggplot2::facet_grid(cols = ggplot2::vars(scenario), drop = FALSE) +
-    ggplot2::scale_fill_manual(values = fuel_colours, breaks = fuel_order,
-                               labels = unname(fuel_labels[fuel_order]),
-                               name = "Fuel", drop = FALSE) +
-    ggplot2::scale_alpha_manual(values = component_alpha[c("Feedstock", "Operations", "Capital", "Imported fuel")],
-                                breaks = c("Feedstock", "Operations", "Capital", "Imported fuel"),
-                                name = "Component") +
-    ggplot2::scale_x_continuous(breaks = c(2030, 2035, 2040),
-                                labels = c("2030", "2035", "2040")) +
-    ggplot2::labs(
-      x = "Benchmark year", y = y_label, title = title,
-      subtitle = "Domestic production components and finished-product imports are shown as one supply-accounting bar.",
-      caption = "Normalized values use total domestic-plus-imported fuel energy as denominator. Imported fuel uses workbook factors."
-    ) + plot_theme()
+                              fuel_width = 2.20,
+                              fuel_offsets = seq(-8.8, 8.8, length.out = length(fuel_order)))
+  native_stack_spec(
+    stacked, title = title,
+    subtitle = "Each model bar is decomposed into Feedstock, Operations, Capital and Imported fuel.",
+    caption = "",
+    y_label = y_label, xlim = c(0, 63), show_subtitle = FALSE,
+    legend_key_scale = 2, nonnegative_lower_pad = 0.015
+  )
 }
 
 plot_external_measure <- function(comparison, measure = c("absolute", "intensity")) {
@@ -1110,81 +1265,38 @@ plot_external_measure <- function(comparison, measure = c("absolute", "intensity
   )
   model_components <- model_components[is.finite(model_components$value), , drop = FALSE]
   model_components$biofuel <- factor(model_components$biofuel, levels = fuel_order)
+  comparison_offsets <- setNames(seq(-8.8, 8.8, length.out = length(fuel_order)), fuel_order)
   model_components <- stack_rectangles(
-    model_components, method_offsets = c(Model = -0.16), method_width = 0.13
+    model_components, method_offsets = c(Model = -0.50), method_width = 1.00,
+    fuel_offsets = comparison_offsets
   )
-  ggplot2::ggplot() +
-    ggplot2::geom_rect(
-      data = model_components,
-      ggplot2::aes(
-        xmin = endpoint_index - 0.16 - 0.065,
-        xmax = endpoint_index - 0.16 + 0.065,
-        ymin = ymin, ymax = ymax, fill = biofuel, alpha = component
-      ),
-      colour = "white", linewidth = 0.2
-    ) +
-    ggplot2::geom_linerange(
-      data = ordinary[is.finite(ordinary$lower), ],
-      ggplot2::aes(
-        x = endpoint_index + 0.15, ymin = lower, ymax = upper,
-        colour = "Published lifecycle range for matched pathways"
-      ),
-      linewidth = 1
-    ) +
-    ggplot2::geom_point(
-      data = ordinary[is.finite(ordinary$midpoint), ],
-      ggplot2::aes(
-        x = endpoint_index + 0.15, y = midpoint,
-        colour = "Published lifecycle range for matched pathways"
-      ),
-      size = 1.7
-    ) +
-    ggplot2::geom_linerange(
-      data = credit[credit$credit_case_available & is.finite(credit$lower), ],
-      ggplot2::aes(
-        x = endpoint_index + 0.31, ymin = lower, ymax = upper,
-        colour = "Published estimate including avoided manure-storage emissions"
-      ),
-      linewidth = 0.8
-    ) +
-    ggplot2::geom_point(
-      data = credit[credit$credit_case_available & is.finite(credit$midpoint), ],
-      ggplot2::aes(
-        x = endpoint_index + 0.31, y = midpoint,
-        colour = "Published estimate including avoided manure-storage emissions"
-      ),
-      shape = 18, size = 2
-    ) +
-    ggplot2::geom_hline(yintercept = 0, colour = "#555555", linewidth = 0.3) +
-    scenario_separators() + facet_fuels() + endpoint_scale() +
-    ggplot2::scale_fill_manual(values = fuel_colours, breaks = fuel_order,
-                               labels = unname(fuel_labels[fuel_order]),
-                               name = "Fuel", drop = FALSE) +
-    ggplot2::scale_alpha_manual(values = component_alpha[c("Feedstock", "Operations")],
-                                breaks = c("Feedstock", "Operations"),
-                                name = "Component") +
-    ggplot2::scale_colour_manual(
-      values = c(
-        "Published lifecycle range for matched pathways" = "#7A3E9D",
-        "Published estimate including avoided manure-storage emissions" = "#C44E52"
-      ),
-      name = NULL
-    ) +
-    ggplot2::labs(
-      x = "Benchmark year within scenario", y = y_label, title = title,
-      subtitle = paste(
-        "The model bar contains feedstock and operations; the benchmark is an",
-        "energy-weighted interval from JEC, RED and related pathway sources."
-      ),
-      caption = paste(
-        "Unmapped or partially covered fuel-scenarios are left unavailable rather",
-        "than plotted as zero. Avoided manure-storage emissions are a separate",
-        "counterfactual case. Proxy and route coverage remain in the companion CSV."
-      )
-    ) + plot_theme()
+  ordinary$biofuel <- factor(ordinary$biofuel, levels = fuel_order)
+  ordinary$x <- unname(plot_year_centres[as.character(ordinary$year)]) +
+    comparison_offsets[as.character(ordinary$biofuel)] + 0.50
+  native_stack_spec(
+    model_components, title = title,
+    subtitle = "Within each fuel slot, the left bar is the decomposed model footprint and the right purple interval is the published pathway range.",
+    caption = "Intervals use verified JEC/RED/CORSIA/BEST catalogue rows only; incomplete route coverage remains unavailable.",
+    y_label = y_label, ranges = ordinary, xlim = c(0, 63),
+    reference = list(type = "range", label = "Published pathway range (right-hand interval)"),
+    legend_key_scale = 4, legend_height = 1.2, text_scale = 1.25,
+    legend_text_scale = 1.08
+  )
 }
 
-save_plot <- function(plot, output_base, width = 16, height = 8) {
+save_plot <- function(plot, output_base, width = 18, height = 8) {
+  if (inherits(plot, "native_stack_spec")) {
+    grDevices::png(paste0(output_base, ".png"), width = width * 180,
+                    height = height * 180, res = 180, bg = "white")
+    graphics::par(oma = c(3.6, 6.5, 4.2, 0))
+    draw_native_stack_spec(plot)
+    grDevices::dev.off()
+    grDevices::cairo_pdf(paste0(output_base, ".pdf"), width = width, height = height)
+    graphics::par(oma = c(3.6, 6.5, 4.2, 0))
+    draw_native_stack_spec(plot)
+    grDevices::dev.off()
+    return(invisible(NULL))
+  }
   ggplot2::ggsave(
     paste0(output_base, ".png"), plot = plot, width = width, height = height,
     units = "in", dpi = 180, bg = "white"
@@ -1299,40 +1411,40 @@ render_all <- function(workbook = "Providing sectors.xlsx",
   save_plot(
     plot_workbook_measure(workbook_comparison, "absolute"),
     file.path(output_dir, "ghg_workbook_lifecycle_comparison_total"),
-    height = 11
+    height = 18.2
   )
   save_plot(
     plot_workbook_measure(workbook_comparison, "intensity"),
     file.path(output_dir, "ghg_workbook_lifecycle_comparison_normalized"),
-    height = 11
+    height = 18.2
   )
   save_plot(
     plot_model_measure(hybrid, finished_import, "absolute"),
-    file.path(output_dir, "ghg_model_stage_emissions_total")
+    file.path(output_dir, "ghg_model_stage_emissions_total"), height = 13.4
   )
   save_plot(
     plot_model_measure(hybrid, finished_import, "intensity"),
-    file.path(output_dir, "ghg_model_stage_emissions_normalized")
+    file.path(output_dir, "ghg_model_stage_emissions_normalized"), height = 13.4
   )
   save_plot(
     plot_geographic_measure(geographic_components, "absolute"),
     file.path(output_dir, "ghg_model_components_total"),
-    height = 22
+    height = 44
   )
   save_plot(
     plot_geographic_measure(geographic_components, "intensity"),
     file.path(output_dir, "ghg_model_components_normalized"),
-    height = 22
+    height = 44
   )
   save_plot(
     plot_external_measure(external_comparison, "absolute"),
     file.path(output_dir, "ghg_external_lifecycle_comparison_total"),
-    height = 11
+    height = 18.2
   )
   save_plot(
     plot_external_measure(external_comparison, "intensity"),
     file.path(output_dir, "ghg_external_lifecycle_comparison_normalized"),
-    height = 11
+    height = 18.2
   )
 
   cat("GHG workbook/geographic/external plotting complete.\n")

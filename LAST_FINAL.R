@@ -1207,7 +1207,7 @@ S1_2030 <- list(
 
     dist_feed = list(
       IVC7 = c(food_bev = -0.220097, agriculture = -1.032750, sewerage = 2.376712, adv_biodiesel = 0.000000, chemicals = -0.123865),
-      IVC9a = c(sewerage = 0.026151, food_bev = 0.012566, agriculture = 0.558703, forestry = 0.193274, paper = 0.159288, adv_biodiesel = 0.050018)
+      IVC9a = c(sewerage = 0.026151, food_bev = 0.012566, agriculture = 0.558703, forestry = 0.193274, paper = 0.159288, adv_biodiesel = 0.025009, adv_biogasoline = 0.025009)
     )
   ),
 
@@ -1481,8 +1481,8 @@ S3_2030 <- list(
     ),
 
     dist_feed = list(
-      IVC2_HVO = c(agriculture = 0.107549, adv_biodiesel = 0.758583, chemicals = 0.133868),
-      IVC11a_road = c(sewerage = 0.023309, food_bev = 0.012600, agriculture = 0.597717, forestry = 0.129200, paper = 0.149189, adv_biodiesel = 0.087985),
+      IVC2_HVO = c(agriculture = 0.107549, adv_biodiesel = 0.379292, chemicals = 0.133868, adv_biogasoline = 0.379291),
+      IVC11a_road = c(sewerage = 0.023309, food_bev = 0.012600, agriculture = 0.597717, forestry = 0.129200, paper = 0.149189, adv_biodiesel = 0.043993, adv_biogasoline = 0.043992),
       IVC13a = c(sewerage = 0.023180, food_bev = 0.013471, agriculture = 0.639006, forestry = 0.148157, paper = 0.176186)
     )
   ),
@@ -1520,7 +1520,7 @@ S3_2030 <- list(
 
     dist_feed = list(
       IVC7 = c(food_bev = -0.338184, agriculture = -1.699925, sewerage = 3.165507, chemicals = -0.127397),
-      IVC9a = c(sewerage = 0.024286, food_bev = 0.013129, agriculture = 0.622776, forestry = 0.134617, paper = 0.155444, adv_biodiesel = 0.049749)
+      IVC9a = c(sewerage = 0.024286, food_bev = 0.013129, agriculture = 0.622776, forestry = 0.134617, paper = 0.155444, adv_biodiesel = 0.024875, adv_biogasoline = 0.024875)
     )
   ),
 
@@ -1738,7 +1738,7 @@ S1_2035 <- list(
 
     dist_feed = list(
       IVC7 = c(food_bev = -0.220097, agriculture = -1.032750, sewerage = 2.376712, chemicals = -0.123865),
-      IVC9a = c(sewerage = 0.026151, food_bev = 0.012566, agriculture = 0.558703, forestry = 0.193274, paper = 0.159288, adv_biodiesel = 0.050018)
+      IVC9a = c(sewerage = 0.026151, food_bev = 0.012566, agriculture = 0.558703, forestry = 0.193274, paper = 0.159288, adv_biodiesel = 0.025009, adv_biogasoline = 0.025009)
     )
   ),
 
@@ -2014,7 +2014,7 @@ S3_2035 <- list(
     ),
 
     dist_feed = list(
-      IVC2_HVO = c(agriculture = 1.000000),
+      IVC2_HVO = c(agriculture = 0.107549, adv_biodiesel = 0.379292, chemicals = 0.133868, adv_biogasoline = 0.379291),
       IVC11a_road = c(agriculture = 0.597717, forestry = 0.129200, paper = 0.149189, food_bev = 0.012600, sewerage = 0.023309, adv_biodiesel = 0.043992, adv_biogasoline = 0.043992),
       IVC13a = c(agriculture = 0.639006, forestry = 0.148157, paper = 0.176186, food_bev = 0.013471, sewerage = 0.023180, adv_biodiesel = 0.000000)
     )
@@ -2661,7 +2661,7 @@ S3_2040 <- list(
     ),
 
     dist_feed = list(
-      IVC2_HEFA = c(agriculture = 0.331911, adv_biodiesel = 0.567876, chemicals = 0.100213),
+      IVC2_HEFA = c(agriculture = 0.331911, adv_biodiesel = 0.283938, chemicals = 0.100213, adv_biogasoline = 0.283938),
       IVC6 = c(adv_bio_hfo = 1.000000),
       IVC11a_SAF = c(agriculture =  0.595247, forestry =  0.113460, paper =  0.133678, sewerage =  0.022231, adv_biodiesel =  0.062554, food_bev =  0.010277, adv_biogasoline =  0.062554),
       IVC13b_SAF = c(agriculture = 0.690241, forestry = 0.125038, paper = 0.151791, sewerage = 0.021288, food_bev = 0.011642)
@@ -5901,22 +5901,7 @@ model_results <- list(
   metadata = list(
     BIO = BIO,
     NONBIO = NONBIO,
-    sector_names = sector_names,
-
-    # Read-only inputs for the optional GHG post-processing analysis.
-    # These values are saved from this model run and do not enter its solve.
-    ghg_inputs = list(
-      biofuel_sectors = BIOFUEL_SECTORS,
-      input_sectors = INPUT_SECTORS,
-      fuel_tech_group = FUEL_TECH_GROUP,
-      ivc_tech_library = IVC_TECH_LIBRARY,
-      scenario_eur_to_io_unit = SCENARIO_EUR_TO_IO_UNIT,
-      scenario_configs = list(
-        `2030` = list(S1 = S1_2030, S2 = S2_2030, S3 = S3_2030),
-        `2035` = list(S1 = S1_2035, S2 = S2_2035, S3 = S3_2035),
-        `2040` = list(S1 = S1_2040, S2 = S2_2040, S3 = S3_2040)
-      )
-    )
+    sector_names = sector_names
   )
 )
 

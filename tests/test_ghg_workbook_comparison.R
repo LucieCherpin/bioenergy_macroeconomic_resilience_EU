@@ -165,4 +165,41 @@ stopifnot(
             "feedstock_mix_weighted_fixed_values")
 )
 
+# The workbook labels weighted-emission cell D5 as a POME/tall-oil proxy for
+# HVO. The S1 production analysis now resolves HVO to POME only, so this route
+# must use D5 as an explicit proxy rather than fail or borrow the IVC1 POME value.
+if (file.exists("Providing sectors.xlsx")) {
+  audited_workbook_factors <- load_workbook_factors("Providing sectors.xlsx")
+  pome_factor <- audited_workbook_factors[
+    audited_workbook_factors$model_biofuel == "adv_biodiesel" &
+      audited_workbook_factors$model_ivc == "IVC2_HVO" &
+      audited_workbook_factors$feedstock_key == "palm_oil_mill_effluent_raw",
+    , drop = FALSE
+  ]
+  pome_route <- data.frame(
+    year = 2030, scenario = "S1", biofuel = "adv_biodiesel",
+    ivc_id = "IVC2_HVO", route_energy_MJ = 100
+  )
+  pome_mix <- data.frame(
+    year = 2030, scenario = "S1", biofuel = "adv_biodiesel",
+    ivc_id = "IVC2_HVO", feedstock_key = "palm_oil_mill_effluent_raw",
+    feedstock_mix_share = 1
+  )
+  resolved_pome <- resolve_workbook_route_values(
+    pome_route, audited_workbook_factors, pome_mix
+  )
+  stopifnot(
+    nrow(pome_factor) == 1L,
+    identical(pome_factor$cell[[1L]], "D5"),
+    identical(pome_factor$mapping_status[[1L]], "proxy_candidate"),
+    isTRUE(all.equal(
+      resolved_pome$workbook_gCO2e_per_MJ[[1L]],
+      pome_factor$workbook_gCO2e_per_MJ[[1L]]
+    )),
+    identical(resolved_pome$workbook_source_cells[[1L]], "D5"),
+    identical(resolved_pome$workbook_route_mapping_status[[1L]],
+              "feedstock_mix_weighted_proxy_values")
+  )
+}
+
 cat("GHG workbook comparison synthetic tests passed.\n")

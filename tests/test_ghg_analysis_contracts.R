@@ -1,4 +1,5 @@
 options(warn = 2)
+suppressPackageStartupMessages(library(readxl))
 
 stop_if_not <- function(ok, msg) {
   if (!isTRUE(ok)) stop(msg, call. = FALSE)
@@ -21,9 +22,11 @@ extract_assignment <- function(path, object_name) {
   get(object_name, envir = env, inherits = FALSE)
 }
 
+announce_file <- extract_assignment("GHG_Analysis.R", "announce_file")
 read_extension <- extract_assignment("GHG_Analysis.R", "read_extension")
 recursive_bio_intensity <- extract_assignment("GHG_Analysis.R", "recursive_bio_intensity")
 num <- extract_assignment("GHG_Analysis.R", "num")
+norm_label <- extract_assignment("GHG_Analysis.R", "norm_label")
 workbook_mix_column_for <- extract_assignment(
   "GHG_Analysis.R", "workbook_mix_column_for"
 )
@@ -33,6 +36,15 @@ is_pure_recursive_ivc <- extract_assignment(
 feedstock_sourcing_shares <- extract_assignment(
   "GHG_Analysis.R", "feedstock_sourcing_shares"
 )
+feedstock_key_from_label <- extract_assignment(
+  "GHG_Analysis.R", "feedstock_key_from_label"
+)
+s1_hvo_pome_candidate <- extract_assignment(
+  "GHG_Analysis.R", "s1_hvo_pome_candidate"
+)
+get_ivc_prod_cost <- extract_assignment("GHG_Analysis.R", "get_ivc_prod_cost")
+get_ivc_alpha <- extract_assignment("GHG_Analysis.R", "get_ivc_alpha")
+choose_advanced_mix <- extract_assignment("GHG_Analysis.R", "choose_advanced_mix")
 
 # R compiles this TRE pattern only when num() executes, not while parsing.
 stop_if_not(
@@ -64,6 +76,38 @@ stop_if_not(
   !is_pure_recursive_ivc("IVC11a_SAF"),
   "A primary-feedstock IVC was incorrectly classified as pure recursive."
 )
+
+# Scenario 1's HVO route is explicitly POME-only in all three scenario-cost
+# sheets. It must use that recipe rather than the shared HVO mix-sheet recipe.
+if (file.exists("Providing sectors.xlsx")) {
+  WORKBOOK_FILE <- "Providing sectors.xlsx"
+  hvo_cfg <- list(
+    prod_cost=list(IVC2_HVO=1572.75),
+    alpha=list(IVC2_HVO=c(feed=0.6358))
+  )
+  for (year in c("2030","2035","2040")) {
+    pome <- s1_hvo_pome_candidate(year,"Providing sectors.xlsx")
+    stop_if_not(
+      nrow(pome)==1L && identical(pome$feedstock_key[[1L]],
+                                  "palm_oil_mill_effluent_raw"),
+      paste0("Scenario 1 HVO did not resolve to its POME feedstock in ",year,".")
+    )
+    stop_if_not(
+      isTRUE(all.equal(pome$q_t_feedstock_per_t_fuel[[1L]],1,tolerance=1e-10)) &&
+        isTRUE(all.equal(pome$price_eur_per_t[[1L]],1000,tolerance=1e-10)) &&
+        isTRUE(all.equal(pome$cost_eur_per_t_fuel[[1L]],1000,tolerance=1e-8)),
+      paste0("Scenario 1 HVO POME physical recipe is inconsistent in ",year,".")
+    )
+    selected <- choose_advanced_mix(hvo_cfg,"IVC2_HVO",year,"S1")
+    stop_if_not(
+      identical(selected$table$feedstock_key[[1L]],
+                "palm_oil_mill_effluent_raw") &&
+        isTRUE(all.equal(selected$cost,1000,tolerance=1e-8)) &&
+        selected$error<=5,
+      paste0("S1 HVO did not select/reconcile its POME override in ",year,".")
+    )
+  }
+}
 
 # Domestic/import feedstock allocation follows the model's positive purchased
 # input coefficients. Negative gate-fee entries are revenues and must not enter

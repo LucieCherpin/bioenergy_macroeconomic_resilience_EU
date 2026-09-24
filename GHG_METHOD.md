@@ -141,6 +141,18 @@ capital-goods coverage remains `unknown`; the model/workbook figure displays the
 model's recursively embodied full result but labels this boundary mismatch and
 does not claim a like-for-like validation.
 
+The scenario-cost workbook identifies the S1 IVC2_HVO route as POME-only. Its
+physical POME quantity is reconstructed from the scenario's absolute feedstock
+expenditure divided by the POME price, then divided by HVO output; the observed
+scenario entries imply 1 tonne of POME per tonne of HVO. This is a
+GHG-post-processing mix override only: it does not alter the shared IVC2_HVO
+technology, the economic model, or its output. The weighted-intensity workbook
+does not provide a POME-only HVO factor: cell D5 is explicitly labelled
+"POME / tall-oil proxy". The S1 route therefore uses D5 as a disclosed proxy,
+not as an exact POME measurement or an independently validated lifecycle
+factor. Its proxy status and D5 provenance are retained in
+`ghg_workbook_route_values.csv` and noted on the workbook-comparison figures.
+
 The model component figures are an additive stage decomposition. Physical
 feedstock GHG is split by the positive monetary sourcing shares described
 above. IO-fallback feedstock, OPEX and CAPEX retain separate domestic-chain and

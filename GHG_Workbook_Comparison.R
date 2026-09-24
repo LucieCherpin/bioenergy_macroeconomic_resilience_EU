@@ -13,6 +13,11 @@ assert <- function(ok, message) {
   if (!isTRUE(ok)) stop(message, call. = FALSE)
 }
 
+announce_file <- function(action, path, detail = NULL) {
+  suffix <- if (is.null(detail)) "" else paste0(" [", detail, "]")
+  cat(action, " file: ", path, suffix, "\n", sep = "")
+}
+
 require_columns <- function(x, required, object_name) {
   missing <- setdiff(required, names(x))
   assert(!length(missing), paste0(
@@ -64,6 +69,7 @@ excel_column <- function(index) {
 }
 
 find_sheet <- function(workbook, accepted_names) {
+  announce_file("Reading", workbook, "worksheet names")
   sheets <- readxl::excel_sheets(workbook)
   hit <- sheets[tolower(normalise_text(sheets)) %in%
                   tolower(normalise_text(accepted_names))]
@@ -76,6 +82,7 @@ find_sheet <- function(workbook, accepted_names) {
 }
 
 scan_sheet <- function(workbook, sheet) {
+  announce_file("Reading", workbook, paste0("sheet: ", sheet))
   sheet_data <- readxl::read_excel(
     workbook, sheet = sheet, col_names = FALSE, col_types = "text",
     .name_repair = "minimal", guess_max = 10000
@@ -172,6 +179,24 @@ workbook_manifest_definition <- function() {
     "Providing sectors.xlsx weighted-emission row ", manifest$row,
     "; model mapping status: ", manifest$mapping_status
   )
+  # Weighted-sheet row D5 is explicitly labelled "POME / tall-oil proxy" for
+  # HVO. Preserve its existing tall-oil key for other scenario mixes and add
+  # a separate POME alias so the verified S1 POME-only route resolves to this
+  # source value while remaining visibly classified as a proxy.
+  hvo_pome_proxy <- manifest[
+    manifest$model_biofuel == "adv_biodiesel" &
+      manifest$model_ivc == "IVC2_HVO" & manifest$row == 5L,
+    , drop = FALSE
+  ]
+  assert(nrow(hvo_pome_proxy) == 1L &&
+           hvo_pome_proxy$mapping_status[[1L]] == "proxy_candidate",
+         "Expected one explicit HVO POME/tall-oil proxy at weighted-sheet row 5.")
+  hvo_pome_proxy$feedstock_key <- "palm_oil_mill_effluent_raw"
+  hvo_pome_proxy$source_note <- paste(
+    "Providing sectors.xlsx weighted-emission cell D5, labelled",
+    "POME / tall-oil proxy; used as a proxy for the S1 HVO POME recipe."
+  )
+  manifest <- rbind(manifest, hvo_pome_proxy)
   manifest
 }
 
@@ -179,6 +204,7 @@ load_workbook_factors <- function(workbook) {
   weighted_sheet <- find_sheet(
     workbook, c("Weighetd emission intensities", "Weighted emission intensities")
   )
+  announce_file("Reading", workbook, paste0("sheet: ", weighted_sheet))
   raw <- readxl::read_excel(
     workbook, sheet = weighted_sheet, col_names = FALSE, col_types = "text",
     .name_repair = "minimal", guess_max = 1000
@@ -226,16 +252,22 @@ inspect_workbook <- function(workbook, output_dir) {
   weighted_cells <- scan_sheet(workbook, weighted_sheet)
   ivc_cells <- scan_sheet(workbook, ivc_sheet)
   factors <- load_workbook_factors(workbook)
+  weighted_cells_file <- file.path(output_dir, "ghg_weighted_sheet_cells.csv")
+  announce_file("Saving", weighted_cells_file)
   write.csv(
-    weighted_cells, file.path(output_dir, "ghg_weighted_sheet_cells.csv"),
+    weighted_cells, weighted_cells_file,
     row.names = FALSE, na = ""
   )
+  ivc_cells_file <- file.path(output_dir, "ghg_ivc_sheet_cells.csv")
+  announce_file("Saving", ivc_cells_file)
   write.csv(
-    ivc_cells, file.path(output_dir, "ghg_ivc_sheet_cells.csv"),
+    ivc_cells, ivc_cells_file,
     row.names = FALSE, na = ""
   )
+  workbook_manifest_file <- file.path(output_dir, "ghg_workbook_source_manifest.csv")
+  announce_file("Saving", workbook_manifest_file)
   write.csv(
-    factors, file.path(output_dir, "ghg_workbook_source_manifest.csv"),
+    factors, workbook_manifest_file,
     row.names = FALSE, na = ""
   )
   cat("Workbook inspection complete.\n")
@@ -474,7 +506,11 @@ resolve_workbook_route_values <- function(route_energy, workbook_factors,
         matched$feedstock_mix_share * matched$workbook_gCO2e_per_MJ
       ) / share_sum
       cells <- paste(matched$cell, collapse = ";")
-      status <- "feedstock_mix_weighted_fixed_values"
+      status <- if (any(grepl("proxy|anomaly|composite", matched$mapping_status))) {
+        "feedstock_mix_weighted_proxy_values"
+      } else {
+        "feedstock_mix_weighted_fixed_values"
+      }
     }
     rows[[i]] <- data.frame(
       route,
@@ -552,7 +588,9 @@ build_workbook_comparison <- function(hybrid, route_energy, workbook_factors,
   result$comparison_note <- paste(
     "Fixed workbook feedstock values are weighted by the explicit scenario",
     "feedstock mix, then IVC values are weighted by modeled route energy.",
-    "Workbook capital-goods coverage is unknown."
+    "Workbook capital-goods coverage is unknown.",
+    "The S1 POME-only HVO route uses workbook D5, explicitly labelled a",
+    "POME/tall-oil proxy; route source cells and proxy flags are retained."
   )
   attr(result, "resolved_routes") <- resolved_routes
   result
@@ -859,7 +897,10 @@ plot_workbook_measure <- function(comparison, measure = c("absolute", "intensity
   native_stack_spec(
     stacked, title = title,
     subtitle = "Within each fuel slot, the left bar is the decomposed model footprint and the right solid bar is the JEC pathway value.",
-    caption = "CAPEX and finished-product imports are excluded from this pathway comparison. JEC values retain signed credits.",
+    caption = paste(
+      "No CAPEX or finished-product imports; JEC credits retain their signs.",
+      "S1 HVO uses the D5 POME/tall-oil proxy (details in route-value CSV)."
+    ),
     y_label = y_label, xlim = c(0, 63),
     reference = list(type = "crosshatch", label = "JEC pathway (right-hand cross-hatched bar)"),
     legend_key_scale = 4, legend_height = 1.2, text_scale = 1.25,
@@ -1153,6 +1194,7 @@ plot_geographic_measure <- function(components, measure = c("absolute", "intensi
 
 read_finished_import_workbook <- function(path) {
   assert(file.exists(path), paste("Missing finished-import workbook output:", path))
+  announce_file("Reading", path)
   x <- read.csv(path, stringsAsFactors = FALSE, check.names = FALSE)
   require_columns(
     x, c("year", "scenario", "model_biofuel", "imported_Mtoe",
@@ -1286,23 +1328,31 @@ plot_external_measure <- function(comparison, measure = c("absolute", "intensity
 
 save_plot <- function(plot, output_base, width = 18, height = 8) {
   if (inherits(plot, "native_stack_spec")) {
-    grDevices::png(paste0(output_base, ".png"), width = width * 180,
+    png_file <- paste0(output_base, ".png")
+    announce_file("Saving", png_file)
+    grDevices::png(png_file, width = width * 180,
                     height = height * 180, res = 180, bg = "white")
     graphics::par(oma = c(3.6, 6.5, 4.2, 0))
     draw_native_stack_spec(plot)
     grDevices::dev.off()
-    grDevices::cairo_pdf(paste0(output_base, ".pdf"), width = width, height = height)
+    pdf_file <- paste0(output_base, ".pdf")
+    announce_file("Saving", pdf_file)
+    grDevices::cairo_pdf(pdf_file, width = width, height = height)
     graphics::par(oma = c(3.6, 6.5, 4.2, 0))
     draw_native_stack_spec(plot)
     grDevices::dev.off()
     return(invisible(NULL))
   }
+  png_file <- paste0(output_base, ".png")
+  announce_file("Saving", png_file)
   ggplot2::ggsave(
-    paste0(output_base, ".png"), plot = plot, width = width, height = height,
+    png_file, plot = plot, width = width, height = height,
     units = "in", dpi = 180, bg = "white"
   )
+  pdf_file <- paste0(output_base, ".pdf")
+  announce_file("Saving", pdf_file)
   ggplot2::ggsave(
-    paste0(output_base, ".pdf"), plot = plot, width = width, height = height,
+    pdf_file, plot = plot, width = width, height = height,
     units = "in", device = grDevices::cairo_pdf, bg = "white"
   )
 }
@@ -1326,29 +1376,33 @@ render_all <- function(workbook = "Providing sectors.xlsx",
   ))
   dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-  hybrid <- read.csv(
-    file.path(output_dir, "ghg_hybrid_benchmark.csv"),
-    stringsAsFactors = FALSE, check.names = FALSE
-  )
+  hybrid_file <- file.path(output_dir, "ghg_hybrid_benchmark.csv")
+  announce_file("Reading", hybrid_file)
+  hybrid <- read.csv(hybrid_file, stringsAsFactors = FALSE, check.names = FALSE)
+  feedstock_detail_file <- file.path(output_dir, "ghg_feedstock_detail_benchmark.csv")
+  announce_file("Reading", feedstock_detail_file)
   feedstock_detail <- read.csv(
-    file.path(output_dir, "ghg_feedstock_detail_benchmark.csv"),
-    stringsAsFactors = FALSE, check.names = FALSE
+    feedstock_detail_file, stringsAsFactors = FALSE, check.names = FALSE
   )
+  io_channels_file <- file.path(output_dir, "ghg_io_channels_benchmark.csv")
+  announce_file("Reading", io_channels_file)
   io_channels <- read.csv(
-    file.path(output_dir, "ghg_io_channels_benchmark.csv"),
-    stringsAsFactors = FALSE, check.names = FALSE
+    io_channels_file, stringsAsFactors = FALSE, check.names = FALSE
   )
   finished_import <- read_finished_import_workbook(
     file.path(output_dir, "ghg_finished_import_workbook.csv")
   )
+  energy_factors_file <- file.path(output_dir, "ghg_fuel_energy_factors_used.csv")
+  announce_file("Reading", energy_factors_file)
   energy_factors <- read.csv(
-    file.path(output_dir, "ghg_fuel_energy_factors_used.csv"),
-    stringsAsFactors = FALSE, check.names = FALSE
+    energy_factors_file, stringsAsFactors = FALSE, check.names = FALSE
   )
+  external_benchmarks_file <- file.path(output_dir, "ghg_external_benchmarks_used.csv")
+  announce_file("Reading", external_benchmarks_file)
   external_benchmarks <- read.csv(
-    file.path(output_dir, "ghg_external_benchmarks_used.csv"),
-    stringsAsFactors = FALSE, check.names = FALSE
+    external_benchmarks_file, stringsAsFactors = FALSE, check.names = FALSE
   )
+  announce_file("Reading", "model_results_CAPEX_separate.rds")
   results <- readRDS("model_results_CAPEX_separate.rds")
   assert(nrow(hybrid) == 81L,
          "Expected 81 GHG benchmark rows (3 years x 3 scenarios x 9 fuels).")
@@ -1367,44 +1421,60 @@ render_all <- function(workbook = "Providing sectors.xlsx",
     hybrid, route_energy, external_benchmarks
   )
 
+  workbook_manifest_file <- file.path(output_dir, "ghg_workbook_source_manifest.csv")
+  announce_file("Saving", workbook_manifest_file)
   write.csv(
     workbook_factors,
-    file.path(output_dir, "ghg_workbook_source_manifest.csv"),
+    workbook_manifest_file,
     row.names = FALSE, na = ""
   )
+  route_energy_file <- file.path(output_dir, "ghg_scenario_route_energy.csv")
+  announce_file("Saving", route_energy_file)
   write.csv(
     route_energy,
-    file.path(output_dir, "ghg_scenario_route_energy.csv"),
+    route_energy_file,
     row.names = FALSE, na = ""
   )
+  route_values_file <- file.path(output_dir, "ghg_workbook_route_values.csv")
+  announce_file("Saving", route_values_file)
   write.csv(
     attr(workbook_comparison, "resolved_routes"),
-    file.path(output_dir, "ghg_workbook_route_values.csv"),
+    route_values_file,
     row.names = FALSE, na = ""
   )
+  workbook_comparison_file <- file.path(output_dir, "ghg_workbook_lifecycle_comparison.csv")
+  announce_file("Saving", workbook_comparison_file)
   write.csv(
     workbook_comparison,
-    file.path(output_dir, "ghg_workbook_lifecycle_comparison.csv"),
+    workbook_comparison_file,
     row.names = FALSE, na = ""
   )
+  geographic_components_file <- file.path(output_dir, "ghg_geographic_component_comparison.csv")
+  announce_file("Saving", geographic_components_file)
   write.csv(
     geographic_components,
-    file.path(output_dir, "ghg_geographic_component_comparison.csv"),
+    geographic_components_file,
     row.names = FALSE, na = ""
   )
+  external_comparison_file <- file.path(output_dir, "ghg_external_lifecycle_plot_data.csv")
+  announce_file("Saving", external_comparison_file)
   write.csv(
     external_comparison,
-    file.path(output_dir, "ghg_external_lifecycle_plot_data.csv"),
+    external_comparison_file,
     row.names = FALSE, na = ""
   )
+  model_total_file <- file.path(output_dir, "ghg_model_supply_components_total.csv")
+  announce_file("Saving", model_total_file)
   write.csv(
     model_plot_components(hybrid, finished_import, "absolute"),
-    file.path(output_dir, "ghg_model_supply_components_total.csv"),
+    model_total_file,
     row.names = FALSE, na = ""
   )
+  model_intensity_file <- file.path(output_dir, "ghg_model_supply_components_normalized.csv")
+  announce_file("Saving", model_intensity_file)
   write.csv(
     model_plot_components(hybrid, finished_import, "intensity"),
-    file.path(output_dir, "ghg_model_supply_components_normalized.csv"),
+    model_intensity_file,
     row.names = FALSE, na = ""
   )
 

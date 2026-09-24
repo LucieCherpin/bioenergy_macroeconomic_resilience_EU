@@ -45,6 +45,12 @@ needed <- c(RESULTS_FILE, WORKBOOK_FILE, INVENTORY_FILE, AUDIT_FILE,
 missing <- needed[!file.exists(needed)]
 if (length(missing)) stop("Missing required file(s): ", paste(missing, collapse=", "))
 
+announce_file <- function(action,path,detail=NULL) {
+  suffix <- if (is.null(detail)) "" else paste0(" [",detail,"]")
+  cat(action," file: ",path,suffix,"\n",sep="")
+}
+
+announce_file("Reading",RESULTS_FILE)
 results <- readRDS(RESULTS_FILE)
 if (is.null(results$metadata$ghg_inputs)) {
   stop("RDS lacks metadata$ghg_inputs. Re-run LAST_FINAL.R to save the model-side inputs required by GHG_Analysis.R.")
@@ -101,11 +107,17 @@ normalize_weights <- function(w, tol=1e-3) {
   w/sw
 }
 
+announce_file("Reading",INVENTORY_FILE)
 inventory <- read.csv(INVENTORY_FILE, stringsAsFactors=FALSE, check.names=FALSE)
+announce_file("Reading",AUDIT_FILE)
 audit <- read.csv(AUDIT_FILE, stringsAsFactors=FALSE, check.names=FALSE)
+announce_file("Reading",FACTOR_FILE)
 factors <- read.csv(FACTOR_FILE, stringsAsFactors=FALSE, check.names=FALSE)
+announce_file("Reading",ENERGY_FACTOR_FILE)
 energy_factors <- read.csv(ENERGY_FACTOR_FILE, stringsAsFactors=FALSE, check.names=FALSE)
+announce_file("Reading",VALIDATION_SOURCE_FILE)
 validation_sources <- read.csv(VALIDATION_SOURCE_FILE, stringsAsFactors=FALSE, check.names=FALSE)
+announce_file("Reading",BENCHMARK_FILE)
 external_benchmarks <- read.csv(BENCHMARK_FILE, stringsAsFactors=FALSE, check.names=FALSE)
 
 energy_req <- c("model_biofuel","ivc_id","lhv_mj_per_kg","basis_quality","source_id")
@@ -208,6 +220,7 @@ extension_position_for_model <- function(m) {
   NA_integer_                     # 12:19 and 33 are BIO
 }
 read_extension <- function(path, boundary) {
+  announce_file("Reading",path,paste0("boundary: ",boundary))
   x <- read.csv(path, stringsAsFactors=FALSE, check.names=FALSE)
   req <- c("sector_position","sector","boundary","extension","stressor","unit","intensity")
   if (!all(req %in% names(x))) stop(path, " has wrong schema.")
@@ -281,6 +294,8 @@ for (m in NONBIO) {
 }
 if (anyNA(ghg_dom[NONBIO]) || anyNA(ghg_imp[NONBIO])) stop("Incomplete NONBIO GHG intensities.")
 
+io_intensity_file <- file.path(OUTPUT_DIR,"ghg_io_intensity_model_sectors.csv")
+announce_file("Saving",io_intensity_file)
 write.csv(data.frame(
   model_sector_position=seq_along(sector_names),
   model_sector=sector_names,
@@ -288,11 +303,12 @@ write.csv(data.frame(
   extension_sector=ext_sector,
   domestic_kgCO2e_per_MEUR=ghg_dom,
   imported_direct_kgCO2e_per_MEUR=ghg_imp
-), file.path(OUTPUT_DIR,"ghg_io_intensity_model_sectors.csv"), row.names=FALSE)
+), io_intensity_file, row.names=FALSE)
 
 # ===================================================================
 # Workbook physical-feedstock reconstruction
 # ===================================================================
+announce_file("Reading",WORKBOOK_FILE,"sheet: Feedstock MIX per IVC")
 mix <- read_excel(WORKBOOK_FILE, sheet="Feedstock MIX per IVC",
                   col_names=FALSE, .name_repair="minimal")
 
@@ -379,6 +395,65 @@ advanced_candidate_mix <- function(ivc_id, share_col) {
   out$cost_eur_per_t_fuel <- out$q_t_feedstock_per_t_fuel * out$price_eur_per_t
   out
 }
+
+# Scenario 1 uses a POME-only recipe for the HVO route. The shared IVC 2 HVO
+# mix sheet instead describes the tall-oil/FPBO recipe used by other cases, so
+# read the S1 scenario-cost sheet's own physical feedstock entry. On each S1
+# sheet, the HVO header row records output tonnes in column F; its next row
+# records origin in H, feedstock in I, feedstock price in K, and absolute
+# feedstock expenditure in L. Dividing expenditure by price and HVO tonnes
+# yields physical tonnes of POME per tonne of HVO without changing the model's
+# common IVC technology or IO coefficients.
+s1_hvo_pome_candidate <- function(year, workbook_file=WORKBOOK_FILE) {
+  sheet_by_year <- c(
+    "2030"="2030 costs Sc 1",
+    "2035"="2035 costs Sc 1",
+    "2040"="2040 Sc 1"
+  )
+  sheet <- unname(sheet_by_year[[as.character(year)]])
+  if (is.null(sheet)) stop("No Scenario 1 HVO/POME source sheet for ",year)
+
+  announce_file("Reading",workbook_file,paste0("sheet: ",sheet))
+  tab <- read_excel(workbook_file, sheet=sheet, col_names=FALSE,
+                    .name_repair="minimal")
+  hvo_rows <- which(vapply(tab[[1]], function(x) {
+    identical(norm_label(x),"of which ivc 2 hvo")
+  }, logical(1)))
+  if (length(hvo_rows)!=1L) {
+    stop("Expected one IVC 2 HVO row in Providing sectors.xlsx / ",sheet)
+  }
+  header_row <- hvo_rows[[1L]]
+  feed_row <- header_row+1L
+  label <- as.character(tab[[9]][feed_row])
+  origin <- norm_label(tab[[8]][feed_row])
+  price <- num(tab[[11]][feed_row])
+  absolute_feed_cost <- num(tab[[12]][feed_row])
+  fuel_tonnes <- num(tab[[6]][header_row])
+  if (!identical(norm_label(label),"pome") || origin!="imported") {
+    stop("Expected imported POME directly below the IVC 2 HVO row in ",sheet)
+  }
+  if (!is.finite(price) || price<=0 || !is.finite(absolute_feed_cost) ||
+      absolute_feed_cost<0 || !is.finite(fuel_tonnes) || fuel_tonnes<=0) {
+    stop("Invalid POME price, expenditure, or HVO output in ",sheet)
+  }
+  q <- absolute_feed_cost/price/fuel_tonnes
+  if (!is.finite(q) || q<=0) {
+    stop("Scenario 1 POME quantity per tonne of HVO is not positive in ",sheet)
+  }
+  key <- feedstock_key_from_label(label)
+  if (is.na(key)) stop("No inventory mapping for POME in ",sheet)
+  data.frame(
+    workbook_row=feed_row,
+    workbook_label=label,
+    feedstock_key=key,
+    price_eur_per_t=price,
+    conversion_t_fuel_per_t_feedstock=1/q,
+    mix_share=1,
+    q_t_feedstock_per_t_fuel=q,
+    cost_eur_per_t_fuel=q*price,
+    stringsAsFactors=FALSE
+  )
+}
 get_ivc_prod_cost <- function(fuel_cfg,ivc_id) {
   z <- NULL
   if (!is.null(fuel_cfg$prod_cost)) z <- fuel_cfg$prod_cost[[ivc_id]]
@@ -395,11 +470,27 @@ get_ivc_alpha <- function(fuel_cfg,ivc_id) {
 }
 choose_advanced_mix <- function(fuel_cfg,ivc_id,year,scenario_name) {
   target <- get_ivc_prod_cost(fuel_cfg,ivc_id) * get_ivc_alpha(fuel_cfg,ivc_id)[["feed"]]
-  source_name <- workbook_mix_column_for(year,scenario_name)
-  tab <- advanced_candidate_mix(ivc_id,candidate_share_cols[[source_name]])
+  s1_hvo_pome <- identical(ivc_id,"IVC2_HVO") &&
+    identical(scenario_name,"S1")
+  if (s1_hvo_pome) {
+    tab <- s1_hvo_pome_candidate(year)
+    source_name <- paste0("S1 POME scenario sheet / ",year)
+    source <- paste0("Providing sectors.xlsx / ",
+                     switch(as.character(year),
+                       "2030"="2030 costs Sc 1",
+                       "2035"="2035 costs Sc 1",
+                       "2040"="2040 Sc 1"),
+                     " / IVC 2 HVO POME row ",tab$workbook_row[1])
+  } else {
+    source_name <- workbook_mix_column_for(year,scenario_name)
+    tab <- advanced_candidate_mix(ivc_id,candidate_share_cols[[source_name]])
+    source <- paste0("Providing sectors.xlsx / Feedstock MIX per IVC / mix column ",
+                     source_name)
+  }
   if (is.null(tab)) return(NULL)
   cost <- sum(tab$cost_eur_per_t_fuel,na.rm=TRUE)
-  selected <- list(name=source_name,table=tab,cost=cost,error=abs(cost-target))
+  selected <- list(name=source_name,table=tab,cost=cost,error=abs(cost-target),
+                   source=source)
   tol <- max(5,0.025*max(1,abs(target)))
   if (!is.finite(selected$error) || selected$error>tol) {
     stop("No workbook mix reconciles with model for ",ivc_id,
@@ -411,6 +502,7 @@ choose_advanced_mix <- function(fuel_cfg,ivc_id,year,scenario_name) {
 }
 
 # Conventional source workbook. Numeric values remain in Excel.
+announce_file("Reading",WORKBOOK_FILE,"sheet: Feedtstocks only CONVENTIONAL")
 conv <- read_excel(WORKBOOK_FILE, sheet="Feedtstocks only CONVENTIONAL",
                    col_names=FALSE, .name_repair="minimal")
 
@@ -641,10 +733,7 @@ for (year in benchmark_years) {
           choice <- choose_advanced_mix(fuel_cfg,ivc_id,year,scenario_name)
           if (!is.null(choice)) {
             physical <- choice$table
-            physical_method <- paste0(
-              "Providing sectors.xlsx / Feedstock MIX per IVC / mix column ",
-              choice$name
-            )
+            physical_method <- choice$source
             feed_recon[[rc]] <- data.frame(
               year=as.integer(year), scenario=scenario_name,
               biofuel=fuel_name, ivc_id=ivc_id,
@@ -1022,32 +1111,50 @@ if (any(!is.finite(hybrid_df$hybrid_total_kgCO2e))) {
   stop("Non-finite hybrid GHG result.")
 }
 
+feed_detail_file <- file.path(OUTPUT_DIR,"ghg_feedstock_detail_benchmark.csv")
+announce_file("Saving",feed_detail_file)
 write.csv(feed_detail_df,
-          file.path(OUTPUT_DIR,"ghg_feedstock_detail_benchmark.csv"),
+          feed_detail_file,
           row.names=FALSE)
+feed_recon_file <- file.path(OUTPUT_DIR,"ghg_feedstock_mix_reconciliation.csv")
+announce_file("Saving",feed_recon_file)
 write.csv(feed_recon_df,
-          file.path(OUTPUT_DIR,"ghg_feedstock_mix_reconciliation.csv"),
+          feed_recon_file,
           row.names=FALSE)
+io_detail_file <- file.path(OUTPUT_DIR,"ghg_io_channels_benchmark.csv")
+announce_file("Saving",io_detail_file)
 write.csv(io_detail_df,
-          file.path(OUTPUT_DIR,"ghg_io_channels_benchmark.csv"),
+          io_detail_file,
           row.names=FALSE)
+hybrid_file <- file.path(OUTPUT_DIR,"ghg_hybrid_benchmark.csv")
+announce_file("Saving",hybrid_file)
 write.csv(hybrid_df,
-          file.path(OUTPUT_DIR,"ghg_hybrid_benchmark.csv"),
+          hybrid_file,
           row.names=FALSE)
+method_comparison_file <- file.path(OUTPUT_DIR,"ghg_method_comparison_benchmark.csv")
+announce_file("Saving",method_comparison_file)
 write.csv(method_comparison,
-          file.path(OUTPUT_DIR,"ghg_method_comparison_benchmark.csv"),
+          method_comparison_file,
           row.names=FALSE)
+validation_comparison_file <- file.path(OUTPUT_DIR,"ghg_external_validation_comparison.csv")
+announce_file("Saving",validation_comparison_file)
 write.csv(validation_comparison,
-          file.path(OUTPUT_DIR,"ghg_external_validation_comparison.csv"),
+          validation_comparison_file,
           row.names=FALSE)
+benchmarks_used_file <- file.path(OUTPUT_DIR,"ghg_external_benchmarks_used.csv")
+announce_file("Saving",benchmarks_used_file)
 write.csv(external_benchmarks,
-          file.path(OUTPUT_DIR,"ghg_external_benchmarks_used.csv"),
+          benchmarks_used_file,
           row.names=FALSE)
+sources_used_file <- file.path(OUTPUT_DIR,"ghg_validation_sources_used.csv")
+announce_file("Saving",sources_used_file)
 write.csv(validation_sources,
-          file.path(OUTPUT_DIR,"ghg_validation_sources_used.csv"),
+          sources_used_file,
           row.names=FALSE)
+energy_used_file <- file.path(OUTPUT_DIR,"ghg_fuel_energy_factors_used.csv")
+announce_file("Saving",energy_used_file)
 write.csv(energy_factors,
-          file.path(OUTPUT_DIR,"ghg_fuel_energy_factors_used.csv"),
+          energy_used_file,
           row.names=FALSE)
 
 notes <- c(
@@ -1076,7 +1183,9 @@ notes <- c(
   "21. BEST Matschegg et al. 2026 is context-only for feedstocks already sourced from that paper and is not treated as independent validation at that level.",
   "22. This implementation reports 2030/2035/2040 only. The current model comments state that the 2023 feedstock/OPEX diagnostic split is incomplete for adv_biogas and conv_biogasoline, so annual 2023-2040 GHG should not silently inherit that baseline gap."
 )
-writeLines(notes,file.path(OUTPUT_DIR,"ghg_method_notes.txt"))
+method_notes_file <- file.path(OUTPUT_DIR,"ghg_method_notes.txt")
+announce_file("Saving",method_notes_file)
+writeLines(notes,method_notes_file)
 
 cat("GHG analysis complete.\n",
     "Output directory: ",OUTPUT_DIR,"\n",

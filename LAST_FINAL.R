@@ -1216,7 +1216,7 @@ S1_2030 <- list(
 
     weights = c(IVC2_HEFA = 0.941860, IVC11a_SAF = 0.058140),
 
-    prod_cost = list(IVC2_HEFA = 2974.41, IVC11a_SAF = 2832.004306),
+    prod_cost = list(IVC2_HEFA = 2458.911636, IVC11a_SAF = 2832.004306),
 
     alpha = list(
       IVC2_HEFA = c(feed = 0.674449, capex = 0.152913, opex = 0.172637),
@@ -1224,7 +1224,7 @@ S1_2030 <- list(
     ),
 
     dist_feed = list(
-      IVC2_HEFA = c(food_bev_imp = 1.000000),
+      IVC2_HEFA = c(agriculture = 0.298742, chemicals = 0.105189, adv_biodiesel = 0.298035, adv_biogasoline = 0.298035),
       IVC11a_SAF = c(food_bev =  0.01206, agriculture =  0.53611, forestry =  0.18546, paper =  0.15285, sewerage =  0.02509, chemicals = 0.000000, adv_biodiesel =  0.04422, adv_biogasoline =  0.04422)
     )
   ),
@@ -1691,7 +1691,7 @@ S1_2035 <- list(
 
     alpha = list(
       IVC1 = c(feed = 0.779271, capex = 0.064680, opex = 0.156049),
-      IVC2_HVO = c(feed = 0.6358, capex = 0.1710, opex = 0.1931),
+      IVC2_HVO = c(feed = 0.6358, capex = 0.115455, opex = 0.130370),
       IVC13a = c(feed = 0.155245, capex = 0.547747, opex = 0.297008)
     ),
 
@@ -1747,7 +1747,7 @@ S1_2035 <- list(
 
     weights = c(IVC2_HEFA = 0.896382, IVC11a_SAF = 0.064955, IVC13b_SAF = 0.038662),
 
-    prod_cost = list(IVC2_HEFA = 2974.41, IVC11a_SAF = 2832.004306, IVC13b_SAF = 2000.298884),
+    prod_cost = list(IVC2_HEFA = 2458.911636, IVC11a_SAF = 2832.004306, IVC13b_SAF = 2000.298884),
 
     alpha = list(
       IVC2_HEFA = c(feed = 0.674449, capex = 0.152913, opex = 0.172637),
@@ -1756,7 +1756,7 @@ S1_2035 <- list(
     ),
 
     dist_feed = list(
-      IVC2_HEFA = c(food_bev_imp = 1.000000),
+      IVC2_HEFA = c(agriculture = 0.298742, chemicals = 0.105189, adv_biodiesel = 0.298035, adv_biogasoline = 0.298035),
       IVC11a_SAF = c(agriculture =  0.5361, forestry =  0.1855, paper =  0.1528, sewerage =  0.0251, food_bev =  0.0121, adv_biodiesel =  0.0442, adv_biogasoline =  0.0442),
       IVC13b_SAF = c(agriculture = 0.603022, forestry = 0.195262, paper = 0.165730, sewerage = 0.022913, food_bev = 0.013074)
     )
@@ -2286,7 +2286,7 @@ S1_2040 <- list(
 
     weights = c(IVC2_HEFA = 0.896382, IVC11a_SAF = 0.064955, IVC13b_SAF = 0.038662),
 
-    prod_cost = list(IVC2_HEFA = 2974.41, IVC11a_SAF = 2864.859741, IVC13b_SAF = 2007.966733),
+    prod_cost = list(IVC2_HEFA = 2483.258230, IVC11a_SAF = 2864.859741, IVC13b_SAF = 2007.966733),
 
     alpha = list(
       IVC2_HEFA = c(feed = 0.677641, capex = 0.151414, opex = 0.170945),
@@ -2295,7 +2295,7 @@ S1_2040 <- list(
     ),
 
     dist_feed = list(
-      IVC2_HEFA = c(food_bev_imp = 1.000000),
+      IVC2_HEFA = c(agriculture = 0.269808, chemicals = 0.109529, adv_biodiesel = 0.310332, adv_biogasoline = 0.310332),
       IVC11a_SAF = c(agriculture =  0.56586, forestry =  0.14015, paper =  0.13530, sewerage =  0.02307, adv_biodiesel =  0.06281, food_bev =  0.01000, adv_biogasoline =  0.06281),
       IVC13b_SAF = c(agriculture = 0.657475, forestry = 0.154729, paper = 0.154244, sewerage = 0.022164, food_bev = 0.011388)
     )

@@ -1981,7 +1981,7 @@ dist_feed = list(
 ),
 
   conv_bio_kerosene = list(
-    abs_market_value = 6101362522.63,
+    abs_market_value = 6103334654.80,
 
     weights = c(IVC_HT_lipids_SAF = 1.000000),
 

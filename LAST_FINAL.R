@@ -1447,7 +1447,7 @@ dist_feed = list(
   ),
 
   conv_bio_kerosene = list(
-    abs_market_value = 1102347635.59,
+    abs_market_value = 1120525681.68,
 
     weights = c(IVC_HT_lipids_SAF = 1.000000),
 
@@ -1801,7 +1801,7 @@ S1_2035 <- list(
   ),
 
   conv_biodiesel = list(
-    abs_market_value = 16263122131.49,
+    abs_market_value = 16263168128.33,
 
     weights = c(IVC_T_FF = 0.268713, IVC_HT_FF = 0.193709, IVC_T_CC = 0.000000, IVC_HT_CC = 0.197817, IVC_HT_lipids_SAF = 0.339761),
 
@@ -1845,7 +1845,7 @@ dist_feed = list(
 S2_2035 <- list(
 
   adv_biodiesel = list(
-    abs_market_value = 17066996781.46,
+    abs_market_value = 17004625766.17,
 
     weights = c(IVC11a_road = 0.7638, IVC13a = 0.2361),
 
@@ -1904,7 +1904,7 @@ S2_2035 <- list(
   ),
 
   adv_bio_kerosene = list(
-    abs_market_value = 8244827779.80,
+    abs_market_value = 8242615363.34,
 
     weights = c(IVC6 = 0.05623, IVC11a_SAF = 0.28114, IVC13b_SAF = 0.66263),
 
@@ -2061,7 +2061,7 @@ S3_2035 <- list(
   ),
 
   adv_bio_kerosene = list(
-    abs_market_value = 22292239597.26,
+    abs_market_value = 26321429631.12,
 
     weights = c(IVC2_HEFA = 0.122619414, IVC6 = 0.542012121, IVC11a_SAF = 0.182292052, IVC13b_SAF = 0.153076413),
 
@@ -2083,7 +2083,7 @@ S3_2035 <- list(
   ),
 
   adv_bio_hfo = list(
-    abs_market_value = 69072668587.09,
+    abs_market_value = 67125791049.72,
 
     weights = c(IVC8a = 0.388364122, IVC8b = 0.582632457, IVC13b_mar = 0.02900342),
 

@@ -1847,7 +1847,7 @@ S2_2035 <- list(
   adv_biodiesel = list(
     abs_market_value = 17004625766.17,
 
-    weights = c(IVC11a_road = 0.7638, IVC13a = 0.2361),
+    weights = c(IVC11a_road = 0.763827186, IVC13a = 0.236172814),
 
     prod_cost = list(IVC11a_road = 2502.277056, IVC13a = 1469.889719),
 
@@ -2071,7 +2071,7 @@ S3_2035 <- list(
       IVC2_HEFA = c(feed = 0.660244, capex = 0.159586, opex = 0.180170),
       IVC6 = c(feed = 0.423191, capex = 0.298350, opex = 0.278460),
       IVC11a_SAF = c(feed = 0.239880816, capex = 0.508211554, opex = 0.251907630),
-      IVC13b_SAF = c(feed = 0.343801, capex = 0.341141, opex = 0.315058)
+      IVC13b_SAF = c(feed = 0.343122, capex = 0.341494, opex = 0.315384)
     ),
 
     dist_feed = list(

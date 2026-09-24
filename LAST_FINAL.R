@@ -5901,7 +5901,21 @@ model_results <- list(
   metadata = list(
     BIO = BIO,
     NONBIO = NONBIO,
-    sector_names = sector_names
+    sector_names = sector_names,
+    # Keep the exact model-side inputs required by the post-processing GHG
+    # analysis with the solved endpoint data. This is metadata only: it does
+    # not alter any matrix, scenario value, or model calculation.
+    ghg_inputs = list(
+      biofuel_sectors = BIOFUEL_SECTORS,
+      input_sectors = INPUT_SECTORS,
+      ivc_tech_library = IVC_TECH_LIBRARY,
+      scenario_eur_to_io_unit = SCENARIO_EUR_TO_IO_UNIT,
+      scenario_configs = list(
+        `2030` = list(S1 = S1_2030, S2 = S2_2030, S3 = S3_2030),
+        `2035` = list(S1 = S1_2035, S2 = S2_2035, S3 = S3_2035),
+        `2040` = list(S1 = S1_2040, S2 = S2_2040, S3 = S3_2040)
+      )
+    )
   )
 )
 

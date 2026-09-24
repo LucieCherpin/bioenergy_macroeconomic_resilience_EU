@@ -47,7 +47,7 @@ if (length(missing)) stop("Missing required file(s): ", paste(missing, collapse=
 
 results <- readRDS(RESULTS_FILE)
 if (is.null(results$metadata$ghg_inputs)) {
-  stop("RDS lacks metadata$ghg_inputs. Re-run Final_main_code.R after applying patch.")
+  stop("RDS lacks metadata$ghg_inputs. Re-run LAST_FINAL.R to save the model-side inputs required by GHG_Analysis.R.")
 }
 
 BIO <- results$metadata$BIO
@@ -59,6 +59,17 @@ INPUT_SECTORS <- G$input_sectors
 IVC_TECH_LIBRARY <- G$ivc_tech_library
 SCENARIO_EUR_TO_IO_UNIT <- G$scenario_eur_to_io_unit
 SCENARIO_CONFIGS <- G$scenario_configs
+
+required_ghg_inputs <- c(
+  "biofuel_sectors", "input_sectors", "ivc_tech_library",
+  "scenario_eur_to_io_unit", "scenario_configs"
+)
+missing_ghg_inputs <- setdiff(required_ghg_inputs, names(G))
+if (length(missing_ghg_inputs)) {
+  stop("RDS metadata$ghg_inputs is incomplete; missing: ",
+       paste(missing_ghg_inputs, collapse = ", "),
+       ". Re-run LAST_FINAL.R to refresh the model-results RDS.")
+}
 
 benchmark_years <- c("2030","2035","2040")
 scenario_names <- c("S1","S2","S3")

@@ -1372,16 +1372,16 @@ S2_2030 <- list(
 
     weights = c(IVC6 = 0.7541, IVC11a_SAF = 0.2459),
 
-    prod_cost = list(IVC6 = 2513.829787, IVC11a_SAF =  2784.77),
+    prod_cost = list(IVC6 = 2513.829787, IVC11a_SAF =  2843.304112),
 
     alpha = list(
       IVC6 = c(feed = 0.423191, capex = 0.298350, opex = 0.278460),
-      IVC11a_SAF = c(feed = 0.22, capex = 0.52, opex = 0.26)
+      IVC11a_SAF = c(feed = 0.239880816, capex = 0.508211554, opex = 0.251907630)
     ),
 
     dist_feed = list(
       IVC6 = c(adv_bio_hfo = 1.000000),
-      IVC11a_SAF = c(food_bev = 0.01378, agriculture = 0.65382, forestry = 0.14133, paper = 0.16319, sewerage = 0.0255, adv_biodiesel = 0.00237, adv_biogasoline = 0.00237)
+      IVC11a_SAF = c(food_bev = 0.01260, agriculture = 0.59772, forestry = 0.12920, paper = 0.14919, sewerage = 0.02331, adv_biodiesel = 0.04399, adv_biogasoline = 0.04399)
     )
   ),
 
@@ -1556,7 +1556,7 @@ S3_2030 <- list(
     ),
 
     dist_feed = list(
-      IVC8a = c(sewerage = 0.023376, food_bev = 0.012637, agriculture = 0.599452, forestry = 0.129575, paper = 0.149622, adv_biodiesel = 0.085337),
+      IVC8a = c(sewerage = 0.023376, food_bev = 0.012637, agriculture = 0.599452, forestry = 0.129575, paper = 0.149622, adv_biodiesel = 0.042669, adv_biogasoline = 0.042669),
       IVC8b = c(adv_biogas = 1.000000),
       IVC13b_mar = c(sewerage = 0.021142, food_bev = 0.013572, agriculture = 0.669460, forestry = 0.135131, paper = 0.160695, adv_biodiesel = 0.000000)
     )
@@ -1776,7 +1776,7 @@ S1_2035 <- list(
     ),
 
     dist_feed = list(
-      IVC8a = c(agriculture = 0.537670, forestry = 0.185998, paper = 0.153292, sewerage = 0.025167, food_bev = 0.012093, adv_biodiesel = 0.085781),
+      IVC8a = c(agriculture = 0.537670, forestry = 0.185998, paper = 0.153292, sewerage = 0.025167, food_bev = 0.012093, adv_biodiesel = 0.042890, adv_biogasoline = 0.042890),
       IVC8b = c(adv_biogas = 1.000000),
       IVC13b_mar = c(agriculture = 0.603022, forestry = 0.195262, paper = 0.165730, food_bev = 0.013074, sewerage = 0.022913)
     )
@@ -2315,7 +2315,7 @@ S1_2040 <- list(
     ),
 
     dist_feed = list(
-      IVC8a = c(agriculture = 0.593056, forestry = 0.146064, paper = 0.141415, sewerage = 0.024132, adv_biodiesel = 0.084894, food_bev = 0.010440, adv_biogasoline = 0.000000),
+      IVC8a = c(agriculture = 0.593056, forestry = 0.146064, paper = 0.141415, sewerage = 0.024132, adv_biodiesel = 0.042447, food_bev = 0.010440, adv_biogasoline = 0.042447),
       IVC8b = c(adv_biogas = 1.000000),
       IVC13b_mar = c(agriculture = 0.657475, forestry = 0.154729, paper = 0.154244, food_bev = 0.011388, sewerage = 0.022164)
     )
@@ -2501,7 +2501,7 @@ S2_2040 <- list(
     ),
 
     dist_feed = list(
-      IVC8a = c(agriculture = 0.623109, forestry = 0.118531, paper = 0.139700, sewerage = 0.023256, adv_biodiesel = 0.084682, food_bev = 0.010722, adv_biogasoline = 0.000000),
+      IVC8a = c(agriculture = 0.623109, forestry = 0.118531, paper = 0.139700, sewerage = 0.023256, adv_biodiesel = 0.042341, food_bev = 0.010722, adv_biogasoline = 0.042341),
       IVC8b = c(adv_biogas = 1.000000),
       IVC13b_mar = c(agriculture = 0.690241, forestry = 0.125038, paper = 0.151791, food_bev = 0.011642, sewerage = 0.021288)
     )
@@ -2682,7 +2682,7 @@ S3_2040 <- list(
     ),
 
     dist_feed = list(
-      IVC8a = c(agriculture = 0.623109, forestry = 0.118531, paper = 0.139700, sewerage = 0.023256, adv_biodiesel = 0.084682, food_bev = 0.010722, adv_biogasoline = 0.000000),
+      IVC8a = c(agriculture = 0.623109, forestry = 0.118531, paper = 0.139700, sewerage = 0.023256, adv_biodiesel = 0.042341, food_bev = 0.010722, adv_biogasoline = 0.042341),
       IVC8b = c(adv_biogas = 1.000000),
       IVC13b_mar = c(agriculture = 0.690241, forestry = 0.125038, paper = 0.151791, food_bev = 0.011642, sewerage = 0.021288)
     )
